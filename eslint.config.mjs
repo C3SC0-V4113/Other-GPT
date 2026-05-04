@@ -3,10 +3,12 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier/flat';
 import importPlugin from 'eslint-plugin-import';
+import reactYouMightNotNeedAnEffect from 'eslint-plugin-react-you-might-not-need-an-effect';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  reactYouMightNotNeedAnEffect.configs.recommended,
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     plugins: {
@@ -38,6 +40,7 @@ const eslintConfig = defineConfig([
   {
     files: ['**/*.{jsx,tsx}'],
     rules: {
+      'react-hooks/exhaustive-deps': 'error',
       'react/boolean-prop-naming': [
         'error',
         {
@@ -62,6 +65,8 @@ const eslintConfig = defineConfig([
           fixStyle: 'inline-type-imports',
         },
       ],
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
       '@typescript-eslint/naming-convention': [
         'error',
         {
