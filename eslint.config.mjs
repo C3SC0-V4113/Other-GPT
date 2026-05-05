@@ -44,8 +44,9 @@ const eslintConfig = defineConfig([
       'react/boolean-prop-naming': [
         'error',
         {
-          rule: '^(is|has)[A-Z]([A-Za-z0-9]?)+',
-          message: "Boolean props should start with 'is' or 'has'",
+          rule: '^(is|should|has|can|did|will|as)[A-Z]([A-Za-z0-9]?)+',
+          message:
+            "Boolean props should start with 'is', 'should', 'has', 'can', 'did', 'will', or 'as'",
         },
       ],
     },
@@ -70,6 +71,15 @@ const eslintConfig = defineConfig([
       '@typescript-eslint/naming-convention': [
         'error',
         {
+          selector: 'objectLiteralProperty',
+          modifiers: ['requiresQuotes'],
+          filter: {
+            regex: '^[a-z]+(?:-[a-z0-9]+)+$',
+            match: true,
+          },
+          format: null,
+        },
+        {
           selector: 'default',
           format: ['camelCase'],
         },
@@ -77,7 +87,7 @@ const eslintConfig = defineConfig([
           selector: 'variable',
           format: ['PascalCase', 'UPPER_CASE'],
           types: ['boolean'],
-          prefix: ['is', 'should', 'has', 'can', 'did', 'will'],
+          prefix: ['is', 'should', 'has', 'can', 'did', 'will', 'as'],
         },
         {
           selector: 'variableLike',
