@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono, Montserrat } from 'next/font/google';
 
+import { ThemeProvider } from '@/components/theme/theme-provider';
 import { cn } from '@/lib/utils';
 
 import type { Metadata } from 'next';
@@ -31,6 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={cn(
         'h-full',
         'antialiased',
@@ -40,7 +42,16 @@ export default function RootLayout({
         montserrat.variable
       )}
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          storageKey="otro-gpt-theme-mode"
+        >
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
