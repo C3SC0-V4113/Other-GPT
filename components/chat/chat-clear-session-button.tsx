@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 export function ChatClearSessionButton() {
   const router = useRouter();
   const [isClearing, setIsClearing] = useState(false);
-  const { abortPendingRequest, clearLocalState, isSubmitting, setErrorMessage } =
+  const { abortPendingRequest, addErrorBubble, clearLocalState, isSubmitting } =
     useChatControllerContext();
 
   const handleClear = async () => {
@@ -19,7 +19,6 @@ export function ChatClearSessionButton() {
     }
 
     setIsClearing(true);
-    setErrorMessage('');
     abortPendingRequest();
 
     try {
@@ -32,7 +31,7 @@ export function ChatClearSessionButton() {
       clearLocalState();
       router.refresh();
     } catch {
-      setErrorMessage('Unable to clear the chat right now.');
+      addErrorBubble('Unable to clear the chat right now.');
     } finally {
       setIsClearing(false);
     }

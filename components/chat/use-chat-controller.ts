@@ -8,11 +8,21 @@ interface UseChatControllerOptions {
   initialMessages: ChatMessage[];
 }
 
-export interface ChatUiMessage extends ChatMessage {
+type ChatMessageKind = 'error' | 'message';
+type ChatMessageStatus = 'complete' | 'error' | 'interrupted' | 'streaming';
+type ChatMessageRole = 'assistant' | 'system' | 'user';
+
+export interface ChatUiMessage {
+  content: string;
   id: string;
+  kind: ChatMessageKind;
+  retryPrompt?: string;
+  role: ChatMessageRole;
+  status: ChatMessageStatus;
 }
 
 export interface ChatController {
+  addErrorBubble: (message: string, options?: { retryPrompt?: string }) => void;
   abortPendingRequest: () => void;
   clearLocalState: () => void;
   errorMessage: string;
@@ -21,9 +31,11 @@ export interface ChatController {
   isSendDisabled: boolean;
   isSubmitting: boolean;
   messages: ChatUiMessage[];
+  retryLastFailedPrompt: () => Promise<void>;
   resetFromInitialMessages: () => void;
   sendMessage: () => Promise<void>;
   setErrorMessage: (message: string) => void;
+  stopGeneration: () => void;
   updateInput: (nextInput: string) => void;
 }
 
@@ -39,6 +51,8 @@ function toUiMessage(message: ChatMessage, index: number): ChatUiMessage {
   return {
     ...message,
     id: `${message.role}-${index}`,
+    kind: 'message',
+    status: 'complete',
   };
 }
 
@@ -46,11 +60,13 @@ export function useChatController({ initialMessages }: UseChatControllerOptions)
   const [errorMessage, setErrorMessageState] = useState('');
   const [input, setInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastFailedUserPrompt, setLastFailedUserPrompt] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatUiMessage[]>(() =>
     initialMessages.map((message, index) => toUiMessage(message, index))
   );
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isManualStopRequestedRef = useRef(false);
   const pendingAssistantMessageIdRef = useRef<string | null>(null);
 
   const isSendDisabled = useMemo(() => isSubmitting || !input.trim(), [input, isSubmitting]);
@@ -60,6 +76,7 @@ export function useChatController({ initialMessages }: UseChatControllerOptions)
     return () => {
       abortControllerRef.current?.abort();
       abortControllerRef.current = null;
+      isManualStopRequestedRef.current = false;
       pendingAssistantMessageIdRef.current = null;
     };
   }, []);
@@ -73,6 +90,7 @@ export function useChatController({ initialMessages }: UseChatControllerOptions)
 
     controller.abort();
     abortControllerRef.current = null;
+    isManualStopRequestedRef.current = false;
 
     const pendingAssistantMessageId = pendingAssistantMessageIdRef.current;
     pendingAssistantMessageIdRef.current = null;
@@ -86,10 +104,24 @@ export function useChatController({ initialMessages }: UseChatControllerOptions)
     setIsSubmitting(false);
   };
 
+  const stopGeneration = () => {
+    const controller = abortControllerRef.current;
+
+    if (!controller) {
+      return;
+    }
+
+    isManualStopRequestedRef.current = true;
+    controller.abort();
+    abortControllerRef.current = null;
+    setIsSubmitting(false);
+  };
+
   const clearLocalState = () => {
     abortPendingRequest();
     setErrorMessageState('');
     setInput('');
+    setLastFailedUserPrompt(null);
     setMessages([]);
   };
 
@@ -97,11 +129,28 @@ export function useChatController({ initialMessages }: UseChatControllerOptions)
     abortPendingRequest();
     setErrorMessageState('');
     setInput('');
+    setLastFailedUserPrompt(null);
     setMessages(initialMessages.map((message, index) => toUiMessage(message, index)));
   };
 
-  const sendMessage = async () => {
-    const trimmedInput = input.trim();
+  const addErrorBubble = (message: string, options?: { retryPrompt?: string }) => {
+    const errorMessageId = crypto.randomUUID();
+
+    setMessages((currentMessages) => [
+      ...currentMessages,
+      {
+        content: message,
+        id: errorMessageId,
+        kind: 'error',
+        retryPrompt: options?.retryPrompt,
+        role: 'system',
+        status: 'error',
+      },
+    ]);
+  };
+
+  const sendChatMessage = async (rawInput: string) => {
+    const trimmedInput = rawInput.trim();
 
     if (!trimmedInput || isSubmitting) {
       return;
@@ -113,16 +162,30 @@ export function useChatController({ initialMessages }: UseChatControllerOptions)
 
     const requestMessageId = crypto.randomUUID();
     const assistantMessageId = crypto.randomUUID();
+    isManualStopRequestedRef.current = false;
     pendingAssistantMessageIdRef.current = assistantMessageId;
 
     setMessages((currentMessages) => [
       ...currentMessages,
-      { content: trimmedInput, id: requestMessageId, role: 'user' },
-      { content: '', id: assistantMessageId, role: 'assistant' },
+      {
+        content: trimmedInput,
+        id: requestMessageId,
+        kind: 'message',
+        role: 'user',
+        status: 'complete',
+      },
+      {
+        content: '',
+        id: assistantMessageId,
+        kind: 'message',
+        role: 'assistant',
+        status: 'streaming',
+      },
     ]);
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
+    let assistantContent = '';
 
     try {
       const response = await fetch('/api/chat', {
@@ -143,7 +206,6 @@ export function useChatController({ initialMessages }: UseChatControllerOptions)
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let assistantContent = '';
 
       while (true) {
         const { done: isDone, value } = await reader.read();
@@ -156,7 +218,9 @@ export function useChatController({ initialMessages }: UseChatControllerOptions)
 
         setMessages((currentMessages) =>
           currentMessages.map((message) =>
-            message.id === assistantMessageId ? { ...message, content: assistantContent } : message
+            message.id === assistantMessageId
+              ? { ...message, content: assistantContent, status: 'streaming' }
+              : message
           )
         );
       }
@@ -165,9 +229,35 @@ export function useChatController({ initialMessages }: UseChatControllerOptions)
         setMessages((currentMessages) =>
           currentMessages.filter((message) => message.id !== assistantMessageId)
         );
+      } else {
+        setMessages((currentMessages) =>
+          currentMessages.map((message) =>
+            message.id === assistantMessageId ? { ...message, status: 'complete' } : message
+          )
+        );
       }
+
+      setLastFailedUserPrompt(null);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
+        if (isManualStopRequestedRef.current) {
+          setLastFailedUserPrompt(trimmedInput);
+
+          if (!assistantContent) {
+            setMessages((currentMessages) =>
+              currentMessages.filter((message) => message.id !== assistantMessageId)
+            );
+          } else {
+            setMessages((currentMessages) =>
+              currentMessages.map((message) =>
+                message.id === assistantMessageId
+                  ? { ...message, retryPrompt: trimmedInput, status: 'interrupted' }
+                  : message
+              )
+            );
+          }
+        }
+
         return;
       }
 
@@ -175,14 +265,31 @@ export function useChatController({ initialMessages }: UseChatControllerOptions)
       setMessages((currentMessages) =>
         currentMessages.filter((message) => message.id !== assistantMessageId)
       );
+      setLastFailedUserPrompt(trimmedInput);
+      addErrorBubble(getErrorMessage(error), { retryPrompt: trimmedInput });
     } finally {
       abortControllerRef.current = null;
+      isManualStopRequestedRef.current = false;
       pendingAssistantMessageIdRef.current = null;
       setIsSubmitting(false);
     }
   };
 
+  const sendMessage = async () => {
+    await sendChatMessage(input);
+  };
+
+  const retryLastFailedPrompt = async () => {
+    if (!lastFailedUserPrompt || isSubmitting) {
+      return;
+    }
+
+    setMessages((currentMessages) => currentMessages.filter((message) => message.kind !== 'error'));
+    await sendChatMessage(lastFailedUserPrompt);
+  };
+
   return {
+    addErrorBubble,
     abortPendingRequest,
     clearLocalState,
     errorMessage,
@@ -191,9 +298,11 @@ export function useChatController({ initialMessages }: UseChatControllerOptions)
     isSendDisabled,
     isSubmitting,
     messages,
+    retryLastFailedPrompt,
     resetFromInitialMessages,
     sendMessage,
     setErrorMessage: setErrorMessageState,
+    stopGeneration,
     updateInput: setInput,
   };
 }

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
 export function ChatComposerForm() {
-  const { input, isSendDisabled, isSubmitting, sendMessage, updateInput } =
+  const { input, isSendDisabled, isSubmitting, sendMessage, stopGeneration, updateInput } =
     useChatControllerContext();
 
   return (
@@ -32,8 +32,17 @@ export function ChatComposerForm() {
         disabled={isSubmitting}
         rows={1}
       />
-      <Button type="submit" disabled={isSendDisabled}>
-        Send
+      <Button
+        type={isSubmitting ? 'button' : 'submit'}
+        variant={isSubmitting ? 'destructive' : 'default'}
+        disabled={isSubmitting ? false : isSendDisabled}
+        onClick={() => {
+          if (isSubmitting) {
+            stopGeneration();
+          }
+        }}
+      >
+        {isSubmitting ? 'Stop' : 'Send'}
       </Button>
     </form>
   );

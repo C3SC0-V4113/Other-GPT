@@ -2,7 +2,6 @@
 
 import { ChatComposerForm } from '@/components/chat/chat-composer-form';
 import { ChatControllerProvider } from '@/components/chat/chat-controller-provider';
-import { ChatErrorBanner } from '@/components/chat/chat-error-banner';
 import { ChatMessagesView } from '@/components/chat/chat-messages-view';
 
 import type { ChatMessage } from '@/lib/chat-session-store';
@@ -23,7 +22,6 @@ export function ChatClient({ children, initialMessages }: ChatClientProps) {
 
         <div className="border-t bg-background/95">
           <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 px-4 py-4">
-            <ChatErrorBanner />
             <ChatComposerForm />
           </div>
         </div>
