@@ -11,7 +11,7 @@ export default async function Home() {
   const initialMessages = getSessionMessages(sessionId);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex h-dvh min-h-0 flex-col overflow-hidden">
       <ChatClient initialMessages={initialMessages}>
         <ChatHeader action={<ChatClearSessionButton />} />
       </ChatClient>
