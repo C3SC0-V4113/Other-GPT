@@ -34,3 +34,9 @@ These checks are mandatory for any agent making code or config changes in this r
 ### Completion criteria
 
 - Do not claim the task is done unless all required checks pass, or failures are explicitly reported with blockers.
+
+## Project References
+
+- Architecture summary and implementation contracts: `README.md`
+- UI/UX standard and visual rules (source of truth for design): `DESIGN.md`
+- Agent architecture guardrails: `.agents/skills/project-architecture/SKILL.md`
