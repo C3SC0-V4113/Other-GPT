@@ -40,3 +40,5 @@ These checks are mandatory for any agent making code or config changes in this r
 - Architecture summary and implementation contracts: `README.md`
 - UI/UX standard and visual rules (source of truth for design): `DESIGN.md`
 - Agent architecture guardrails: `.agents/skills/project-architecture/SKILL.md`
+- ADR index and architecture decisions: `docs/adr/README.md`
+- Decision documentation sync skill: `.agents/skills/decision-doc-sync/SKILL.md`

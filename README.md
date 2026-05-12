@@ -1,20 +1,21 @@
-# otro-GPT
+﻿# otro-GPT
 
-Aplicación de chat server-first en Next.js 16 con streaming de respuestas, estado de sesión en cookie y UI basada en componentes compuestos.
+Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estado de sesion en cookie y UI basada en componentes compuestos.
 
 ## Referencias del proyecto
 
-- Estándar visual y de interacción: [DESIGN.md](./DESIGN.md)
-- Guía operativa para agentes: [AGENTS.md](./AGENTS.md)
+- Estandar visual y de interaccion: [DESIGN.md](./DESIGN.md)
+- Guia operativa para agentes: [AGENTS.md](./AGENTS.md)
 - Skill local de arquitectura para agentes: `.agents/skills/project-architecture/SKILL.md`
+- ADRs de arquitectura: [docs/adr/README.md](./docs/adr/README.md)
 
 ## Principios de arquitectura
 
 - Server-first por defecto: `layout`, `page` y estructura principal en Server Components.
-- Islas cliente mínimas: solo componentes con estado, eventos o APIs del navegador.
-- Separación de responsabilidades:
-  - composición y shell en `app/` + componentes server.
-  - lógica de chat en hook/controlador cliente.
+- Islas cliente minimas: solo componentes con estado, eventos o APIs del navegador.
+- Separacion de responsabilidades:
+  - composicion y shell en `app/` + componentes server.
+  - logica de chat en hook/controlador cliente.
   - render en componentes UI compuestos reutilizables.
 
 ## Mapa de componentes del chat
@@ -23,13 +24,13 @@ Aplicación de chat server-first en Next.js 16 con streaming de respuestas, esta
   - `app/page.tsx` compone header, selector de tema y chat.
   - `components/chat/chat-header.tsx` mantiene markup server-side.
 - Estado y comportamiento:
-  - `components/chat/use-chat-controller.ts` contiene envío, streaming, stop, retry y clear.
+  - `components/chat/use-chat-controller.ts` contiene envio, streaming, stop, retry y clear.
   - `components/chat/chat-controller-provider.tsx` expone contexto.
-- Render de conversación:
+- Render de conversacion:
   - `components/chat/chat-messages-view.tsx` gestiona listado y autoscroll.
   - `components/chat/chat-bubble.tsx` define infraestructura compuesta (`Root`, `Header`, `Body`, `Footer`, `Actions`, `Action`).
 - Entrada de usuario:
-  - `components/chat/chat-composer-form.tsx` usa botón toggle `Send/Stop`.
+  - `components/chat/chat-composer-form.tsx` usa boton toggle `Send/Stop`.
 
 ## Estados y flujo de mensajes
 
@@ -39,20 +40,20 @@ Aplicación de chat server-first en Next.js 16 con streaming de respuestas, esta
   - `role`: `user | assistant | system`
 - Flujo:
   - `sendMessage()` agrega user + burbuja assistant `streaming`.
-  - `stopGeneration()` aborta la petición activa; conserva parcial como `interrupted`.
+  - `stopGeneration()` aborta la peticion activa; conserva parcial como `interrupted`.
   - errores de red/API se renderizan in-stream como burbuja destructiva (`kind=error`).
-  - `retryLastFailedPrompt()` reenvía el último prompt fallido.
+  - `retryLastFailedPrompt()` reenvia el ultimo prompt fallido.
 
 ## Layout y scroll
 
 - Header y composer siempre visibles.
 - Solo la zona de mensajes hace scroll (`ScrollArea`).
-- La pantalla de chat se ancla al viewport (`h-dvh` + `overflow-hidden` en la página).
+- La pantalla de chat se ancla al viewport (`h-dvh` + `overflow-hidden` en la pagina).
 
 ## Theming
 
 - Tema gestionado con `next-themes`.
-- Configuración:
+- Configuracion:
   - `defaultTheme="system"`
   - `enableSystem`
   - persistencia local con `storageKey="otro-gpt-theme-mode"`.

@@ -1,6 +1,6 @@
----
+﻿---
 name: project-architecture
-description: Guardrails de arquitectura y diseño para mantener el patrón server-first, el flujo de chat compuesto y el estándar visual del proyecto.
+description: Guardrails de arquitectura y diseno para mantener el patron server-first, el flujo de chat compuesto y el estandar visual del proyecto.
 ---
 
 # Project Architecture Guardrails
@@ -19,7 +19,7 @@ Usa esta skill cuando el cambio toque UI, arquitectura de componentes, flujo del
 3. Mantener la regla de layout:
    - header y composer visibles.
    - solo mensajes con scroll.
-4. Mantener patrón compuesto para mensajes:
+4. Mantener patron compuesto para mensajes:
    - usar `ChatBubble.*` para estructura de burbujas y acciones.
 5. Mantener estrategia de tema:
    - `System / Light / Dark`.
@@ -28,13 +28,14 @@ Usa esta skill cuando el cambio toque UI, arquitectura de componentes, flujo del
 
 ## Checklist previo a cierre
 
-- ¿El cambio incrementó innecesariamente superficie cliente?
-- ¿Se preservó el flujo de estados del chat y acciones retry?
+- ¿El cambio incremento innecesariamente superficie cliente?
+- ¿Se preservo el flujo de estados del chat y acciones retry?
 - ¿La UI respeta `DESIGN.md`?
 - ¿Se mantuvo el comportamiento de scroll y header/composer fijos?
 
 ## Referencias
 
 - Arquitectura general: `README.md`
-- Estándar de diseño: `DESIGN.md`
-- Evaluación mínima de checks: `.agents/skills/project-min-evaluation/SKILL.md`
+- Estandar de diseno: `DESIGN.md`
+- Sincronizacion de decisiones estructurales: `.agents/skills/decision-doc-sync/SKILL.md`
+- Evaluacion minima de checks: `.agents/skills/project-min-evaluation/SKILL.md`
