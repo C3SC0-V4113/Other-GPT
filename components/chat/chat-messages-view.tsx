@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 
 import * as ChatBubble from '@/components/chat/chat-bubble';
 import { useChatControllerContext } from '@/components/chat/chat-controller-provider';
+import { ChatMarkdown } from '@/components/chat/chat-markdown';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const messageStateLabels = {
@@ -40,7 +41,13 @@ export function ChatMessagesView() {
             <ChatBubble.Root key={message.id} role={message.role} state={message.status}>
               {message.kind === 'error' ? <ChatBubble.Header>Error</ChatBubble.Header> : null}
 
-              <ChatBubble.Body>{message.content}</ChatBubble.Body>
+              {message.role === 'assistant' || message.role === 'system' ? (
+                <ChatBubble.Body className="whitespace-normal">
+                  <ChatMarkdown content={message.content} />
+                </ChatBubble.Body>
+              ) : (
+                <ChatBubble.Body>{message.content}</ChatBubble.Body>
+              )}
 
               {message.status === 'streaming' ||
               message.status === 'interrupted' ||
