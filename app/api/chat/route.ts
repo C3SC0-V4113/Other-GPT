@@ -62,13 +62,23 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
-  appendSessionMessage(sessionId, { content: userMessage, role: 'user' });
+  appendSessionMessage(sessionId, { content: { text: userMessage, type: 'text' }, role: 'user' });
 
   const sessionMessages = getSessionMessages(sessionId);
-  const modelMessages: ChatCompletionMessageParam[] = sessionMessages.map((message) => ({
-    content: message.content,
-    role: message.role,
-  }));
+  const modelMessages: ChatCompletionMessageParam[] = sessionMessages.reduce<
+    ChatCompletionMessageParam[]
+  >((accumulator, message) => {
+    if (message.content.type !== 'text') {
+      return accumulator;
+    }
+
+    accumulator.push({
+      content: message.content.text,
+      role: message.role,
+    });
+
+    return accumulator;
+  }, []);
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
@@ -97,7 +107,10 @@ export async function POST(request: Request): Promise<Response> {
         }
 
         if (assistantMessage) {
-          appendSessionMessage(sessionId, { content: assistantMessage, role: 'assistant' });
+          appendSessionMessage(sessionId, {
+            content: { text: assistantMessage, type: 'text' },
+            role: 'assistant',
+          });
         }
       } catch {
         if (!controller.desiredSize || controller.desiredSize > 0) {

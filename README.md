@@ -30,7 +30,18 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
   - `components/chat/chat-messages-view.tsx` gestiona listado y autoscroll.
   - `components/chat/chat-bubble.tsx` define infraestructura compuesta (`Root`, `Header`, `Body`, `Footer`, `Actions`, `Action`).
 - Entrada de usuario:
-  - `components/chat/chat-composer-form.tsx` usa boton toggle `Send/Stop`.
+  - `components/chat/chat-composer-form.tsx` usa boton toggle `Send/Stop`, menu `+` para modo imagen y boton de dictado.
+
+## Capacidades multimodales
+
+- Texto (streaming):
+  - `POST /api/chat` con streaming incremental de respuestas.
+- Imagen:
+  - `POST /api/images` para generar imagenes desde prompt y aspect ratio.
+- Speech-to-text:
+  - `POST /api/audio/transcriptions` para transcribir audio del dictado.
+- Text-to-speech:
+  - `POST /api/audio/speech` para escuchar respuestas del assistant.
 
 ## Estados y flujo de mensajes
 
@@ -38,11 +49,14 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
   - `kind`: `message | error`
   - `status`: `complete | streaming | interrupted | error`
   - `role`: `user | assistant | system`
+  - `content.type`: `text | image`
 - Flujo:
   - `sendMessage()` agrega user + burbuja assistant `streaming`.
+  - modo imagen genera burbuja user (prompt) + burbuja assistant (imagen).
   - `stopGeneration()` aborta la peticion activa; conserva parcial como `interrupted`.
   - errores de red/API se renderizan in-stream como burbuja destructiva (`kind=error`).
   - `retryLastFailedPrompt()` reenvia el ultimo prompt fallido.
+  - acciones en respuestas completas del assistant: `Escuchar` y `Copiar`.
 
 ## Layout y scroll
 

@@ -1,5 +1,7 @@
 'use client';
 
+import { Check, Copy, Square, Volume2 } from 'lucide-react';
+import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 
 import * as ChatBubble from '@/components/chat/chat-bubble';
@@ -14,7 +16,17 @@ const messageStateLabels = {
 } as const;
 
 export function ChatMessagesView() {
-  const { isEmptyState, messages, retryLastFailedPrompt } = useChatControllerContext();
+  const {
+    copiedMessageId,
+    isEmptyState,
+    messages,
+    playMessageAudio,
+    playingMessageId,
+    retryLastFailedPrompt,
+    stopPlayingAudio,
+    ttsLoadingMessageId,
+    copyMessageText,
+  } = useChatControllerContext();
   const scrollAreaRootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -37,41 +49,114 @@ export function ChatMessagesView() {
             </div>
           ) : null}
 
-          {messages.map((message) => (
-            <ChatBubble.Root key={message.id} role={message.role} state={message.status}>
-              {message.kind === 'error' ? <ChatBubble.Header>Error</ChatBubble.Header> : null}
+          {messages.map((message) => {
+            const messageText = message.content.type === 'text' ? message.content.text : null;
 
-              {message.role === 'assistant' || message.role === 'system' ? (
-                <ChatBubble.Body className="whitespace-normal">
-                  <ChatMarkdown content={message.content} />
-                </ChatBubble.Body>
-              ) : (
-                <ChatBubble.Body>{message.content}</ChatBubble.Body>
-              )}
+            return (
+              <ChatBubble.Root key={message.id} role={message.role} state={message.status}>
+                {message.kind === 'error' ? <ChatBubble.Header>Error</ChatBubble.Header> : null}
 
-              {message.status === 'streaming' ||
-              message.status === 'interrupted' ||
-              message.status === 'error' ? (
-                <ChatBubble.Footer>
-                  <span>{messageStateLabels[message.status]}</span>
+                {message.content.type === 'image' ? (
+                  <ChatBubble.Body className="space-y-2 whitespace-normal">
+                    <Image
+                      src={`data:${message.content.mimeType};base64,${message.content.imageBase64}`}
+                      alt={message.content.prompt}
+                      width={1024}
+                      height={1024}
+                      unoptimized
+                      className="max-h-[26rem] w-full rounded-xl border border-border object-cover"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Prompt: {message.content.prompt}
+                    </p>
+                  </ChatBubble.Body>
+                ) : message.role === 'assistant' || message.role === 'system' ? (
+                  <ChatBubble.Body className="whitespace-normal">
+                    <ChatMarkdown content={message.content.text} />
+                  </ChatBubble.Body>
+                ) : (
+                  <ChatBubble.Body>{message.content.text}</ChatBubble.Body>
+                )}
 
-                  {message.status === 'interrupted' ||
-                  (message.status === 'error' && message.retryPrompt) ? (
+                {message.status === 'streaming' ||
+                message.status === 'interrupted' ||
+                message.status === 'error' ? (
+                  <ChatBubble.Footer>
+                    <span>{messageStateLabels[message.status]}</span>
+
+                    {message.status === 'interrupted' ||
+                    (message.status === 'error' && message.retryPrompt) ? (
+                      <ChatBubble.Actions>
+                        <ChatBubble.Action
+                          variant={message.status === 'error' ? 'destructive' : 'ghost'}
+                          onClick={() => {
+                            void retryLastFailedPrompt();
+                          }}
+                        >
+                          Reintentar
+                        </ChatBubble.Action>
+                      </ChatBubble.Actions>
+                    ) : null}
+                  </ChatBubble.Footer>
+                ) : null}
+
+                {message.status === 'complete' &&
+                message.kind === 'message' &&
+                message.role === 'assistant' &&
+                messageText ? (
+                  <ChatBubble.Footer>
+                    <span>Listo</span>
                     <ChatBubble.Actions>
                       <ChatBubble.Action
-                        variant={message.status === 'error' ? 'destructive' : 'ghost'}
+                        variant={playingMessageId === message.id ? 'secondary' : 'ghost'}
                         onClick={() => {
-                          void retryLastFailedPrompt();
+                          if (playingMessageId === message.id) {
+                            stopPlayingAudio();
+                            return;
+                          }
+
+                          void playMessageAudio(message.id, messageText);
                         }}
                       >
-                        Reintentar
+                        {ttsLoadingMessageId === message.id ? (
+                          'Cargando...'
+                        ) : playingMessageId === message.id ? (
+                          <>
+                            <Square data-icon="inline-start" />
+                            Detener
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 data-icon="inline-start" />
+                            Escuchar
+                          </>
+                        )}
+                      </ChatBubble.Action>
+
+                      <ChatBubble.Action
+                        variant={copiedMessageId === message.id ? 'secondary' : 'ghost'}
+                        onClick={() => {
+                          void copyMessageText(message.id, messageText);
+                        }}
+                      >
+                        {copiedMessageId === message.id ? (
+                          <>
+                            <Check data-icon="inline-start" />
+                            Copiado
+                          </>
+                        ) : (
+                          <>
+                            <Copy data-icon="inline-start" />
+                            Copiar
+                          </>
+                        )}
                       </ChatBubble.Action>
                     </ChatBubble.Actions>
-                  ) : null}
-                </ChatBubble.Footer>
-              ) : null}
-            </ChatBubble.Root>
-          ))}
+                  </ChatBubble.Footer>
+                ) : null}
+              </ChatBubble.Root>
+            );
+          })}
         </div>
       </ScrollArea>
     </div>

@@ -1,9 +1,25 @@
 export const CHAT_SESSION_COOKIE_NAME = 'otro_gpt_session_id';
 
 export type ChatRole = 'assistant' | 'user';
+export type ChatImageAspectRatio = '1:1' | '16:9' | '9:16' | 'auto';
+
+export interface ChatTextMessageContent {
+  text: string;
+  type: 'text';
+}
+
+export interface ChatImageMessageContent {
+  aspectRatio: ChatImageAspectRatio;
+  imageBase64: string;
+  mimeType: string;
+  prompt: string;
+  type: 'image';
+}
+
+export type ChatMessageContent = ChatImageMessageContent | ChatTextMessageContent;
 
 export interface ChatMessage {
-  content: string;
+  content: ChatMessageContent;
   role: ChatRole;
 }
 
