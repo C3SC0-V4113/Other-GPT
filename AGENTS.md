@@ -42,3 +42,46 @@ These checks are mandatory for any agent making code or config changes in this r
 - Agent architecture guardrails: `.agents/skills/project-architecture/SKILL.md`
 - ADR index and architecture decisions: `docs/adr/README.md`
 - Decision documentation sync skill: `.agents/skills/decision-doc-sync/SKILL.md`
+
+## Skill Invocation Checklist
+
+Use this checklist to decide **when** to invoke each skill.  
+Reference hierarchy for conflicts:
+
+1. `DESIGN.md` for UI/UX rules.
+2. `README.md` for architecture/contracts.
+3. `AGENTS.md` for operational workflow.
+
+### Trigger map
+
+- `project-architecture`
+  - Trigger on any change to chat UI, component architecture, layout/scroll behavior, state flow, or theming.
+- `vercel-composition-patterns`
+  - Trigger on compound components, composable APIs, provider patterns, or refactors to reduce prop complexity.
+- `vercel-react-best-practices`
+  - Trigger on React/Next performance concerns (re-renders, bundle size, component structure, rendering patterns).
+- `typescript-advanced-types`
+  - Trigger on advanced typing for custom hooks, reducers/actions, discriminated unions, context values/providers, and generic utilities.
+- `next-best-practices`
+  - Trigger on Next.js 16 conventions: RSC boundaries, route handlers, file conventions, data fetching and runtime usage.
+- `shadcn`
+  - Trigger on UI component work using shadcn patterns, composition, styling rules, registries, or CLI-driven component updates.
+- `decision-doc-sync`
+  - Trigger when there are structural decisions (architecture, contracts, cross-cutting UX standards, conventions).
+- `project-min-evaluation`
+  - Trigger at implementation close before declaring completion.
+
+### Recommended invocation order
+
+- New UI feature
+  - `project-architecture` -> `vercel-composition-patterns` -> `vercel-react-best-practices` -> `next-best-practices` -> `project-min-evaluation`
+- State refactor (hooks/reducer/context/provider)
+  - `project-architecture` -> `typescript-advanced-types` -> `vercel-composition-patterns` -> `project-min-evaluation`
+- Large structural change
+  - Apply the relevant flow above, then invoke `decision-doc-sync` before finalizing.
+
+### Documentation sync guardrail
+
+- Keep `CLAUDE.md` as pointer to `AGENTS.md` (no duplicated policy blocks).
+- Do not copy UI rules from `DESIGN.md` into `AGENTS.md`; link instead.
+- Do not copy architecture contracts from `README.md` into `AGENTS.md`; link instead.
