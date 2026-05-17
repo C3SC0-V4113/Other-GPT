@@ -1,9 +1,15 @@
 'use client';
 
-import { ImagePlus, Mic, Plus, Send, Square, X } from 'lucide-react';
+import { ImagePlus, Mic, Plus } from 'lucide-react';
 
 import { useChatComposer } from '@/components/chat/chat-composer-provider';
-import { Badge } from '@/components/ui/badge';
+import {
+  ComposerActionsRow,
+  ComposerModeBadge,
+  ComposerRatioSelect,
+  ComposerSubmitButton,
+  ComposerToolbar,
+} from '@/components/chat/composer';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,26 +17,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
-
 function ComposerRoot({ children }: { children: React.ReactNode }) {
   return <div className="flex flex-col gap-2">{children}</div>;
-}
-
-function ComposerToolbar({ children }: { children: React.ReactNode }) {
-  return <div className="flex items-center gap-2">{children}</div>;
 }
 
 function ComposerInput({
@@ -61,16 +53,68 @@ function ComposerInput({
   );
 }
 
-function ComposerActions({ children }: { children: React.ReactNode }) {
-  return <div className="flex items-end gap-2">{children}</div>;
+function ComposerPlusMenu({
+  isSubmitting,
+  onToggleImageMode,
+}: {
+  isSubmitting: boolean;
+  onToggleImageMode: () => void;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button disabled={isSubmitting} size="icon-sm" type="button" variant="outline">
+              <Plus />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={onToggleImageMode}>
+              <ImagePlus />
+              <span>Generar imagenes</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TooltipTrigger>
+      <TooltipContent sideOffset={6}>Opciones del composer</TooltipContent>
+    </Tooltip>
+  );
 }
 
-const aspectRatioOptions: Array<{ label: string; value: ChatImageAspectRatio }> = [
-  { label: 'Auto', value: 'auto' },
-  { label: '1:1', value: '1:1' },
-  { label: '16:9', value: '16:9' },
-  { label: '9:16', value: '9:16' },
-];
+function ComposerMicButton({
+  isRecording,
+  isSubmitting,
+  isTranscribing,
+  onToggleRecording,
+}: {
+  isRecording: boolean;
+  isSubmitting: boolean;
+  isTranscribing: boolean;
+  onToggleRecording: () => Promise<void>;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          aria-label={isRecording ? 'Detener dictado' : 'Iniciar dictado'}
+          disabled={isSubmitting || isTranscribing}
+          onClick={() => {
+            void onToggleRecording();
+          }}
+          size="icon-sm"
+          type="button"
+          variant={isRecording ? 'destructive' : 'outline'}
+        >
+          <Mic />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent sideOffset={6}>
+        {isRecording ? 'Detener dictado' : 'Iniciar dictado'}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 export function ChatComposerForm() {
   const {
@@ -93,83 +137,28 @@ export function ChatComposerForm() {
     <ComposerRoot>
       {isImageGenerationMode ? (
         <ComposerToolbar>
-          <Badge variant="secondary" className="gap-1.5">
-            <ImagePlus data-icon="inline-start" />
-            Modo imagen
-            <button
-              aria-label="Desactivar modo imagen"
-              className="rounded-full p-0.5 hover:bg-foreground/10"
-              onClick={toggleImageGenerationMode}
-              type="button"
-            >
-              <X />
-            </button>
-          </Badge>
-
+          <ComposerModeBadge onRemove={toggleImageGenerationMode} />
           <Separator className="h-5" orientation="vertical" />
-
-          <Select
-            disabled={isSubmitting}
-            onValueChange={(value) => {
-              setSelectedImageAspectRatio(value as ChatImageAspectRatio);
-            }}
+          <ComposerRatioSelect
+            isDisabled={isSubmitting}
+            onValueChange={setSelectedImageAspectRatio}
             value={selectedImageAspectRatio}
-          >
-            <SelectTrigger aria-label="Seleccionar aspect ratio" size="sm">
-              <SelectValue placeholder="Aspect ratio" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {aspectRatioOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          />
         </ComposerToolbar>
       ) : null}
 
-      <ComposerActions>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button disabled={isSubmitting} size="icon-sm" type="button" variant="outline">
-                  <Plus />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem onClick={toggleImageGenerationMode}>
-                  <ImagePlus />
-                  <span>Generar imágenes</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </TooltipTrigger>
-          <TooltipContent sideOffset={6}>Opciones del composer</TooltipContent>
-        </Tooltip>
+      <ComposerActionsRow>
+        <ComposerPlusMenu
+          isSubmitting={isSubmitting}
+          onToggleImageMode={toggleImageGenerationMode}
+        />
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              aria-label={isRecording ? 'Detener dictado' : 'Iniciar dictado'}
-              disabled={isSubmitting || isTranscribing}
-              onClick={() => {
-                void toggleRecording();
-              }}
-              size="icon-sm"
-              type="button"
-              variant={isRecording ? 'destructive' : 'outline'}
-            >
-              <Mic />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent sideOffset={6}>
-            {isRecording ? 'Detener dictado' : 'Iniciar dictado'}
-          </TooltipContent>
-        </Tooltip>
+        <ComposerMicButton
+          isRecording={isRecording}
+          isSubmitting={isSubmitting}
+          isTranscribing={isTranscribing}
+          onToggleRecording={toggleRecording}
+        />
 
         <Separator className="h-9" orientation="vertical" />
 
@@ -186,25 +175,16 @@ export function ChatComposerForm() {
           value={input}
         />
 
-        {isSubmitting ? (
-          <Button onClick={stopGeneration} type="button" variant="destructive">
-            <Square data-icon="inline-start" />
-            Stop
-          </Button>
-        ) : (
-          <Button
-            disabled={isSendDisabled}
-            onClick={() => {
-              void sendMessage();
-            }}
-            type="button"
-            variant="default"
-          >
-            <Send data-icon="inline-start" />
-            {isImageGenerationMode ? 'Generar' : 'Enviar'}
-          </Button>
-        )}
-      </ComposerActions>
+        <ComposerSubmitButton
+          isImageGenerationMode={isImageGenerationMode}
+          isSendDisabled={isSendDisabled}
+          isSubmitting={isSubmitting}
+          onSend={() => {
+            void sendMessage();
+          }}
+          onStop={stopGeneration}
+        />
+      </ComposerActionsRow>
     </ComposerRoot>
   );
 }

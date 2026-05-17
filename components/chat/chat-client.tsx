@@ -17,21 +17,21 @@ interface ChatClientProps {
 export function ChatClient({ children, initialMessages }: ChatClientProps) {
   return (
     <ChatProvider initialMessages={initialMessages}>
-      <ChatComposerProvider>
-        <TooltipProvider>
-          <div className="flex min-h-0 flex-1 flex-col">
-            {children}
+      <TooltipProvider>
+        <div className="flex min-h-0 flex-1 flex-col">
+          {children}
 
-            <ChatMessagesView />
+          <ChatMessagesView />
 
-            <div className="border-t bg-background/95">
-              <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
+          <div className="border-t bg-background/95">
+            <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
+              <ChatComposerProvider>
                 <ChatComposerForm />
-              </div>
+              </ChatComposerProvider>
             </div>
           </div>
-        </TooltipProvider>
-      </ChatComposerProvider>
+        </div>
+      </TooltipProvider>
     </ChatProvider>
   );
 }

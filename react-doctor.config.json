@@ -1,0 +1,10 @@
+{
+  "ignore": {
+    "overrides": [
+      {
+        "files": ["components/ui/**"],
+        "rules": ["knip/exports", "exports"]
+      }
+    ]
+  }
+}
