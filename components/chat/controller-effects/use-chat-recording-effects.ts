@@ -7,24 +7,26 @@ import type { ChatAction } from '@/components/chat/chat-controller-actions';
 import type { Dispatch, MutableRefObject } from 'react';
 
 interface UseChatRecordingEffectsParams {
-  addErrorBubble: (message: string) => void;
-  dispatch: Dispatch<ChatAction>;
-  isRecording: boolean;
-  isTranscribing: boolean;
-  mediaRecorderRef: MutableRefObject<MediaRecorder | null>;
-  mediaStreamRef: MutableRefObject<MediaStream | null>;
-  recordedChunksRef: MutableRefObject<BlobPart[]>;
+  deps: {
+    addErrorBubble: (message: string) => void;
+    dispatch: Dispatch<ChatAction>;
+  };
+  recording: {
+    isRecording: boolean;
+    isTranscribing: boolean;
+  };
+  refs: {
+    mediaRecorderRef: MutableRefObject<MediaRecorder | null>;
+    mediaStreamRef: MutableRefObject<MediaStream | null>;
+    recordedChunksRef: MutableRefObject<BlobPart[]>;
+  };
 }
 
-export function useChatRecordingEffects({
-  addErrorBubble,
-  dispatch,
-  isRecording,
-  isTranscribing,
-  mediaRecorderRef,
-  mediaStreamRef,
-  recordedChunksRef,
-}: UseChatRecordingEffectsParams) {
+export function useChatRecordingEffects({ deps, recording, refs }: UseChatRecordingEffectsParams) {
+  const { addErrorBubble, dispatch } = deps;
+  const { isRecording, isTranscribing } = recording;
+  const { mediaRecorderRef, mediaStreamRef, recordedChunksRef } = refs;
+
   const toggleRecording = useCallback(async () => {
     if (isTranscribing) {
       return;

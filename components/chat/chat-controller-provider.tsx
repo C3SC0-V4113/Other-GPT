@@ -15,11 +15,13 @@ import {
   chatControllerReducer,
   createInitialChatState,
 } from '@/components/chat/chat-controller-reducer';
-import { useChatAudioEffects } from '@/components/chat/use-chat-audio-effects';
-import { useChatClipboardEffects } from '@/components/chat/use-chat-clipboard-effects';
-import { useChatImageEffects } from '@/components/chat/use-chat-image-effects';
-import { useChatRecordingEffects } from '@/components/chat/use-chat-recording-effects';
-import { useChatStreamEffects } from '@/components/chat/use-chat-stream-effects';
+import {
+  useChatAudioEffects,
+  useChatClipboardEffects,
+  useChatImageEffects,
+  useChatRecordingEffects,
+  useChatStreamEffects,
+} from '@/components/chat/controller-effects';
 
 import type { ChatProviderValue } from '@/components/chat/chat-types';
 import type { ChatImageAspectRatio, ChatMessage } from '@/lib/chat-session-store';
@@ -59,54 +61,78 @@ function useChatProviderValue(initialMessages: ChatMessage[]): ChatProviderValue
   );
 
   const { abortPendingRequest, sendChatMessage, stopGeneration } = useChatStreamEffects({
-    addErrorBubble,
-    addInterruptedStateOnManualStop: true,
-    dispatch,
-    isManualStopRequestedRef,
-    isSubmitting: state.request.isSubmitting,
-    pendingAssistantMessageId: state.request.pendingAssistantMessageId,
-    requestAbortControllerRef,
+    deps: {
+      addErrorBubble,
+      dispatch,
+    },
+    options: {
+      isManualStopRetryEnabled: true,
+    },
+    refs: {
+      isManualStopRequestedRef,
+      requestAbortControllerRef,
+    },
+    request: {
+      isSubmitting: state.request.isSubmitting,
+      pendingAssistantMessageId: state.request.pendingAssistantMessageId,
+    },
   });
 
   const { sendImageMessage } = useChatImageEffects({
-    addErrorBubble: (message) => {
-      addErrorBubble(message);
+    composer: {
+      selectedImageAspectRatio: state.composer.selectedImageAspectRatio,
     },
-    dispatch,
-    isSubmitting: state.request.isSubmitting,
-    isManualStopRequestedRef,
-    requestAbortControllerRef,
-    selectedImageAspectRatio: state.composer.selectedImageAspectRatio,
+    deps: {
+      addErrorBubble,
+      dispatch,
+    },
+    refs: {
+      isManualStopRequestedRef,
+      requestAbortControllerRef,
+    },
+    request: {
+      isSubmitting: state.request.isSubmitting,
+    },
   });
 
   const { copyMessageText } = useChatClipboardEffects({
-    addErrorBubble: (message) => {
-      addErrorBubble(message);
+    deps: {
+      addErrorBubble,
+      dispatch,
     },
-    copyFeedbackTimeoutRef,
-    dispatch,
+    refs: {
+      copyFeedbackTimeoutRef,
+    },
   });
 
   const { playMessageAudio, releaseAudioResources, stopPlayingAudio } = useChatAudioEffects({
-    addErrorBubble: (message) => {
-      addErrorBubble(message);
+    deps: {
+      addErrorBubble,
+      dispatch,
     },
-    audioElementRef,
-    audioUrlRef,
-    dispatch,
-    playingMessageId: state.audioPlayback.playingMessageId,
+    refs: {
+      audioElementRef,
+      audioUrlRef,
+    },
+    runtime: {
+      playingMessageId: state.audioPlayback.playingMessageId,
+    },
   });
 
   const { toggleRecording } = useChatRecordingEffects({
-    addErrorBubble: (message) => {
-      addErrorBubble(message);
+    deps: {
+      addErrorBubble,
+      dispatch,
     },
-    dispatch,
-    isRecording: state.recording.isRecording,
-    isTranscribing: state.recording.isTranscribing,
-    mediaRecorderRef,
-    mediaStreamRef,
-    recordedChunksRef,
+    recording: {
+      isRecording: state.recording.isRecording,
+      isTranscribing: state.recording.isTranscribing,
+    },
+    refs: {
+      mediaRecorderRef,
+      mediaStreamRef,
+      recordedChunksRef,
+    },
   });
 
   const clearLocalState = useCallback(() => {

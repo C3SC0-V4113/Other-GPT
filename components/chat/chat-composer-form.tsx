@@ -1,25 +1,17 @@
 'use client';
 
-import { ImagePlus, Mic, Plus } from 'lucide-react';
-
 import { useChatComposer } from '@/components/chat/chat-composer-provider';
 import {
   ComposerActionsRow,
+  ComposerMicButton,
   ComposerModeBadge,
+  ComposerPlusMenu,
   ComposerRatioSelect,
   ComposerSubmitButton,
   ComposerToolbar,
 } from '@/components/chat/composer';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 function ComposerRoot({ children }: { children: React.ReactNode }) {
   return <div className="flex flex-col gap-2">{children}</div>;
@@ -50,69 +42,6 @@ function ComposerInput({
       rows={1}
       value={value}
     />
-  );
-}
-
-function ComposerPlusMenu({
-  isSubmitting,
-  onToggleImageMode,
-}: {
-  isSubmitting: boolean;
-  onToggleImageMode: () => void;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button disabled={isSubmitting} size="icon-sm" type="button" variant="outline">
-              <Plus />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={onToggleImageMode}>
-              <ImagePlus />
-              <span>Generar imagenes</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TooltipTrigger>
-      <TooltipContent sideOffset={6}>Opciones del composer</TooltipContent>
-    </Tooltip>
-  );
-}
-
-function ComposerMicButton({
-  isRecording,
-  isSubmitting,
-  isTranscribing,
-  onToggleRecording,
-}: {
-  isRecording: boolean;
-  isSubmitting: boolean;
-  isTranscribing: boolean;
-  onToggleRecording: () => Promise<void>;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          aria-label={isRecording ? 'Detener dictado' : 'Iniciar dictado'}
-          disabled={isSubmitting || isTranscribing}
-          onClick={() => {
-            void onToggleRecording();
-          }}
-          size="icon-sm"
-          type="button"
-          variant={isRecording ? 'destructive' : 'outline'}
-        >
-          <Mic />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent sideOffset={6}>
-        {isRecording ? 'Detener dictado' : 'Iniciar dictado'}
-      </TooltipContent>
-    </Tooltip>
   );
 }
 

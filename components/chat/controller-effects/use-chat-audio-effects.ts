@@ -7,20 +7,24 @@ import type { ChatAction } from '@/components/chat/chat-controller-actions';
 import type { Dispatch, MutableRefObject } from 'react';
 
 interface UseChatAudioEffectsParams {
-  addErrorBubble: (message: string) => void;
-  audioElementRef: MutableRefObject<HTMLAudioElement | null>;
-  audioUrlRef: MutableRefObject<string | null>;
-  dispatch: Dispatch<ChatAction>;
-  playingMessageId: string | null;
+  deps: {
+    addErrorBubble: (message: string) => void;
+    dispatch: Dispatch<ChatAction>;
+  };
+  refs: {
+    audioElementRef: MutableRefObject<HTMLAudioElement | null>;
+    audioUrlRef: MutableRefObject<string | null>;
+  };
+  runtime: {
+    playingMessageId: string | null;
+  };
 }
 
-export function useChatAudioEffects({
-  addErrorBubble,
-  audioElementRef,
-  audioUrlRef,
-  dispatch,
-  playingMessageId,
-}: UseChatAudioEffectsParams) {
+export function useChatAudioEffects({ deps, refs, runtime }: UseChatAudioEffectsParams) {
+  const { addErrorBubble, dispatch } = deps;
+  const { audioElementRef, audioUrlRef } = refs;
+  const { playingMessageId } = runtime;
+
   const releaseAudioResources = useCallback(() => {
     if (audioElementRef.current) {
       audioElementRef.current.pause();

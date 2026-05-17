@@ -1,69 +1,93 @@
-# ADR 0003: Chat v2 Reducer + Providers + Composición
+# ADR 0003: Chat v2 Reducer + Providers + Composition
 
 - Date: 2026-05-16
+- Updated: 2026-05-17
 - Status: Accepted
 
 ## Context
 
-El controller previo del chat concentraba demasiada responsabilidad:
+The previous chat controller concentrated too much responsibility:
 
-- estado UI y side effects de chat, imagen, STT y TTS en un solo hook grande,
-- lógica condicional extensa en el render de mensajes,
-- crecimiento del composer sin una frontera de estado propia.
+- UI state and side effects for chat, image, STT, and TTS in a single large hook.
+- Deep conditional rendering in message views.
+- Composer growth without clear state boundaries.
 
-Esto incrementaba costo de mantenimiento, riesgo de regresiones y re-renders innecesarios.
+This increased maintenance cost, re-render risk, and regression probability.
 
 ## Decision
 
-Se adopta Chat v2 con arquitectura por dominios:
+Chat v2 uses a domain-driven structure:
 
-1. Estado central con `useReducer`
+1. Central state with `useReducer`
 
-- Estado segmentado en slices: `messages`, `request`, `composer`, `audioPlayback`, `recording`, `feedback`.
-- Acciones discriminadas y transiciones explícitas por dominio.
+- State slices: `messages`, `request`, `composer`, `audioPlayback`, `recording`, `feedback`.
+- Discriminated actions and explicit transitions per slice.
 
-2. Providers por responsabilidad
+2. Providers by responsibility
 
-- `ChatProvider`: orquesta reducer y side effects (streaming, imagen, STT, TTS, abort/retry/copy).
-- `ChatComposerProvider`: expone estado/acciones del composer para aislar input + toolbar de otras vistas.
+- `ChatProvider`: reducer orchestration + side effects (streaming, image, STT, TTS, abort/retry/copy).
+- `ChatComposerProvider`: composer-focused state/actions for input and toolbar.
 
-3. Hooks de lectura/acción por dominio
+3. Hooks by domain
 
-- `useChatMessages`
-- `useChatRuntime`
-- `useChatComposerState`
-- `useChatAudioActions`
+- Reader/action hooks: `useChatMessages`, `useChatRuntime`, `useChatComposerState`, `useChatAudioActions`.
+- Side-effect hooks are grouped under `components/chat/controller-effects`.
 
-4. Render compuesto de mensajes
+4. Composed message rendering
 
-- Variantes explícitas:
+- Explicit variants:
   - `MessageBubble.UserText`
   - `MessageBubble.AssistantText`
   - `MessageBubble.AssistantImage`
   - `MessageBubble.SystemError`
-- Se mantiene `ChatBubble.*` como infraestructura base.
+- `ChatBubble.*` remains the base UI infrastructure.
 
-5. Contratos DTO y parsers compartidos
+5. DTO/parsing boundaries
 
-- Se centralizan parsers/guards en `lib/chat-dtos.ts`.
-- `unknown` queda restringido a fronteras I/O (request/response parsing).
+- Parsers/guards are centralized in `lib/chat-dtos.ts`.
+- `unknown` is restricted to I/O boundaries only.
+
+## Operational policies (2026-05-17 hardening)
+
+1. Composer composition policy
+
+- `ChatComposerForm` is the context consumer/orchestrator.
+- Child components follow two levels:
+  - layout primitives are presentational only,
+  - feature controls receive minimal UI/action props only.
+- Passing props to presentational children is valid.
+- Anti-pattern: passing whole context objects or redundant global state down the tree.
+
+2. Side-effect injection policy
+
+- Side-effect hooks keep explicit dependency injection (`dispatch`, refs, runtime flags).
+- Dependencies may be grouped by typed domain objects (`deps`, `refs`, `request`, etc.) only to reduce signature noise.
+- Hidden dependency through extra internal context is not allowed.
+
+3. Barrel policy for chat domain
+
+- Barrels are allowed only for local domain modules:
+  - `components/chat/composer/index.ts`
+  - `components/chat/chat-controller-reducers/index.ts`
+  - `components/chat/controller-effects/index.ts`
+- No global catch-all barrel for `components/chat/*`.
+- Outside the local domain, prefer specific imports to preserve analyzable paths and avoid broad bundle coupling.
 
 ## Consequences
 
-### Positivas
+### Positive
 
-- Menor complejidad accidental por separación de responsabilidades.
-- Mejor legibilidad para evolución de funcionalidades multimodales.
-- Menor acoplamiento entre composer y render de mensajes.
-- Tipado más robusto en borde de API.
+- Lower accidental complexity by clearer boundaries.
+- Better maintainability for multimodal chat growth.
+- Stronger internal contracts for composition and side effects.
 
 ### Tradeoffs
 
-- Más módulos y contratos internos que coordinar.
-- Mayor disciplina para mantener acciones/reducer alineados con side effects.
+- More modules and typed wiring to maintain.
+- Requires discipline to keep reducer/actions/effects aligned.
 
-## Relación con otros documentos
+## Related documents
 
-- `README.md`: arquitectura server-first y mapa funcional del chat.
-- `DESIGN.md`: patrón compuesto de burbujas y consistencia visual.
-- `AGENTS.md`: quality gates y políticas operativas.
+- `README.md`: server-first architecture and chat behavior map.
+- `DESIGN.md`: UI and composition visual conventions.
+- `AGENTS.md`: quality gates and operational rules.

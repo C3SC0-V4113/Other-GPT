@@ -8,22 +8,28 @@ import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
 import type { Dispatch, MutableRefObject } from 'react';
 
 interface UseChatImageEffectsParams {
-  addErrorBubble: (message: string) => void;
-  dispatch: Dispatch<ChatAction>;
-  isSubmitting: boolean;
-  isManualStopRequestedRef: MutableRefObject<boolean>;
-  requestAbortControllerRef: MutableRefObject<AbortController | null>;
-  selectedImageAspectRatio: ChatImageAspectRatio;
+  deps: {
+    addErrorBubble: (message: string) => void;
+    dispatch: Dispatch<ChatAction>;
+  };
+  refs: {
+    isManualStopRequestedRef: MutableRefObject<boolean>;
+    requestAbortControllerRef: MutableRefObject<AbortController | null>;
+  };
+  request: {
+    isSubmitting: boolean;
+  };
+  composer: {
+    selectedImageAspectRatio: ChatImageAspectRatio;
+  };
 }
 
-export function useChatImageEffects({
-  addErrorBubble,
-  dispatch,
-  isSubmitting,
-  isManualStopRequestedRef,
-  requestAbortControllerRef,
-  selectedImageAspectRatio,
-}: UseChatImageEffectsParams) {
+export function useChatImageEffects({ composer, deps, refs, request }: UseChatImageEffectsParams) {
+  const { addErrorBubble, dispatch } = deps;
+  const { isManualStopRequestedRef, requestAbortControllerRef } = refs;
+  const { isSubmitting } = request;
+  const { selectedImageAspectRatio } = composer;
+
   const sendImageMessage = useCallback(
     async (trimmedInput: string) => {
       if (!trimmedInput || isSubmitting) {

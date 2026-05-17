@@ -7,28 +7,33 @@ import type { ChatAction } from '@/components/chat/chat-controller-actions';
 import type { Dispatch, MutableRefObject } from 'react';
 
 interface UseChatStreamEffectsParams {
-  addErrorBubble: (message: string, options?: { retryPrompt?: string }) => void;
-  addInterruptedStateOnManualStop: boolean;
-  dispatch: Dispatch<ChatAction>;
-  isManualStopRequestedRef: MutableRefObject<boolean>;
-  isSubmitting: boolean;
-  pendingAssistantMessageId: string | null;
-  requestAbortControllerRef: MutableRefObject<AbortController | null>;
+  deps: {
+    addErrorBubble: (message: string, options?: { retryPrompt?: string }) => void;
+    dispatch: Dispatch<ChatAction>;
+  };
+  options: {
+    isManualStopRetryEnabled: boolean;
+  };
+  refs: {
+    isManualStopRequestedRef: MutableRefObject<boolean>;
+    requestAbortControllerRef: MutableRefObject<AbortController | null>;
+  };
+  request: {
+    isSubmitting: boolean;
+    pendingAssistantMessageId: string | null;
+  };
 }
 
 interface SendChatMessageParams {
   trimmedInput: string;
 }
 
-export function useChatStreamEffects({
-  addErrorBubble,
-  addInterruptedStateOnManualStop,
-  dispatch,
-  isManualStopRequestedRef,
-  isSubmitting,
-  pendingAssistantMessageId,
-  requestAbortControllerRef,
-}: UseChatStreamEffectsParams) {
+export function useChatStreamEffects({ deps, options, refs, request }: UseChatStreamEffectsParams) {
+  const { addErrorBubble, dispatch } = deps;
+  const { isManualStopRetryEnabled } = options;
+  const { isManualStopRequestedRef, requestAbortControllerRef } = refs;
+  const { isSubmitting, pendingAssistantMessageId } = request;
+
   const abortPendingRequest = useCallback(() => {
     const controller = requestAbortControllerRef.current;
 
@@ -149,7 +154,7 @@ export function useChatStreamEffects({
         }
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
-          if (addInterruptedStateOnManualStop && isManualStopRequestedRef.current) {
+          if (isManualStopRetryEnabled && isManualStopRequestedRef.current) {
             dispatch({ payload: trimmedInput, type: 'messages/set-last-failed-prompt' });
 
             if (!assistantContent) {
@@ -188,7 +193,7 @@ export function useChatStreamEffects({
     },
     [
       addErrorBubble,
-      addInterruptedStateOnManualStop,
+      isManualStopRetryEnabled,
       dispatch,
       isManualStopRequestedRef,
       isSubmitting,

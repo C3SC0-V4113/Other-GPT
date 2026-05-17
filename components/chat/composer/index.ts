@@ -1,5 +1,7 @@
 export * from './composer-actions-row';
+export * from './composer-mic-button';
 export * from './composer-mode-badge';
+export * from './composer-plus-menu';
 export * from './composer-ratio-select';
 export * from './composer-submit-button';
 export * from './composer-toolbar';

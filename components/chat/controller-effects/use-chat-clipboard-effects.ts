@@ -4,16 +4,19 @@ import type { ChatAction } from '@/components/chat/chat-controller-actions';
 import type { Dispatch, MutableRefObject } from 'react';
 
 interface UseChatClipboardEffectsParams {
-  addErrorBubble: (message: string) => void;
-  copyFeedbackTimeoutRef: MutableRefObject<number | null>;
-  dispatch: Dispatch<ChatAction>;
+  deps: {
+    addErrorBubble: (message: string) => void;
+    dispatch: Dispatch<ChatAction>;
+  };
+  refs: {
+    copyFeedbackTimeoutRef: MutableRefObject<number | null>;
+  };
 }
 
-export function useChatClipboardEffects({
-  addErrorBubble,
-  copyFeedbackTimeoutRef,
-  dispatch,
-}: UseChatClipboardEffectsParams) {
+export function useChatClipboardEffects({ deps, refs }: UseChatClipboardEffectsParams) {
+  const { addErrorBubble, dispatch } = deps;
+  const { copyFeedbackTimeoutRef } = refs;
+
   const copyMessageText = useCallback(
     async (messageId: string, messageText: string) => {
       if (!messageText.trim()) {
