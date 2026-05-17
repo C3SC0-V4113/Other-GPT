@@ -24,13 +24,15 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
   - `app/page.tsx` compone header, selector de tema y chat.
   - `components/chat/chat-header.tsx` mantiene markup server-side.
 - Estado y comportamiento:
-  - `components/chat/use-chat-controller.ts` contiene envio, streaming, stop, retry y clear.
-  - `components/chat/chat-controller-provider.tsx` expone contexto.
+  - `components/chat/chat-controller-reducer.ts` define estado y acciones por dominio.
+  - `components/chat/chat-controller-provider.tsx` orquesta side effects y hooks por dominio.
+  - `components/chat/chat-composer-provider.tsx` encapsula estado/acciones del composer.
 - Render de conversacion:
   - `components/chat/chat-messages-view.tsx` gestiona listado y autoscroll.
+  - `components/chat/chat-message-bubbles.tsx` define variantes compuestas por tipo de burbuja.
   - `components/chat/chat-bubble.tsx` define infraestructura compuesta (`Root`, `Header`, `Body`, `Footer`, `Actions`, `Action`).
 - Entrada de usuario:
-  - `components/chat/chat-composer-form.tsx` usa boton toggle `Send/Stop`, menu `+` para modo imagen y boton de dictado.
+  - `components/chat/chat-composer-form.tsx` usa composición explícita del composer con controles shadcn (badge/select/tooltip/separator).
 
 ## Capacidades multimodales
 

@@ -22,3 +22,4 @@ Este directorio contiene Architecture Decision Records (ADR) del proyecto.
 
 - [0001-current-architecture.md](./0001-current-architecture.md)
 - [0002-multimodal-chat-capabilities.md](./0002-multimodal-chat-capabilities.md)
+- [0003-chat-v2-reducer-providers-composition.md](./0003-chat-v2-reducer-providers-composition.md)

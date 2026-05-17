@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
+import { parseChatRequestBody } from '@/lib/chat-dtos';
 import {
   appendSessionMessage,
   CHAT_SESSION_COOKIE_NAME,
@@ -9,10 +10,6 @@ import {
 } from '@/lib/chat-session-store';
 
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-
-interface ChatRequestBody {
-  message?: unknown;
-}
 
 function getAssistantMessageText(chunk: OpenAI.ChatCompletionChunk): string {
   return chunk.choices[0]?.delta?.content ?? '';
@@ -34,20 +31,21 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'OPENAI_API_KEY is missing.' }, { status: 500 });
   }
 
-  let body: ChatRequestBody;
+  let body: unknown;
 
   try {
-    body = (await request.json()) as ChatRequestBody;
+    body = await request.json();
   } catch {
     return Response.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
-  const rawMessage = typeof body.message === 'string' ? body.message : '';
-  const userMessage = rawMessage.trim();
+  const parsedBody = parseChatRequestBody(body);
 
-  if (!userMessage) {
-    return Response.json({ error: 'Message is required.' }, { status: 400 });
+  if (!parsedBody.ok) {
+    return Response.json({ error: parsedBody.error }, { status: 400 });
   }
+
+  const userMessage = parsedBody.data.message;
 
   const cookieStore = await cookies();
   const existingSessionId = cookieStore.get(CHAT_SESSION_COOKIE_NAME)?.value;

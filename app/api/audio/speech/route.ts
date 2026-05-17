@@ -1,28 +1,27 @@
 import OpenAI from 'openai';
 
-interface SpeechRequestBody {
-  text?: unknown;
-}
+import { parseSpeechRequestBody } from '@/lib/chat-dtos';
 
 export async function POST(request: Request): Promise<Response> {
   if (!process.env.OPENAI_API_KEY) {
     return Response.json({ error: 'OPENAI_API_KEY is missing.' }, { status: 500 });
   }
 
-  let body: SpeechRequestBody;
+  let body: unknown;
 
   try {
-    body = (await request.json()) as SpeechRequestBody;
+    body = await request.json();
   } catch {
     return Response.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
-  const rawText = typeof body.text === 'string' ? body.text : '';
-  const text = rawText.trim();
+  const parsedBody = parseSpeechRequestBody(body);
 
-  if (!text) {
-    return Response.json({ error: 'Text is required.' }, { status: 400 });
+  if (!parsedBody.ok) {
+    return Response.json({ error: parsedBody.error }, { status: 400 });
   }
+
+  const { text } = parsedBody.data;
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const model = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts';

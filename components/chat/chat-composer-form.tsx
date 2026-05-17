@@ -1,8 +1,9 @@
 'use client';
 
-import { ImagePlus, Mic, Plus, X } from 'lucide-react';
+import { ImagePlus, Mic, Plus, Send, Square, X } from 'lucide-react';
 
-import { useChatControllerContext } from '@/components/chat/chat-controller-provider';
+import { useChatComposer } from '@/components/chat/chat-composer-provider';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,129 +11,200 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+
+import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
+
+function ComposerRoot({ children }: { children: React.ReactNode }) {
+  return <div className="flex flex-col gap-2">{children}</div>;
+}
+
+function ComposerToolbar({ children }: { children: React.ReactNode }) {
+  return <div className="flex items-center gap-2">{children}</div>;
+}
+
+function ComposerInput({
+  isDisabled,
+  isImageMode,
+  onKeyDown,
+  onValueChange,
+  value,
+}: {
+  isDisabled: boolean;
+  isImageMode: boolean;
+  onKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  onValueChange: (value: string) => void;
+  value: string;
+}) {
+  return (
+    <Textarea
+      disabled={isDisabled}
+      name="message"
+      onChange={(event) => {
+        onValueChange(event.target.value);
+      }}
+      onKeyDown={onKeyDown}
+      placeholder={isImageMode ? 'Describe la imagen a generar...' : 'Send a message...'}
+      rows={1}
+      value={value}
+    />
+  );
+}
+
+function ComposerActions({ children }: { children: React.ReactNode }) {
+  return <div className="flex items-end gap-2">{children}</div>;
+}
+
+const aspectRatioOptions: Array<{ label: string; value: ChatImageAspectRatio }> = [
+  { label: 'Auto', value: 'auto' },
+  { label: '1:1', value: '1:1' },
+  { label: '16:9', value: '16:9' },
+  { label: '9:16', value: '9:16' },
+];
 
 export function ChatComposerForm() {
   const {
-    isImageGenerationMode,
     input,
+    isImageGenerationMode,
     isRecording,
     isSendDisabled,
     isSubmitting,
     isTranscribing,
     selectedImageAspectRatio,
     sendMessage,
+    setInput,
+    setSelectedImageAspectRatio,
     stopGeneration,
     toggleImageGenerationMode,
     toggleRecording,
-    updateInput,
-    updateSelectedImageAspectRatio,
-  } = useChatControllerContext();
+  } = useChatComposer();
 
   return (
-    <div className="flex flex-col gap-2">
+    <ComposerRoot>
       {isImageGenerationMode ? (
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="xs"
-            onClick={toggleImageGenerationMode}
-            disabled={isSubmitting}
-          >
+        <ComposerToolbar>
+          <Badge variant="secondary" className="gap-1.5">
             <ImagePlus data-icon="inline-start" />
             Modo imagen
-            <X data-icon="inline-end" />
-          </Button>
+            <button
+              aria-label="Desactivar modo imagen"
+              className="rounded-full p-0.5 hover:bg-foreground/10"
+              onClick={toggleImageGenerationMode}
+              type="button"
+            >
+              <X />
+            </button>
+          </Badge>
 
-          <label className="text-xs text-muted-foreground" htmlFor="image-aspect-ratio">
-            Aspect ratio
-          </label>
-          <select
-            id="image-aspect-ratio"
-            value={selectedImageAspectRatio}
-            onChange={(event) => {
-              updateSelectedImageAspectRatio(
-                event.target.value as '1:1' | '16:9' | '9:16' | 'auto'
-              );
-            }}
-            className="h-7 rounded-4xl border border-border bg-background px-3 text-xs"
+          <Separator className="h-5" orientation="vertical" />
+
+          <Select
             disabled={isSubmitting}
+            onValueChange={(value) => {
+              setSelectedImageAspectRatio(value as ChatImageAspectRatio);
+            }}
+            value={selectedImageAspectRatio}
           >
-            <option value="auto">Auto</option>
-            <option value="1:1">1:1</option>
-            <option value="16:9">16:9</option>
-            <option value="9:16">9:16</option>
-          </select>
-        </div>
+            <SelectTrigger aria-label="Seleccionar aspect ratio" size="sm">
+              <SelectValue placeholder="Aspect ratio" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {aspectRatioOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </ComposerToolbar>
       ) : null}
 
-      <form
-        className="flex items-end gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void sendMessage();
-        }}
-      >
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button type="button" variant="outline" size="icon-sm" disabled={isSubmitting}>
-              <Plus />
+      <ComposerActions>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button disabled={isSubmitting} size="icon-sm" type="button" variant="outline">
+                  <Plus />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={toggleImageGenerationMode}>
+                  <ImagePlus />
+                  <span>Generar imágenes</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TooltipTrigger>
+          <TooltipContent sideOffset={6}>Opciones del composer</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              aria-label={isRecording ? 'Detener dictado' : 'Iniciar dictado'}
+              disabled={isSubmitting || isTranscribing}
+              onClick={() => {
+                void toggleRecording();
+              }}
+              size="icon-sm"
+              type="button"
+              variant={isRecording ? 'destructive' : 'outline'}
+            >
+              <Mic />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={toggleImageGenerationMode}>
-              <ImagePlus />
-              <span>Generar imágenes</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </TooltipTrigger>
+          <TooltipContent sideOffset={6}>
+            {isRecording ? 'Detener dictado' : 'Iniciar dictado'}
+          </TooltipContent>
+        </Tooltip>
 
-        <Button
-          type="button"
-          variant={isRecording ? 'destructive' : 'outline'}
-          size="icon-sm"
-          disabled={isSubmitting || isTranscribing}
-          onClick={() => {
-            void toggleRecording();
-          }}
-          aria-label={isRecording ? 'Detener dictado' : 'Iniciar dictado'}
-        >
-          <Mic />
-        </Button>
+        <Separator className="h-9" orientation="vertical" />
 
-        <Textarea
-          name="message"
-          placeholder={
-            isImageGenerationMode ? 'Describe la imagen a generar...' : 'Send a message...'
-          }
-          value={input}
-          onChange={(event) => {
-            updateInput(event.target.value);
-          }}
+        <ComposerInput
+          isDisabled={isSubmitting}
+          isImageMode={isImageGenerationMode}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
               event.preventDefault();
               void sendMessage();
             }
           }}
-          disabled={isSubmitting}
-          rows={1}
+          onValueChange={setInput}
+          value={input}
         />
 
-        <Button
-          type={isSubmitting ? 'button' : 'submit'}
-          variant={isSubmitting ? 'destructive' : 'default'}
-          disabled={isSubmitting ? false : isSendDisabled}
-          onClick={() => {
-            if (isSubmitting) {
-              stopGeneration();
-            }
-          }}
-        >
-          {isSubmitting ? 'Stop' : isImageGenerationMode ? 'Generar' : 'Send'}
-        </Button>
-      </form>
-    </div>
+        {isSubmitting ? (
+          <Button onClick={stopGeneration} type="button" variant="destructive">
+            <Square data-icon="inline-start" />
+            Stop
+          </Button>
+        ) : (
+          <Button
+            disabled={isSendDisabled}
+            onClick={() => {
+              void sendMessage();
+            }}
+            type="button"
+            variant="default"
+          >
+            <Send data-icon="inline-start" />
+            {isImageGenerationMode ? 'Generar' : 'Enviar'}
+          </Button>
+        )}
+      </ComposerActions>
+    </ComposerRoot>
   );
 }

@@ -4,14 +4,13 @@ import { Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { useChatControllerContext } from '@/components/chat/chat-controller-provider';
+import { useChatRuntime } from '@/components/chat/chat-controller-provider';
 import { Button } from '@/components/ui/button';
 
 export function ChatClearSessionButton() {
-  const router = useRouter();
+  const { refresh } = useRouter();
   const [isClearing, setIsClearing] = useState(false);
-  const { abortPendingRequest, addErrorBubble, clearLocalState, isSubmitting } =
-    useChatControllerContext();
+  const { abortPendingRequest, addErrorBubble, clearLocalState, isSubmitting } = useChatRuntime();
 
   const handleClear = async () => {
     if (isClearing) {
@@ -29,7 +28,7 @@ export function ChatClearSessionButton() {
       }
 
       clearLocalState();
-      router.refresh();
+      refresh();
     } catch {
       addErrorBubble('Unable to clear the chat right now.');
     } finally {

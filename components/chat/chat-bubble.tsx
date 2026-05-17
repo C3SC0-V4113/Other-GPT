@@ -4,9 +4,8 @@ import { type ComponentProps } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export type ChatBubbleKind = 'error' | 'message';
-export type ChatBubbleRole = 'assistant' | 'system' | 'user';
-export type ChatBubbleState = 'complete' | 'error' | 'interrupted' | 'streaming';
+type ChatBubbleRole = 'assistant' | 'system' | 'user';
+type ChatBubbleState = 'complete' | 'error' | 'interrupted' | 'streaming';
 
 const chatBubbleRootVariants = cva(
   'max-w-[85%] rounded-2xl border px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap',

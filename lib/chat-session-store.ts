@@ -1,6 +1,5 @@
 export const CHAT_SESSION_COOKIE_NAME = 'otro_gpt_session_id';
 
-export type ChatRole = 'assistant' | 'user';
 export type ChatImageAspectRatio = '1:1' | '16:9' | '9:16' | 'auto';
 
 export interface ChatTextMessageContent {
@@ -16,11 +15,9 @@ export interface ChatImageMessageContent {
   type: 'image';
 }
 
-export type ChatMessageContent = ChatImageMessageContent | ChatTextMessageContent;
-
 export interface ChatMessage {
-  content: ChatMessageContent;
-  role: ChatRole;
+  content: ChatImageMessageContent | ChatTextMessageContent;
+  role: 'assistant' | 'user';
 }
 
 type SessionStore = Map<string, ChatMessage[]>;

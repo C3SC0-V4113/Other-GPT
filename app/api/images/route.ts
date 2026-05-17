@@ -1,20 +1,10 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
-import {
-  appendSessionMessage,
-  CHAT_SESSION_COOKIE_NAME,
-  type ChatImageAspectRatio,
-} from '@/lib/chat-session-store';
+import { parseGenerateImageRequestBody } from '@/lib/chat-dtos';
+import { appendSessionMessage, CHAT_SESSION_COOKIE_NAME } from '@/lib/chat-session-store';
 
-interface GenerateImageRequestBody {
-  aspectRatio?: unknown;
-  prompt?: unknown;
-}
-
-function isAspectRatio(value: unknown): value is ChatImageAspectRatio {
-  return value === 'auto' || value === '1:1' || value === '16:9' || value === '9:16';
-}
+import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
 
 function getImageSizeFromAspectRatio(
   aspectRatio: ChatImageAspectRatio
@@ -51,26 +41,21 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'OPENAI_API_KEY is missing.' }, { status: 500 });
   }
 
-  let body: GenerateImageRequestBody;
+  let body: unknown;
 
   try {
-    body = (await request.json()) as GenerateImageRequestBody;
+    body = await request.json();
   } catch {
     return Response.json({ error: 'Invalid JSON body.' }, { status: 400 });
   }
 
-  const rawPrompt = typeof body.prompt === 'string' ? body.prompt : '';
-  const prompt = rawPrompt.trim();
+  const parsedBody = parseGenerateImageRequestBody(body);
 
-  if (!prompt) {
-    return Response.json({ error: 'Prompt is required.' }, { status: 400 });
+  if (!parsedBody.ok) {
+    return Response.json({ error: parsedBody.error }, { status: 400 });
   }
 
-  if (!isAspectRatio(body.aspectRatio)) {
-    return Response.json({ error: 'Invalid aspect ratio.' }, { status: 400 });
-  }
-
-  const aspectRatio = body.aspectRatio;
+  const { aspectRatio, prompt } = parsedBody.data;
   const cookieStore = await cookies();
   const existingSessionId = cookieStore.get(CHAT_SESSION_COOKIE_NAME)?.value;
   const sessionId = existingSessionId ?? crypto.randomUUID();
