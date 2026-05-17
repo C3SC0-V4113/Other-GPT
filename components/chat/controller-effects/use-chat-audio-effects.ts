@@ -4,7 +4,7 @@ import { getErrorMessage } from '@/components/chat/chat-controller-errors';
 import { parseApiErrorMessage } from '@/lib/chat-dtos';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
-import type { Dispatch, MutableRefObject } from 'react';
+import type { Dispatch, RefObject } from 'react';
 
 interface UseChatAudioEffectsParams {
   deps: {
@@ -12,8 +12,8 @@ interface UseChatAudioEffectsParams {
     dispatch: Dispatch<ChatAction>;
   };
   refs: {
-    audioElementRef: MutableRefObject<HTMLAudioElement | null>;
-    audioUrlRef: MutableRefObject<string | null>;
+    audioElementRef: RefObject<HTMLAudioElement | null>;
+    audioUrlRef: RefObject<string | null>;
   };
   runtime: {
     playingMessageId: string | null;

@@ -4,7 +4,7 @@ import { getErrorMessage } from '@/components/chat/chat-controller-errors';
 import { parseApiErrorMessage } from '@/lib/chat-dtos';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
-import type { Dispatch, MutableRefObject } from 'react';
+import type { Dispatch, RefObject } from 'react';
 
 interface UseChatStreamEffectsParams {
   deps: {
@@ -15,8 +15,8 @@ interface UseChatStreamEffectsParams {
     isManualStopRetryEnabled: boolean;
   };
   refs: {
-    isManualStopRequestedRef: MutableRefObject<boolean>;
-    requestAbortControllerRef: MutableRefObject<AbortController | null>;
+    isManualStopRequestedRef: RefObject<boolean>;
+    requestAbortControllerRef: RefObject<AbortController | null>;
   };
   request: {
     isSubmitting: boolean;

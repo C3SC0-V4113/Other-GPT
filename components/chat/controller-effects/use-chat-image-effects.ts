@@ -5,7 +5,7 @@ import { parseApiErrorMessage, parseGenerateImageResponse } from '@/lib/chat-dto
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
 import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
-import type { Dispatch, MutableRefObject } from 'react';
+import type { Dispatch, RefObject } from 'react';
 
 interface UseChatImageEffectsParams {
   deps: {
@@ -13,8 +13,8 @@ interface UseChatImageEffectsParams {
     dispatch: Dispatch<ChatAction>;
   };
   refs: {
-    isManualStopRequestedRef: MutableRefObject<boolean>;
-    requestAbortControllerRef: MutableRefObject<AbortController | null>;
+    isManualStopRequestedRef: RefObject<boolean>;
+    requestAbortControllerRef: RefObject<AbortController | null>;
   };
   request: {
     isSubmitting: boolean;

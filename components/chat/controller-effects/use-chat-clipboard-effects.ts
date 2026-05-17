@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
-import type { Dispatch, MutableRefObject } from 'react';
+import type { Dispatch, RefObject } from 'react';
 
 interface UseChatClipboardEffectsParams {
   deps: {
@@ -9,7 +9,7 @@ interface UseChatClipboardEffectsParams {
     dispatch: Dispatch<ChatAction>;
   };
   refs: {
-    copyFeedbackTimeoutRef: MutableRefObject<number | null>;
+    copyFeedbackTimeoutRef: RefObject<number | null>;
   };
 }
 

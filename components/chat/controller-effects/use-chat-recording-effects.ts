@@ -4,7 +4,7 @@ import { getErrorMessage } from '@/components/chat/chat-controller-errors';
 import { parseApiErrorMessage, parseTranscriptionResponse } from '@/lib/chat-dtos';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
-import type { Dispatch, MutableRefObject } from 'react';
+import type { Dispatch, RefObject } from 'react';
 
 interface UseChatRecordingEffectsParams {
   deps: {
@@ -16,9 +16,9 @@ interface UseChatRecordingEffectsParams {
     isTranscribing: boolean;
   };
   refs: {
-    mediaRecorderRef: MutableRefObject<MediaRecorder | null>;
-    mediaStreamRef: MutableRefObject<MediaStream | null>;
-    recordedChunksRef: MutableRefObject<BlobPart[]>;
+    mediaRecorderRef: RefObject<MediaRecorder | null>;
+    mediaStreamRef: RefObject<MediaStream | null>;
+    recordedChunksRef: RefObject<BlobPart[]>;
   };
 }
 
