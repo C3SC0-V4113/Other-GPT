@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono, Montserrat } from 'next/font/google';
+import Script from 'next/script';
 
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { cn } from '@/lib/utils';
@@ -43,6 +44,13 @@ export default function RootLayout({
       )}
     >
       <body className="flex min-h-full flex-col">
+        {process.env.NODE_ENV === 'development' ? (
+          <Script
+            src="https://unpkg.com/react-scan/dist/auto.global.js"
+            strategy="afterInteractive"
+            crossOrigin="anonymous"
+          />
+        ) : null}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
