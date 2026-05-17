@@ -15,7 +15,8 @@ These checks are mandatory for any agent making code or config changes in this r
 1. Run `npm run lint`.
 2. Run `npm run typecheck`.
 3. Run `npm run format:check`.
-4. Run `npm run check` as final gate before reporting completion.
+4. Run `npm run doctor`.
+5. Run `npm run check` as final gate before reporting completion.
 
 ### Next.js linting rule
 
@@ -26,10 +27,17 @@ These checks are mandatory for any agent making code or config changes in this r
 
 - If only documentation files were changed, at minimum run `npm run format:check`.
 - If dependencies or lint/tooling config changed, run `npm install` before validation.
+- `npm run check` includes `npm run doctor:ci`; React Doctor warnings are blocking (`--fail-on warning`).
 - If any required command cannot run, report:
   - the exact command,
   - the exact error,
   - what remains unverified.
+
+### Hooks and CI enforcement
+
+- `pre-commit` runs `npx lint-staged` and `npm run doctor:staged` for fast local feedback.
+- `pre-push` runs `npm run check` as the full blocking gate.
+- CI (`.github/workflows/quality.yml`) runs `npm run check`, so React Doctor policy is enforced in pull requests and pushes.
 
 ### Completion criteria
 

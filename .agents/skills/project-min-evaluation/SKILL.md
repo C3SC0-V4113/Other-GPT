@@ -12,12 +12,14 @@ Use this skill before declaring implementation tasks complete.
 1. Run `npm run lint`.
 2. Run `npm run typecheck`.
 3. Run `npm run format:check`.
-4. Run `npm run check` as the final gate.
+4. Run `npm run doctor`.
+5. Run `npm run check` as the final gate.
 
 ## Project constraints
 
 - Use ESLint CLI only (`npm run lint`, `npm run lint:fix`).
 - Do not use `next lint` (Next.js 16 project).
+- `npm run check` includes `npm run doctor:ci` and fails on React Doctor warnings.
 
 ## Conditional rules
 

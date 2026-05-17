@@ -3,11 +3,14 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier/flat';
 import importPlugin from 'eslint-plugin-import';
+import reactDoctor from 'eslint-plugin-react-doctor';
 import reactYouMightNotNeedAnEffect from 'eslint-plugin-react-you-might-not-need-an-effect';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  reactDoctor.configs.recommended,
+  reactDoctor.configs.next,
   reactYouMightNotNeedAnEffect.configs.recommended,
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
