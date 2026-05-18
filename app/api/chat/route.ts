@@ -1,7 +1,10 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
-import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
+import {
+  isKnownInferenceIncompatibleAttachment,
+  toChatAttachmentSnapshot,
+} from '@/lib/chat-attachments';
 import { parseChatRequestBody } from '@/lib/chat-dtos';
 import {
   appendSessionMessage,
@@ -9,7 +12,10 @@ import {
   clearSessionData,
   getSessionAttachments,
   getSessionMessages,
+  removeSessionAttachmentsByIds,
 } from '@/lib/chat-session-store';
+
+import type { ChatAttachment } from '@/lib/chat-attachments';
 
 async function deleteFilesFromOpenAI(fileIds: string[]): Promise<void> {
   if (!fileIds.length || !process.env.OPENAI_API_KEY) {
@@ -27,6 +33,46 @@ async function deleteFilesFromOpenAI(fileIds: string[]): Promise<void> {
       }
     })
   );
+}
+
+function getProviderErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return 'Unable to complete the request right now.';
+}
+
+function isInvalidFileProviderError(error: unknown): boolean {
+  const message = getProviderErrorMessage(error).toLowerCase();
+  return message.includes('invalid file');
+}
+
+async function removeKnownIncompatibleAttachmentsFromSession(
+  sessionId: string,
+  attachments: ChatAttachment[]
+): Promise<number> {
+  const incompatibleAttachmentIds = attachments.reduce<string[]>((accumulator, attachment) => {
+    if (
+      isKnownInferenceIncompatibleAttachment({
+        filename: attachment.name,
+        mimeType: attachment.mimeType,
+      })
+    ) {
+      accumulator.push(attachment.id);
+    }
+
+    return accumulator;
+  }, []);
+
+  const removedAttachments = removeSessionAttachmentsByIds(sessionId, incompatibleAttachmentIds);
+
+  if (!removedAttachments.length) {
+    return 0;
+  }
+
+  await deleteFilesFromOpenAI(removedAttachments.map((attachment) => attachment.fileId));
+  return removedAttachments.length;
 }
 
 function buildInputFromSessionMessages(
@@ -146,14 +192,46 @@ export async function POST(request: Request): Promise<Response> {
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+  let stream: Awaited<ReturnType<typeof openai.responses.create>>;
 
-  const stream = await openai.responses.create({
-    input: modelInput,
-    instructions:
-      'When using information from attached files, explicitly cite file names in square brackets, for example: [spec.pdf].',
-    model,
-    stream: true,
-  });
+  try {
+    stream = await openai.responses.create({
+      input: modelInput,
+      instructions:
+        'When using information from attached files, explicitly cite file names in square brackets, for example: [spec.pdf].',
+      model,
+      stream: true,
+    });
+  } catch (error) {
+    if (isInvalidFileProviderError(error)) {
+      const removedCount = await removeKnownIncompatibleAttachmentsFromSession(
+        sessionId,
+        activeAttachments
+      );
+
+      if (removedCount > 0) {
+        return Response.json(
+          {
+            error: 'Se removio un adjunto incompatible (por ejemplo SVG). Reintenta el mensaje.',
+          },
+          { status: 400 }
+        );
+      }
+
+      return Response.json(
+        {
+          error:
+            'Uno de los adjuntos fue rechazado por el proveedor de IA. Quitalo manualmente y reintenta.',
+        },
+        { status: 400 }
+      );
+    }
+
+    return Response.json(
+      { error: `No fue posible procesar el mensaje: ${getProviderErrorMessage(error)}` },
+      { status: 502 }
+    );
+  }
 
   const encoder = new TextEncoder();
   let assistantMessage = '';

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
 import { getErrorMessage } from '@/components/chat/chat-controller-errors';
-import { parseApiErrorMessage, parseGenerateImageResponse } from '@/lib/chat-dtos';
+import { parseApiErrorFromResponse, parseGenerateImageResponse } from '@/lib/chat-dtos';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
 import type { ChatAttachment } from '@/lib/chat-attachments';
@@ -58,8 +58,8 @@ export function useChatImageEffects({ composer, deps, refs, request }: UseChatIm
         });
 
         if (!response.ok) {
-          const payload = await response.json();
-          throw new Error(parseApiErrorMessage(payload) || 'Image request failed.');
+          const errorMessage = await parseApiErrorFromResponse(response, 'Image request failed.');
+          throw new Error(errorMessage);
         }
 
         const payload = await response.json();

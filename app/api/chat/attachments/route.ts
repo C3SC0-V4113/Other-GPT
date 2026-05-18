@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 
 import {
   getChatAttachmentKind,
+  isKnownInferenceIncompatibleAttachment,
   isSupportedChatAttachment,
   MAX_ATTACHMENTS_PER_SESSION,
   MAX_ATTACHMENTS_PER_UPLOAD,
@@ -74,6 +75,16 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   for (const file of files) {
+    if (isKnownInferenceIncompatibleAttachment({ filename: file.name, mimeType: file.type })) {
+      return Response.json(
+        {
+          error:
+            'SVG no esta soportado para contexto de IA en este momento. Usa PNG, JPG, WEBP o PDF.',
+        },
+        { status: 400 }
+      );
+    }
+
     if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
       return Response.json(
         {

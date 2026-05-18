@@ -19,7 +19,6 @@ const supportedAttachmentExtensions = new Set([
   'ppt',
   'pptx',
   'rtf',
-  'svg',
   'txt',
   'webp',
   'xls',
@@ -42,12 +41,14 @@ const supportedAttachmentMimeTypes = new Set([
   'image/gif',
   'image/jpeg',
   'image/png',
-  'image/svg+xml',
   'image/webp',
   'text/csv',
   'text/markdown',
   'text/plain',
 ]);
+
+const knownInferenceIncompatibleExtensions = new Set(['svg']);
+const knownInferenceIncompatibleMimeTypes = new Set(['image/svg+xml']);
 
 export type ChatAttachmentKind =
   | 'document'
@@ -170,6 +171,23 @@ export function isSupportedChatAttachment({
   const extension = getFileExtension(filename);
 
   return extension ? supportedAttachmentExtensions.has(extension) : false;
+}
+
+export function isKnownInferenceIncompatibleAttachment({
+  filename,
+  mimeType,
+}: {
+  filename: string;
+  mimeType: string;
+}): boolean {
+  const normalizedMimeType = mimeType.toLowerCase();
+
+  if (knownInferenceIncompatibleMimeTypes.has(normalizedMimeType)) {
+    return true;
+  }
+
+  const extension = getFileExtension(filename);
+  return extension ? knownInferenceIncompatibleExtensions.has(extension) : false;
 }
 
 export function toChatAttachmentSnapshot(attachment: ChatAttachment): ChatAttachmentSnapshot {

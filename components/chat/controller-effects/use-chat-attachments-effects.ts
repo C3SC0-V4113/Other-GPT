@@ -7,7 +7,7 @@ import {
   MAX_ATTACHMENTS_PER_UPLOAD,
   MAX_ATTACHMENT_SIZE_BYTES,
 } from '@/lib/chat-attachments';
-import { parseApiErrorMessage, parseUploadChatAttachmentsResponse } from '@/lib/chat-dtos';
+import { parseApiErrorFromResponse, parseUploadChatAttachmentsResponse } from '@/lib/chat-dtos';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
 import type { ChatAttachment } from '@/lib/chat-attachments';
@@ -116,8 +116,11 @@ export function useChatAttachmentsEffects({
         });
 
         if (!response.ok) {
-          const payload = await response.json();
-          throw new Error(parseApiErrorMessage(payload) || 'No fue posible subir archivos.');
+          const errorMessage = await parseApiErrorFromResponse(
+            response,
+            'No fue posible subir archivos.'
+          );
+          throw new Error(errorMessage);
         }
 
         const payload = await response.json();
@@ -174,8 +177,11 @@ export function useChatAttachmentsEffects({
         });
 
         if (!response.ok) {
-          const payload = await response.json();
-          throw new Error(parseApiErrorMessage(payload) || 'No fue posible eliminar el adjunto.');
+          const errorMessage = await parseApiErrorFromResponse(
+            response,
+            'No fue posible eliminar el adjunto.'
+          );
+          throw new Error(errorMessage);
         }
 
         dispatch({

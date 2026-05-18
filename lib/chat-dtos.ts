@@ -205,6 +205,34 @@ export function parseApiErrorMessage(payload: unknown): string | null {
   return trimmed || null;
 }
 
+export async function parseApiErrorFromResponse(
+  response: Response,
+  fallbackMessage: string
+): Promise<string> {
+  try {
+    const jsonPayload = (await response.clone().json()) as unknown;
+    const messageFromJson = parseApiErrorMessage(jsonPayload);
+
+    if (messageFromJson) {
+      return messageFromJson;
+    }
+  } catch {
+    // Ignore and continue with text parsing fallback.
+  }
+
+  try {
+    const responseText = (await response.text()).trim();
+
+    if (responseText) {
+      return responseText;
+    }
+  } catch {
+    // Ignore and continue with final fallback.
+  }
+
+  return `${fallbackMessage} (HTTP ${response.status})`;
+}
+
 function isChatAttachmentKind(value: unknown): value is ChatAttachmentKind {
   return (
     value === 'document' ||

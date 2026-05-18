@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
 import { getErrorMessage } from '@/components/chat/chat-controller-errors';
-import { parseApiErrorMessage } from '@/lib/chat-dtos';
+import { parseApiErrorFromResponse } from '@/lib/chat-dtos';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
 import type { ChatAttachment } from '@/lib/chat-attachments';
@@ -121,8 +121,8 @@ export function useChatStreamEffects({
         });
 
         if (!response.ok) {
-          const payload = await response.json();
-          throw new Error(parseApiErrorMessage(payload) || 'Request failed.');
+          const errorMessage = await parseApiErrorFromResponse(response, 'Request failed.');
+          throw new Error(errorMessage);
         }
 
         if (!response.body) {
