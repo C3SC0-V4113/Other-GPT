@@ -3,6 +3,7 @@
 import { useChatComposer } from '@/components/chat/chat-composer-provider';
 import {
   ComposerActionsRow,
+  ComposerAttachmentsUploader,
   ComposerMicButton,
   ComposerModeBadge,
   ComposerPlusMenu,
@@ -48,12 +49,16 @@ function ComposerInput({
 export function ChatComposerForm() {
   const {
     input,
+    attachments,
+    addFilesAsAttachments,
+    errorMessage,
     isImageGenerationMode,
     isRecording,
     isSendDisabled,
     isSubmitting,
     isTranscribing,
     selectedImageAspectRatio,
+    removeAttachment,
     sendMessage,
     setInput,
     setSelectedImageAspectRatio,
@@ -61,7 +66,6 @@ export function ChatComposerForm() {
     toggleImageGenerationMode,
     toggleRecording,
   } = useChatComposer();
-
   return (
     <ComposerRoot>
       {isImageGenerationMode ? (
@@ -76,44 +80,55 @@ export function ChatComposerForm() {
         </ComposerToolbar>
       ) : null}
 
-      <ComposerActionsRow>
-        <ComposerPlusMenu
-          isSubmitting={isSubmitting}
-          onToggleImageMode={toggleImageGenerationMode}
-        />
+      <ComposerAttachmentsUploader
+        attachments={attachments}
+        errorMessage={errorMessage}
+        isSubmitting={isSubmitting}
+        onAddFiles={addFilesAsAttachments}
+        onRemoveAttachment={removeAttachment}
+      >
+        {({ openFileDialog }) => (
+          <ComposerActionsRow>
+            <ComposerPlusMenu
+              isSubmitting={isSubmitting}
+              onAddAttachments={openFileDialog}
+              onToggleImageMode={toggleImageGenerationMode}
+            />
 
-        <ComposerMicButton
-          isRecording={isRecording}
-          isSubmitting={isSubmitting}
-          isTranscribing={isTranscribing}
-          onToggleRecording={toggleRecording}
-        />
+            <ComposerMicButton
+              isRecording={isRecording}
+              isSubmitting={isSubmitting}
+              isTranscribing={isTranscribing}
+              onToggleRecording={toggleRecording}
+            />
 
-        <Separator className="h-9" orientation="vertical" />
+            <Separator className="h-9" orientation="vertical" />
 
-        <ComposerInput
-          isDisabled={isSubmitting}
-          isImageMode={isImageGenerationMode}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault();
-              void sendMessage();
-            }
-          }}
-          onValueChange={setInput}
-          value={input}
-        />
+            <ComposerInput
+              isDisabled={isSubmitting}
+              isImageMode={isImageGenerationMode}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault();
+                  void sendMessage();
+                }
+              }}
+              onValueChange={setInput}
+              value={input}
+            />
 
-        <ComposerSubmitButton
-          isImageGenerationMode={isImageGenerationMode}
-          isSendDisabled={isSendDisabled}
-          isSubmitting={isSubmitting}
-          onSend={() => {
-            void sendMessage();
-          }}
-          onStop={stopGeneration}
-        />
-      </ComposerActionsRow>
+            <ComposerSubmitButton
+              isImageGenerationMode={isImageGenerationMode}
+              isSendDisabled={isSendDisabled}
+              isSubmitting={isSubmitting}
+              onSend={() => {
+                void sendMessage();
+              }}
+              onStop={stopGeneration}
+            />
+          </ComposerActionsRow>
+        )}
+      </ComposerAttachmentsUploader>
     </ComposerRoot>
   );
 }

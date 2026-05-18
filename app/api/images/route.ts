@@ -1,8 +1,13 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
+import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
 import { parseGenerateImageRequestBody } from '@/lib/chat-dtos';
-import { appendSessionMessage, CHAT_SESSION_COOKIE_NAME } from '@/lib/chat-session-store';
+import {
+  appendSessionMessage,
+  CHAT_SESSION_COOKIE_NAME,
+  getSessionAttachments,
+} from '@/lib/chat-session-store';
 
 import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
 
@@ -24,16 +29,36 @@ function getImageSizeFromAspectRatio(
   return 'auto';
 }
 
-function getImageMimeType(outputFormat: 'jpeg' | 'png' | 'webp' | null | undefined): string {
-  if (outputFormat === 'jpeg') {
-    return 'image/jpeg';
+function getSessionId(cookieStore: Awaited<ReturnType<typeof cookies>>): string {
+  const existingSessionId = cookieStore.get(CHAT_SESSION_COOKIE_NAME)?.value;
+
+  if (existingSessionId) {
+    return existingSessionId;
   }
 
-  if (outputFormat === 'webp') {
-    return 'image/webp';
+  const nextSessionId = crypto.randomUUID();
+  cookieStore.set(CHAT_SESSION_COOKIE_NAME, nextSessionId, {
+    httpOnly: true,
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
+
+  return nextSessionId;
+}
+
+function getGeneratedImageBase64(response: OpenAI.Responses.Response): string | null {
+  for (const item of response.output) {
+    if (item.type !== 'image_generation_call') {
+      continue;
+    }
+
+    if (typeof item.result === 'string' && item.result) {
+      return item.result;
+    }
   }
 
-  return 'image/png';
+  return null;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -57,41 +82,52 @@ export async function POST(request: Request): Promise<Response> {
 
   const { aspectRatio, prompt } = parsedBody.data;
   const cookieStore = await cookies();
-  const existingSessionId = cookieStore.get(CHAT_SESSION_COOKIE_NAME)?.value;
-  const sessionId = existingSessionId ?? crypto.randomUUID();
-
-  if (!existingSessionId) {
-    cookieStore.set(CHAT_SESSION_COOKIE_NAME, sessionId, {
-      httpOnly: true,
-      path: '/',
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    });
-  }
+  const sessionId = getSessionId(cookieStore);
+  const activeAttachments = getSessionAttachments(sessionId);
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const model = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
+  const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+  const imageModel = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
   const size = getImageSizeFromAspectRatio(aspectRatio);
 
   try {
-    const imageRequest: Parameters<typeof openai.images.generate>[0] = {
+    const response = await openai.responses.create({
+      input: [
+        {
+          content: [
+            { text: prompt, type: 'input_text' },
+            ...activeAttachments.map((attachment) => {
+              const fileInput: { [key: string]: string } & { type: 'input_file' } = {
+                type: 'input_file',
+              };
+              fileInput['file_id'] = attachment.fileId;
+              return fileInput;
+            }),
+          ],
+          role: 'user',
+          type: 'message',
+        },
+      ],
       model,
-      prompt,
-      size,
-      stream: false,
-    };
-    imageRequest['output_format'] = 'png';
-    const response = await openai.images.generate(imageRequest);
+      tools: [
+        (() => {
+          const imageTool: {
+            model: string;
+            size: '1024x1024' | '1024x1536' | '1536x1024' | 'auto';
+            type: 'image_generation';
+            [key: string]: string;
+          } = {
+            model: imageModel,
+            size,
+            type: 'image_generation',
+          };
+          imageTool['output_format'] = 'png';
+          return imageTool;
+        })(),
+      ],
+    });
 
-    if (!('data' in response)) {
-      return Response.json(
-        { error: 'Image generation stream is not supported here.' },
-        { status: 502 }
-      );
-    }
-
-    const firstImage = response.data?.[0];
-    const imageBase64 = firstImage?.b64_json;
+    const imageBase64 = getGeneratedImageBase64(response);
 
     if (!imageBase64) {
       return Response.json(
@@ -100,17 +136,19 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    const mimeType = getImageMimeType('png');
-
     appendSessionMessage(sessionId, {
-      content: { text: prompt, type: 'text' },
+      content: {
+        attachments: activeAttachments.map((attachment) => toChatAttachmentSnapshot(attachment)),
+        text: prompt,
+        type: 'text',
+      },
       role: 'user',
     });
     appendSessionMessage(sessionId, {
       content: {
         aspectRatio,
         imageBase64,
-        mimeType,
+        mimeType: 'image/png',
         prompt,
         type: 'image',
       },
@@ -120,7 +158,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({
       aspectRatio,
       imageBase64,
-      mimeType,
+      mimeType: 'image/png',
       prompt,
     });
   } catch {

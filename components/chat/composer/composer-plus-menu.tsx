@@ -1,4 +1,4 @@
-import { ImagePlus, Plus } from 'lucide-react';
+import { ImagePlus, Paperclip, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -10,11 +10,16 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ComposerPlusMenuProps {
+  onAddAttachments: () => void;
   isSubmitting: boolean;
   onToggleImageMode: () => void;
 }
 
-export function ComposerPlusMenu({ isSubmitting, onToggleImageMode }: ComposerPlusMenuProps) {
+export function ComposerPlusMenu({
+  isSubmitting,
+  onAddAttachments,
+  onToggleImageMode,
+}: ComposerPlusMenuProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -25,6 +30,10 @@ export function ComposerPlusMenu({ isSubmitting, onToggleImageMode }: ComposerPl
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={onAddAttachments}>
+              <Paperclip />
+              <span>Adjuntar archivos</span>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={onToggleImageMode}>
               <ImagePlus />
               <span>Generar imagenes</span>

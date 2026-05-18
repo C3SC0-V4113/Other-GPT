@@ -1,3 +1,4 @@
+import type { ChatAttachment } from '@/lib/chat-attachments';
 import type {
   ChatImageAspectRatio,
   ChatImageMessageContent,
@@ -7,20 +8,32 @@ import type {
 export type ChatAction =
   | { type: 'audio/set-playing-message-id'; payload: string | null }
   | { type: 'audio/set-tts-loading-message-id'; payload: string | null }
+  | { type: 'composer/add-attachments'; payload: ChatAttachment[] }
+  | { type: 'composer/remove-attachment'; payload: { attachmentId: string } }
   | { type: 'composer/set-aspect-ratio'; payload: ChatImageAspectRatio }
   | { type: 'composer/set-image-mode'; payload: boolean }
   | { type: 'composer/set-input'; payload: string }
+  | { type: 'composer/set-attachments'; payload: ChatAttachment[] }
   | { type: 'composer/toggle-image-mode' }
   | { type: 'feedback/set-copied-message-id'; payload: string | null }
   | { type: 'feedback/set-error-message'; payload: string }
   | { type: 'messages/append-error'; payload: { message: string; retryPrompt?: string } }
   | {
       type: 'messages/append-image-exchange';
-      payload: { image: ChatImageMessageContent; prompt: string };
+      payload: {
+        image: ChatImageMessageContent;
+        prompt: string;
+        userAttachments: ChatAttachment[];
+      };
     }
   | {
       type: 'messages/append-user-and-pending-assistant';
-      payload: { assistantMessageId: string; requestMessageId: string; userMessage: string };
+      payload: {
+        assistantMessageId: string;
+        requestMessageId: string;
+        userAttachments: ChatAttachment[];
+        userMessage: string;
+      };
     }
   | { type: 'messages/clear-all' }
   | { type: 'messages/complete-assistant'; payload: { assistantMessageId: string } }

@@ -6,17 +6,19 @@ import { ChatProvider } from '@/components/chat/chat-controller-provider';
 import { ChatMessagesView } from '@/components/chat/chat-messages-view';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
+import type { ChatAttachment } from '@/lib/chat-attachments';
 import type { ChatMessage } from '@/lib/chat-session-store';
 import type { ReactNode } from 'react';
 
 interface ChatClientProps {
   children: ReactNode;
+  initialAttachments: ChatAttachment[];
   initialMessages: ChatMessage[];
 }
 
-export function ChatClient({ children, initialMessages }: ChatClientProps) {
+export function ChatClient({ children, initialAttachments, initialMessages }: ChatClientProps) {
   return (
-    <ChatProvider initialMessages={initialMessages}>
+    <ChatProvider initialAttachments={initialAttachments} initialMessages={initialMessages}>
       <TooltipProvider>
         <div className="flex min-h-0 flex-1 flex-col">
           {children}

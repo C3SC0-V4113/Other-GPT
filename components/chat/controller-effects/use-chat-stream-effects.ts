@@ -4,9 +4,13 @@ import { getErrorMessage } from '@/components/chat/chat-controller-errors';
 import { parseApiErrorMessage } from '@/lib/chat-dtos';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
+import type { ChatAttachment } from '@/lib/chat-attachments';
 import type { Dispatch, RefObject } from 'react';
 
 interface UseChatStreamEffectsParams {
+  composer: {
+    attachments: ChatAttachment[];
+  };
   deps: {
     addErrorBubble: (message: string, options?: { retryPrompt?: string }) => void;
     dispatch: Dispatch<ChatAction>;
@@ -28,8 +32,15 @@ interface SendChatMessageParams {
   trimmedInput: string;
 }
 
-export function useChatStreamEffects({ deps, options, refs, request }: UseChatStreamEffectsParams) {
+export function useChatStreamEffects({
+  composer,
+  deps,
+  options,
+  refs,
+  request,
+}: UseChatStreamEffectsParams) {
   const { addErrorBubble, dispatch } = deps;
+  const { attachments } = composer;
   const { isManualStopRetryEnabled } = options;
   const { isManualStopRequestedRef, requestAbortControllerRef } = refs;
   const { isSubmitting, pendingAssistantMessageId } = request;
@@ -87,6 +98,7 @@ export function useChatStreamEffects({ deps, options, refs, request }: UseChatSt
         payload: {
           assistantMessageId,
           requestMessageId,
+          userAttachments: attachments,
           userMessage: trimmedInput,
         },
         type: 'messages/append-user-and-pending-assistant',
@@ -193,6 +205,7 @@ export function useChatStreamEffects({ deps, options, refs, request }: UseChatSt
     },
     [
       addErrorBubble,
+      attachments,
       isManualStopRetryEnabled,
       dispatch,
       isManualStopRequestedRef,

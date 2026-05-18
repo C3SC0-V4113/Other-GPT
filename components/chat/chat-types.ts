@@ -1,3 +1,4 @@
+import type { ChatAttachment } from '@/lib/chat-attachments';
 import type {
   ChatImageAspectRatio,
   ChatImageMessageContent,
@@ -32,6 +33,7 @@ export interface ChatState {
     ttsLoadingMessageId: string | null;
   };
   composer: {
+    attachments: ChatAttachment[];
     input: string;
     isImageGenerationMode: boolean;
     selectedImageAspectRatio: ChatImageAspectRatio;
@@ -58,9 +60,11 @@ export interface ChatProviderValue {
   actions: {
     abortPendingRequest: () => void;
     addErrorBubble: (message: string, options?: { retryPrompt?: string }) => void;
+    addFilesAsAttachments: (files: File[]) => Promise<void>;
     clearLocalState: () => void;
     copyMessageText: (messageId: string, messageText: string) => Promise<void>;
     playMessageAudio: (messageId: string, messageText: string) => Promise<void>;
+    removeAttachment: (attachmentId: string) => Promise<void>;
     resetFromInitialMessages: () => void;
     retryLastFailedPrompt: () => Promise<void>;
     sendMessage: () => Promise<void>;

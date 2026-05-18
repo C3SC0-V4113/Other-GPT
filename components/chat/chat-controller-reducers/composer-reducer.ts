@@ -8,10 +8,27 @@ export function reduceComposerState(
   action: ChatAction
 ): ChatComposerState {
   switch (action.type) {
+    case 'composer/add-attachments':
+      return {
+        ...state,
+        attachments: [...state.attachments, ...action.payload],
+      };
+    case 'composer/remove-attachment':
+      return {
+        ...state,
+        attachments: state.attachments.filter(
+          (attachment) => attachment.id !== action.payload.attachmentId
+        ),
+      };
     case 'composer/set-aspect-ratio':
       return {
         ...state,
         selectedImageAspectRatio: action.payload,
+      };
+    case 'composer/set-attachments':
+      return {
+        ...state,
+        attachments: action.payload,
       };
     case 'composer/set-image-mode':
       return {
@@ -29,6 +46,12 @@ export function reduceComposerState(
         isImageGenerationMode: !state.isImageGenerationMode,
       };
     case 'messages/clear-all':
+      return {
+        ...state,
+        attachments: [],
+        input: '',
+        isImageGenerationMode: false,
+      };
     case 'messages/hydrate':
       return {
         ...state,

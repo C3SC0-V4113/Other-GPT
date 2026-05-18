@@ -16,6 +16,7 @@ import {
   createInitialChatState,
 } from '@/components/chat/chat-controller-reducer';
 import {
+  useChatAttachmentsEffects,
   useChatAudioEffects,
   useChatClipboardEffects,
   useChatImageEffects,
@@ -24,18 +25,31 @@ import {
 } from '@/components/chat/controller-effects';
 
 import type { ChatProviderValue } from '@/components/chat/chat-types';
+import type { ChatAttachment } from '@/lib/chat-attachments';
 import type { ChatImageAspectRatio, ChatMessage } from '@/lib/chat-session-store';
 
 interface ChatProviderProps {
   children: ReactNode;
+  initialAttachments: ChatAttachment[];
   initialMessages: ChatMessage[];
 }
 
-function useChatProviderValue(initialMessages: ChatMessage[]): ChatProviderValue {
+function releaseAttachmentPreviews(attachments: ChatAttachment[]): void {
+  for (const attachment of attachments) {
+    if (attachment.previewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(attachment.previewUrl);
+    }
+  }
+}
+
+function useChatProviderValue(
+  initialMessages: ChatMessage[],
+  initialAttachments: ChatAttachment[]
+): ChatProviderValue {
   const [state, dispatch] = useReducer(
     chatControllerReducer,
-    initialMessages,
-    createInitialChatState
+    { initialAttachments, initialMessages },
+    (initial) => createInitialChatState(initial.initialMessages, initial.initialAttachments)
   );
 
   const requestAbortControllerRef = useRef<AbortController | null>(null);
@@ -61,6 +75,9 @@ function useChatProviderValue(initialMessages: ChatMessage[]): ChatProviderValue
   );
 
   const { abortPendingRequest, sendChatMessage, stopGeneration } = useChatStreamEffects({
+    composer: {
+      attachments: state.composer.attachments,
+    },
     deps: {
       addErrorBubble,
       dispatch,
@@ -80,6 +97,7 @@ function useChatProviderValue(initialMessages: ChatMessage[]): ChatProviderValue
 
   const { sendImageMessage } = useChatImageEffects({
     composer: {
+      attachments: state.composer.attachments,
       selectedImageAspectRatio: state.composer.selectedImageAspectRatio,
     },
     deps: {
@@ -94,6 +112,19 @@ function useChatProviderValue(initialMessages: ChatMessage[]): ChatProviderValue
       isSubmitting: state.request.isSubmitting,
     },
   });
+
+  const { addFilesAsAttachments, removeAttachment: removeAttachmentEffect } =
+    useChatAttachmentsEffects({
+      composer: {
+        attachments: state.composer.attachments,
+      },
+      deps: {
+        dispatch,
+      },
+      request: {
+        isSubmitting: state.request.isSubmitting,
+      },
+    });
 
   const { copyMessageText } = useChatClipboardEffects({
     deps: {
@@ -138,14 +169,23 @@ function useChatProviderValue(initialMessages: ChatMessage[]): ChatProviderValue
   const clearLocalState = useCallback(() => {
     abortPendingRequest();
     releaseAudioResources();
+    releaseAttachmentPreviews(state.composer.attachments);
     dispatch({ type: 'messages/clear-all' });
-  }, [abortPendingRequest, dispatch, releaseAudioResources]);
+  }, [abortPendingRequest, releaseAudioResources, state.composer.attachments]);
 
   const resetFromInitialMessages = useCallback(() => {
     abortPendingRequest();
     releaseAudioResources();
+    releaseAttachmentPreviews(state.composer.attachments);
     dispatch({ payload: initialMessages, type: 'messages/hydrate' });
-  }, [abortPendingRequest, dispatch, initialMessages, releaseAudioResources]);
+    dispatch({ payload: initialAttachments, type: 'composer/set-attachments' });
+  }, [
+    abortPendingRequest,
+    initialAttachments,
+    initialMessages,
+    releaseAudioResources,
+    state.composer.attachments,
+  ]);
 
   const sendMessage = useCallback(async () => {
     const trimmedInput = state.composer.input.trim();
@@ -183,6 +223,20 @@ function useChatProviderValue(initialMessages: ChatMessage[]): ChatProviderValue
     copyFeedbackTimeoutRef.current = null;
   }, []);
 
+  const removeAttachment = useCallback(
+    async (attachmentId: string) => {
+      const attachment = state.composer.attachments.find(
+        (candidate) => candidate.id === attachmentId
+      );
+      const didRemoveAttachment = await removeAttachmentEffect(attachmentId);
+
+      if (didRemoveAttachment && attachment?.previewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(attachment.previewUrl);
+      }
+    },
+    [removeAttachmentEffect, state.composer.attachments]
+  );
+
   useEffect(() => {
     return () => {
       requestAbortControllerRef.current?.abort();
@@ -199,16 +253,19 @@ function useChatProviderValue(initialMessages: ChatMessage[]): ChatProviderValue
 
       releaseAudioResources();
       clearCopyFeedbackTimeout();
+      releaseAttachmentPreviews(state.composer.attachments);
     };
-  }, [clearCopyFeedbackTimeout, releaseAudioResources]);
+  }, [clearCopyFeedbackTimeout, releaseAudioResources, state.composer.attachments]);
 
   const actions = useMemo<ChatProviderValue['actions']>(
     () => ({
       abortPendingRequest,
       addErrorBubble,
+      addFilesAsAttachments,
       clearLocalState,
       copyMessageText,
       playMessageAudio,
+      removeAttachment,
       resetFromInitialMessages,
       retryLastFailedPrompt,
       sendMessage,
@@ -228,10 +285,12 @@ function useChatProviderValue(initialMessages: ChatMessage[]): ChatProviderValue
     [
       abortPendingRequest,
       addErrorBubble,
+      addFilesAsAttachments,
       clearLocalState,
       copyMessageText,
       dispatch,
       playMessageAudio,
+      removeAttachment,
       resetFromInitialMessages,
       retryLastFailedPrompt,
       sendMessage,
@@ -261,8 +320,8 @@ function useChatProviderValue(initialMessages: ChatMessage[]): ChatProviderValue
 
 const ChatContext = createContext<ChatProviderValue | null>(null);
 
-export function ChatProvider({ children, initialMessages }: ChatProviderProps) {
-  const value = useChatProviderValue(initialMessages);
+export function ChatProvider({ children, initialAttachments, initialMessages }: ChatProviderProps) {
+  const value = useChatProviderValue(initialMessages, initialAttachments);
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
@@ -309,10 +368,14 @@ export function useChatComposerState() {
   const { actions, state } = useChatContext();
 
   return {
+    addFilesAsAttachments: actions.addFilesAsAttachments,
+    attachments: state.composer.attachments,
     input: state.composer.input,
     isImageGenerationMode: state.composer.isImageGenerationMode,
     isRecording: state.recording.isRecording,
+    isSubmitting: state.request.isSubmitting,
     isTranscribing: state.recording.isTranscribing,
+    removeAttachment: actions.removeAttachment,
     selectedImageAspectRatio: state.composer.selectedImageAspectRatio,
     setInput: actions.setInput,
     setSelectedImageAspectRatio: actions.setSelectedImageAspectRatio,

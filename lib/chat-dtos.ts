@@ -1,9 +1,23 @@
+import type { ChatAttachmentKind } from '@/lib/chat-attachments';
 import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
 
 const chatImageAspectRatios = ['auto', '1:1', '16:9', '9:16'] as const;
 
 export interface ChatRequestDto {
   message: string;
+}
+
+interface ChatAttachmentDto {
+  id: string;
+  kind: ChatAttachmentKind;
+  mimeType: string;
+  name: string;
+  sizeBytes: number;
+  uploadedAt: number;
+}
+
+export interface UploadChatAttachmentsResponseDto {
+  attachments: ChatAttachmentDto[];
 }
 
 export interface GenerateImageRequestDto {
@@ -62,6 +76,44 @@ export function parseChatRequestBody(payload: unknown): ParseResult<ChatRequestD
   }
 
   return { data: { message }, ok: true };
+}
+
+export function parseUploadChatAttachmentsResponse(
+  payload: unknown
+): ParseResult<UploadChatAttachmentsResponseDto> {
+  if (!isRecord(payload) || !Array.isArray(payload.attachments)) {
+    return { error: 'Invalid attachment response received.', ok: false };
+  }
+
+  const attachments: ChatAttachmentDto[] = [];
+
+  for (const item of payload.attachments) {
+    if (!isRecord(item)) {
+      return { error: 'Invalid attachment response received.', ok: false };
+    }
+
+    if (
+      typeof item.id !== 'string' ||
+      typeof item.name !== 'string' ||
+      typeof item.mimeType !== 'string' ||
+      typeof item.sizeBytes !== 'number' ||
+      typeof item.uploadedAt !== 'number' ||
+      !isChatAttachmentKind(item.kind)
+    ) {
+      return { error: 'Invalid attachment response received.', ok: false };
+    }
+
+    attachments.push({
+      id: item.id,
+      kind: item.kind,
+      mimeType: item.mimeType,
+      name: item.name,
+      sizeBytes: item.sizeBytes,
+      uploadedAt: item.uploadedAt,
+    });
+  }
+
+  return { data: { attachments }, ok: true };
 }
 
 export function parseGenerateImageRequestBody(
@@ -151,4 +203,16 @@ export function parseApiErrorMessage(payload: unknown): string | null {
 
   const trimmed = payload.error.trim();
   return trimmed || null;
+}
+
+function isChatAttachmentKind(value: unknown): value is ChatAttachmentKind {
+  return (
+    value === 'document' ||
+    value === 'image' ||
+    value === 'markdown' ||
+    value === 'other' ||
+    value === 'pdf' ||
+    value === 'presentation' ||
+    value === 'spreadsheet'
+  );
 }

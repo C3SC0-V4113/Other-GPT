@@ -1,27 +1,93 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
+import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
 import { parseChatRequestBody } from '@/lib/chat-dtos';
 import {
   appendSessionMessage,
   CHAT_SESSION_COOKIE_NAME,
-  clearSessionMessages,
+  clearSessionData,
+  getSessionAttachments,
   getSessionMessages,
 } from '@/lib/chat-session-store';
 
-import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+async function deleteFilesFromOpenAI(fileIds: string[]): Promise<void> {
+  if (!fileIds.length || !process.env.OPENAI_API_KEY) {
+    return;
+  }
 
-function getAssistantMessageText(chunk: OpenAI.ChatCompletionChunk): string {
-  return chunk.choices[0]?.delta?.content ?? '';
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+  await Promise.all(
+    fileIds.map(async (fileId) => {
+      try {
+        await openai.files.delete(fileId);
+      } catch {
+        // The session is already cleared locally; best effort remote cleanup.
+      }
+    })
+  );
+}
+
+function buildInputFromSessionMessages(
+  sessionMessages: ReturnType<typeof getSessionMessages>,
+  currentMessage: string,
+  currentFileIds: string[]
+) {
+  return sessionMessages.reduce<OpenAI.Responses.ResponseInputItem[]>(
+    (accumulator, message, index) => {
+      if (message.content.type !== 'text') {
+        return accumulator;
+      }
+
+      const isCurrentUserMessage =
+        index === sessionMessages.length - 1 &&
+        message.role === 'user' &&
+        message.content.text === currentMessage;
+
+      if (!isCurrentUserMessage) {
+        accumulator.push({
+          content: message.content.text,
+          role: message.role,
+          type: 'message',
+        });
+        return accumulator;
+      }
+
+      accumulator.push({
+        content: [
+          {
+            text: message.content.text,
+            type: 'input_text',
+          },
+          ...currentFileIds.map((fileId) => {
+            const fileInput: { [key: string]: string } & { type: 'input_file' } = {
+              type: 'input_file',
+            };
+            fileInput['file_id'] = fileId;
+            return fileInput;
+          }),
+        ],
+        role: 'user',
+        type: 'message',
+      });
+
+      return accumulator;
+    },
+    []
+  );
 }
 
 export async function DELETE(): Promise<Response> {
   const cookieStore = await cookies();
   const sessionId = cookieStore.get(CHAT_SESSION_COOKIE_NAME)?.value;
 
-  if (sessionId) {
-    clearSessionMessages(sessionId);
+  if (!sessionId) {
+    return new Response(null, { status: 204 });
   }
+
+  const { fileIdsToDelete } = clearSessionData(sessionId);
+  await deleteFilesFromOpenAI(fileIdsToDelete);
 
   return new Response(null, { status: 204 });
 }
@@ -60,29 +126,31 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
-  appendSessionMessage(sessionId, { content: { text: userMessage, type: 'text' }, role: 'user' });
+  const activeAttachments = getSessionAttachments(sessionId);
+
+  appendSessionMessage(sessionId, {
+    content: {
+      attachments: activeAttachments.map((attachment) => toChatAttachmentSnapshot(attachment)),
+      text: userMessage,
+      type: 'text',
+    },
+    role: 'user',
+  });
 
   const sessionMessages = getSessionMessages(sessionId);
-  const modelMessages: ChatCompletionMessageParam[] = sessionMessages.reduce<
-    ChatCompletionMessageParam[]
-  >((accumulator, message) => {
-    if (message.content.type !== 'text') {
-      return accumulator;
-    }
-
-    accumulator.push({
-      content: message.content.text,
-      role: message.role,
-    });
-
-    return accumulator;
-  }, []);
+  const modelInput = buildInputFromSessionMessages(
+    sessionMessages,
+    userMessage,
+    activeAttachments.map((attachment) => attachment.fileId)
+  );
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
 
-  const stream = await openai.chat.completions.create({
-    messages: modelMessages,
+  const stream = await openai.responses.create({
+    input: modelInput,
+    instructions:
+      'When using information from attached files, explicitly cite file names in square brackets, for example: [spec.pdf].',
     model,
     stream: true,
   });
@@ -93,15 +161,13 @@ export async function POST(request: Request): Promise<Response> {
   const readableStream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        for await (const chunk of stream) {
-          const delta = getAssistantMessageText(chunk);
-
-          if (!delta) {
+        for await (const event of stream) {
+          if (event.type !== 'response.output_text.delta' || !event.delta) {
             continue;
           }
 
-          assistantMessage += delta;
-          controller.enqueue(encoder.encode(delta));
+          assistantMessage += event.delta;
+          controller.enqueue(encoder.encode(event.delta));
         }
 
         if (assistantMessage) {

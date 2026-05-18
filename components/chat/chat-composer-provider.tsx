@@ -4,6 +4,7 @@ import { createContext, use, useMemo, type ReactNode } from 'react';
 
 import { useChatComposerState, useChatRuntime } from '@/components/chat/chat-controller-provider';
 
+import type { ChatAttachment } from '@/lib/chat-attachments';
 import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
 
 interface ChatComposerProviderProps {
@@ -11,12 +12,16 @@ interface ChatComposerProviderProps {
 }
 
 interface ChatComposerContextValue {
+  addFilesAsAttachments: (files: File[]) => Promise<void>;
+  attachments: ChatAttachment[];
+  errorMessage: string;
   input: string;
   isImageGenerationMode: boolean;
   isRecording: boolean;
   isSendDisabled: boolean;
   isSubmitting: boolean;
   isTranscribing: boolean;
+  removeAttachment: (attachmentId: string) => Promise<void>;
   selectedImageAspectRatio: ChatImageAspectRatio;
   sendMessage: () => Promise<void>;
   setInput: (nextInput: string) => void;
@@ -34,12 +39,16 @@ export function ChatComposerProvider({ children }: ChatComposerProviderProps) {
 
   const value = useMemo<ChatComposerContextValue>(
     () => ({
+      addFilesAsAttachments: composer.addFilesAsAttachments,
+      attachments: composer.attachments,
+      errorMessage: runtime.errorMessage,
       input: composer.input,
       isImageGenerationMode: composer.isImageGenerationMode,
       isRecording: composer.isRecording,
       isSendDisabled: runtime.isSendDisabled,
       isSubmitting: runtime.isSubmitting,
       isTranscribing: composer.isTranscribing,
+      removeAttachment: composer.removeAttachment,
       selectedImageAspectRatio: composer.selectedImageAspectRatio,
       sendMessage: runtime.sendMessage,
       setInput: composer.setInput,

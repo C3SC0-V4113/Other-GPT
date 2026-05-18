@@ -58,6 +58,7 @@ function renderMessage(
     if (message.role === 'user') {
       return (
         <MessageBubble.userText
+          attachments={message.content.attachments}
           key={message.id}
           messageId={message.id}
           text={message.content.text}

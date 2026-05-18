@@ -4,6 +4,7 @@ import { getErrorMessage } from '@/components/chat/chat-controller-errors';
 import { parseApiErrorMessage, parseGenerateImageResponse } from '@/lib/chat-dtos';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
+import type { ChatAttachment } from '@/lib/chat-attachments';
 import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
 import type { Dispatch, RefObject } from 'react';
 
@@ -20,6 +21,7 @@ interface UseChatImageEffectsParams {
     isSubmitting: boolean;
   };
   composer: {
+    attachments: ChatAttachment[];
     selectedImageAspectRatio: ChatImageAspectRatio;
   };
 }
@@ -28,7 +30,7 @@ export function useChatImageEffects({ composer, deps, refs, request }: UseChatIm
   const { addErrorBubble, dispatch } = deps;
   const { isManualStopRequestedRef, requestAbortControllerRef } = refs;
   const { isSubmitting } = request;
-  const { selectedImageAspectRatio } = composer;
+  const { attachments, selectedImageAspectRatio } = composer;
 
   const sendImageMessage = useCallback(
     async (trimmedInput: string) => {
@@ -77,6 +79,7 @@ export function useChatImageEffects({ composer, deps, refs, request }: UseChatIm
               type: 'image',
             },
             prompt: trimmedInput,
+            userAttachments: attachments,
           },
           type: 'messages/append-image-exchange',
         });
@@ -101,6 +104,7 @@ export function useChatImageEffects({ composer, deps, refs, request }: UseChatIm
       isSubmitting,
       requestAbortControllerRef,
       selectedImageAspectRatio,
+      attachments,
     ]
   );
 

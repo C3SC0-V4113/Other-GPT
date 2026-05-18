@@ -1,10 +1,25 @@
 'use client';
 
-import { Check, Copy, Square, Volume2 } from 'lucide-react';
+import {
+  Check,
+  FileArchive,
+  FileImage,
+  FileSpreadsheet,
+  FileText,
+  FileType2,
+  Presentation,
+  Copy,
+  Square,
+  Volume2,
+} from 'lucide-react';
 import Image from 'next/image';
 
 import * as ChatBubble from '@/components/chat/chat-bubble';
 import { ChatMarkdown } from '@/components/chat/chat-markdown';
+import { Badge } from '@/components/ui/badge';
+import { formatAttachmentSize } from '@/lib/chat-attachments';
+
+import type { ChatAttachmentSnapshot } from '@/lib/chat-attachments';
 
 const messageStateLabels = {
   error: 'Error',
@@ -13,6 +28,7 @@ const messageStateLabels = {
 } as const;
 
 interface UserTextMessageBubbleProps {
+  attachments?: ChatAttachmentSnapshot[];
   messageId: string;
   text: string;
 }
@@ -43,10 +59,54 @@ interface SystemErrorMessageBubbleProps {
   text: string;
 }
 
-function UserTextMessageBubble({ messageId, text }: UserTextMessageBubbleProps) {
+function getAttachmentIcon(attachment: ChatAttachmentSnapshot) {
+  if (attachment.kind === 'image') {
+    return <FileImage />;
+  }
+
+  if (attachment.kind === 'pdf') {
+    return <FileType2 />;
+  }
+
+  if (attachment.kind === 'spreadsheet') {
+    return <FileSpreadsheet />;
+  }
+
+  if (attachment.kind === 'presentation') {
+    return <Presentation />;
+  }
+
+  if (attachment.kind === 'markdown' || attachment.kind === 'document') {
+    return <FileText />;
+  }
+
+  return <FileArchive />;
+}
+
+function UserTextMessageBubble({ attachments, messageId, text }: UserTextMessageBubbleProps) {
   return (
     <ChatBubble.Root key={messageId} role="user" state="complete">
-      <ChatBubble.Body>{text}</ChatBubble.Body>
+      <ChatBubble.Body className="space-y-2">
+        <p>{text}</p>
+
+        {attachments?.length ? (
+          <div className="flex flex-wrap gap-1.5">
+            {attachments.map((attachment) => (
+              <Badge
+                key={attachment.id}
+                className="h-auto max-w-55 gap-1.5 rounded-lg border-primary-foreground/30 bg-primary-foreground/10 px-2 py-1 text-primary-foreground"
+                variant="outline"
+              >
+                {getAttachmentIcon(attachment)}
+                <span className="max-w-28 truncate">{attachment.name}</span>
+                <span className="text-[10px] opacity-80">
+                  {formatAttachmentSize(attachment.sizeBytes)}
+                </span>
+              </Badge>
+            ))}
+          </div>
+        ) : null}
+      </ChatBubble.Body>
     </ChatBubble.Root>
   );
 }

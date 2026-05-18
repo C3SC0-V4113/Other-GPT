@@ -37,9 +37,13 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
 ## Capacidades multimodales
 
 - Texto (streaming):
-  - `POST /api/chat` con streaming incremental de respuestas.
+  - `POST /api/chat` con `Responses API` y streaming incremental de respuestas.
 - Imagen:
   - `POST /api/images` para generar imagenes desde prompt y aspect ratio.
+- Adjuntos de archivos:
+  - `POST /api/chat/attachments` para subir archivos del composer.
+  - `DELETE /api/chat/attachments/[attachmentId]` para quitar adjuntos activos.
+  - adjuntos reutilizables por sesion y enviados como `input_file` en chat e imagen.
 - Speech-to-text:
   - `POST /api/audio/transcriptions` para transcribir audio del dictado.
 - Text-to-speech:
@@ -54,6 +58,7 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
   - `content.type`: `text | image`
 - Flujo:
   - `sendMessage()` agrega user + burbuja assistant `streaming`.
+  - si hay adjuntos activos, cada prompt de usuario los incluye como contexto de archivo.
   - modo imagen genera burbuja user (prompt) + burbuja assistant (imagen).
   - `stopGeneration()` aborta la peticion activa; conserva parcial como `interrupted`.
   - errores de red/API se renderizan in-stream como burbuja destructiva (`kind=error`).

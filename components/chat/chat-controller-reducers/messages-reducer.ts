@@ -1,4 +1,5 @@
 import { toUiMessage } from '@/components/chat/chat-types';
+import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
 import type { ChatState, ChatUiMessage } from '@/components/chat/chat-types';
@@ -39,7 +40,13 @@ export function reduceMessagesState(
         items: [
           ...state.items,
           {
-            content: { text: action.payload.prompt, type: 'text' },
+            content: {
+              attachments: action.payload.userAttachments.map((attachment) =>
+                toChatAttachmentSnapshot(attachment)
+              ),
+              text: action.payload.prompt,
+              type: 'text',
+            },
             id: crypto.randomUUID(),
             kind: 'message',
             role: 'user',
@@ -61,7 +68,13 @@ export function reduceMessagesState(
         items: [
           ...state.items,
           {
-            content: { text: action.payload.userMessage, type: 'text' },
+            content: {
+              attachments: action.payload.userAttachments.map((attachment) =>
+                toChatAttachmentSnapshot(attachment)
+              ),
+              text: action.payload.userMessage,
+              type: 'text',
+            },
             id: action.payload.requestMessageId,
             kind: 'message',
             role: 'user',
