@@ -10,6 +10,13 @@ import {
   getSessionMessages,
 } from '@/lib/chat-session-store';
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Chat',
+  description: 'Main chat interface for otro-GPT.',
+};
+
 export default async function Home() {
   const cookieStore = await cookies();
   const sessionId = cookieStore.get(CHAT_SESSION_COOKIE_NAME)?.value;
