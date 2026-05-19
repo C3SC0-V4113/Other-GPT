@@ -12,7 +12,7 @@ interface ChatComposerProviderProps {
 }
 
 interface ChatComposerContextValue {
-  addFilesAsAttachments: (files: File[]) => Promise<void>;
+  addFilesAsAttachments: (files: File[]) => Promise<number>;
   attachments: ChatAttachment[];
   errorMessage: string;
   input: string;
@@ -21,7 +21,7 @@ interface ChatComposerContextValue {
   isSendDisabled: boolean;
   isSubmitting: boolean;
   isTranscribing: boolean;
-  removeAttachment: (attachmentId: string) => Promise<void>;
+  removeAttachment: (attachmentId: string) => Promise<boolean>;
   selectedImageAspectRatio: ChatImageAspectRatio;
   sendMessage: () => Promise<void>;
   setInput: (nextInput: string) => void;

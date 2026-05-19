@@ -1,5 +1,7 @@
 'use client';
 
+import { useCallback } from 'react';
+
 import { useChatComposer } from '@/components/chat/chat-composer-provider';
 import {
   ComposerActionsRow,
@@ -66,6 +68,11 @@ export function ChatComposerForm() {
     toggleImageGenerationMode,
     toggleRecording,
   } = useChatComposer();
+
+  const handleSendMessage = useCallback(async () => {
+    await sendMessage();
+  }, [sendMessage]);
+
   return (
     <ComposerRoot>
       {isImageGenerationMode ? (
@@ -87,11 +94,13 @@ export function ChatComposerForm() {
         onAddFiles={addFilesAsAttachments}
         onRemoveAttachment={removeAttachment}
       >
-        {({ openFileDialog }) => (
+        {({ contextAttachmentCount, openContextModal, openFileDialog }) => (
           <ComposerActionsRow>
             <ComposerPlusMenu
+              contextAttachmentCount={contextAttachmentCount}
               isSubmitting={isSubmitting}
               onAddAttachments={openFileDialog}
+              onOpenAttachmentsContext={openContextModal}
               onToggleImageMode={toggleImageGenerationMode}
             />
 
@@ -110,7 +119,7 @@ export function ChatComposerForm() {
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault();
-                  void sendMessage();
+                  void handleSendMessage();
                 }
               }}
               onValueChange={setInput}
@@ -122,7 +131,7 @@ export function ChatComposerForm() {
               isSendDisabled={isSendDisabled}
               isSubmitting={isSubmitting}
               onSend={() => {
-                void sendMessage();
+                void handleSendMessage();
               }}
               onStop={stopGeneration}
             />

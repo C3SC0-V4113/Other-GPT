@@ -6,15 +6,44 @@ import {
   FileSpreadsheet,
   FileText,
   FileType2,
+  Paperclip,
   Presentation,
   X,
 } from 'lucide-react';
 import Image from 'next/image';
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { useDropzone, type Accept, type FileRejection } from 'react-dropzone';
+import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatAttachmentSize, MAX_ATTACHMENT_SIZE_BYTES } from '@/lib/chat-attachments';
 import { cn } from '@/lib/utils';
 
@@ -22,14 +51,24 @@ import type { ChatAttachment } from '@/lib/chat-attachments';
 
 interface ComposerAttachmentsUploaderProps {
   attachments: ChatAttachment[];
-  children: (controls: { openFileDialog: () => void }) => ReactNode;
+  children: (controls: {
+    contextAttachmentCount: number;
+    openContextModal: () => void;
+    openFileDialog: () => void;
+  }) => ReactNode;
   errorMessage: string;
   isSubmitting: boolean;
-  onAddFiles: (files: File[]) => Promise<void>;
-  onRemoveAttachment: (attachmentId: string) => Promise<void>;
+  onAddFiles: (files: File[]) => Promise<number>;
+  onRemoveAttachment: (attachmentId: string) => Promise<boolean>;
 }
 
 type DropOverlayState = 'dragActive' | 'dragReject' | 'idle' | 'processing';
+type OptimisticAttachmentsAction =
+  | { type: 'remove'; payload: { attachmentId: string } }
+  | { type: 'restore'; payload: { attachment: ChatAttachment } };
+
+const BADGE_EXIT_DURATION_MS = 200;
+const BADGE_EXIT_EASE_CLASS = '[transition-timing-function:cubic-bezier(0.215,0.61,0.355,1)]';
 
 function getAttachmentIcon(attachment: ChatAttachment) {
   if (attachment.kind === 'image') {
@@ -59,6 +98,182 @@ function getAttachmentIcon(attachment: ChatAttachment) {
   return <FileArchive />;
 }
 
+function getToastErrorMessage(error: unknown, fallbackMessage: string): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallbackMessage;
+}
+
+function reduceOptimisticAttachments(
+  attachments: ChatAttachment[],
+  action: OptimisticAttachmentsAction
+): ChatAttachment[] {
+  switch (action.type) {
+    case 'remove':
+      return attachments.filter((attachment) => attachment.id !== action.payload.attachmentId);
+    case 'restore': {
+      const { attachment } = action.payload;
+
+      if (attachments.some((candidate) => candidate.id === attachment.id)) {
+        return attachments;
+      }
+
+      return [...attachments, attachment];
+    }
+    default:
+      return attachments;
+  }
+}
+
+interface AttachmentsBadgeListProps {
+  attachments: ChatAttachment[];
+  className?: string;
+  isSubmitting: boolean;
+  onRemoveAttachment: (attachmentId: string) => Promise<boolean>;
+}
+
+function AttachmentsBadgeList({
+  attachments,
+  className,
+  isSubmitting,
+  onRemoveAttachment,
+}: AttachmentsBadgeListProps) {
+  const [exitingAttachmentIds, setExitingAttachmentIds] = useState<Set<string>>(() => new Set());
+  const [removingAttachmentIds, setRemovingAttachmentIds] = useState<Set<string>>(() => new Set());
+  const [optimisticAttachments, applyOptimisticAttachmentUpdate] = useOptimistic(
+    attachments,
+    reduceOptimisticAttachments
+  );
+  const exitTimeoutsRef = useRef<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    const exitTimeouts = exitTimeoutsRef.current;
+
+    return () => {
+      for (const timeoutId of exitTimeouts.values()) {
+        window.clearTimeout(timeoutId);
+      }
+      exitTimeouts.clear();
+    };
+  }, []);
+
+  const handleRemoveAttachment = useCallback(
+    (attachment: ChatAttachment) => {
+      if (isSubmitting || removingAttachmentIds.has(attachment.id)) {
+        return;
+      }
+
+      setExitingAttachmentIds((currentIds) => new Set(currentIds).add(attachment.id));
+      setRemovingAttachmentIds((currentIds) => new Set(currentIds).add(attachment.id));
+
+      const timeoutId = window.setTimeout(() => {
+        exitTimeoutsRef.current.delete(attachment.id);
+
+        void (async () => {
+          startTransition(() => {
+            applyOptimisticAttachmentUpdate({
+              payload: { attachmentId: attachment.id },
+              type: 'remove',
+            });
+          });
+
+          try {
+            const didRemoveAttachment = await onRemoveAttachment(attachment.id);
+
+            if (!didRemoveAttachment) {
+              startTransition(() => {
+                applyOptimisticAttachmentUpdate({
+                  payload: { attachment },
+                  type: 'restore',
+                });
+              });
+              toast.error('No fue posible eliminar el adjunto. Intenta nuevamente.');
+            }
+          } finally {
+            setExitingAttachmentIds((currentIds) => {
+              const nextIds = new Set(currentIds);
+              nextIds.delete(attachment.id);
+              return nextIds;
+            });
+            setRemovingAttachmentIds((currentIds) => {
+              const nextIds = new Set(currentIds);
+              nextIds.delete(attachment.id);
+              return nextIds;
+            });
+          }
+        })();
+      }, BADGE_EXIT_DURATION_MS);
+
+      exitTimeoutsRef.current.set(attachment.id, timeoutId);
+    },
+    [applyOptimisticAttachmentUpdate, isSubmitting, onRemoveAttachment, removingAttachmentIds]
+  );
+
+  if (!optimisticAttachments.length) {
+    return null;
+  }
+
+  return (
+    <div className={cn('flex flex-wrap gap-1.5', className)}>
+      {optimisticAttachments.map((attachment) => {
+        const isExiting = exitingAttachmentIds.has(attachment.id);
+        const isRemoving = removingAttachmentIds.has(attachment.id);
+
+        return (
+          <div
+            key={attachment.id}
+            className={cn(
+              'origin-left overflow-hidden transition-[max-height,max-width,opacity,transform] duration-200 motion-reduce:transition-none',
+              BADGE_EXIT_EASE_CLASS,
+              isExiting
+                ? 'max-h-0 max-w-0 -translate-y-0.5 scale-95 opacity-0'
+                : 'max-h-16 max-w-[22rem] translate-y-0 scale-100 opacity-100'
+            )}
+          >
+            <Badge
+              className="h-auto max-w-[22rem] gap-1.5 rounded-lg border-border/70 bg-muted/50 px-2 py-1 text-foreground"
+              variant="outline"
+            >
+              {attachment.kind === 'image' && attachment.previewUrl ? (
+                <Image
+                  alt={attachment.name}
+                  className="size-4 rounded object-cover"
+                  height={16}
+                  src={attachment.previewUrl}
+                  unoptimized
+                  width={16}
+                />
+              ) : (
+                getAttachmentIcon(attachment)
+              )}
+
+              <span className="max-w-28 truncate">{attachment.name}</span>
+              <span className="text-[10px] text-muted-foreground">
+                {formatAttachmentSize(attachment.sizeBytes)}
+              </span>
+
+              <Button
+                aria-label={`Quitar ${attachment.name}`}
+                disabled={isSubmitting || isRemoving}
+                onClick={() => {
+                  handleRemoveAttachment(attachment);
+                }}
+                size="icon-xs"
+                type="button"
+                variant="ghost"
+              >
+                <X />
+              </Button>
+            </Badge>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ComposerAttachmentsUploader({
   attachments,
   children,
@@ -69,6 +284,7 @@ export function ComposerAttachmentsUploader({
 }: ComposerAttachmentsUploaderProps) {
   const [dropErrorMessage, setDropErrorMessage] = useState('');
   const [dropOverlayState, setDropOverlayState] = useState<DropOverlayState>('idle');
+  const [isContextModalOpen, setIsContextModalOpen] = useState(false);
 
   const clearDropFeedback = useCallback(() => {
     setDropErrorMessage('');
@@ -87,7 +303,17 @@ export function ComposerAttachmentsUploader({
       setDropOverlayState('processing');
 
       try {
-        await onAddFiles(acceptedFiles);
+        const attachedCount = await onAddFiles(acceptedFiles);
+
+        if (attachedCount > 0) {
+          toast.success(
+            attachedCount === 1
+              ? '1 archivo agregado al contexto.'
+              : `${attachedCount} archivos agregados al contexto.`
+          );
+        }
+      } catch (error) {
+        toast.error(getToastErrorMessage(error, 'No fue posible subir archivos al contexto.'));
       } finally {
         setDropOverlayState('idle');
       }
@@ -158,6 +384,9 @@ export function ComposerAttachmentsUploader({
     clearDropFeedback();
     open();
   }, [clearDropFeedback, open]);
+  const openContextModal = useCallback(() => {
+    setIsContextModalOpen(true);
+  }, []);
 
   const resolvedDropOverlayState: DropOverlayState =
     dropOverlayState === 'processing'
@@ -194,7 +423,11 @@ export function ComposerAttachmentsUploader({
     >
       <input {...getInputProps()} />
 
-      {children({ openFileDialog })}
+      {children({
+        contextAttachmentCount: attachments.length,
+        openContextModal,
+        openFileDialog,
+      })}
 
       {shouldShowOverlay ? (
         <div
@@ -209,48 +442,66 @@ export function ComposerAttachmentsUploader({
         </div>
       ) : null}
 
-      {attachments.length ? (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {attachments.map((attachment) => (
-            <Badge
-              key={attachment.id}
-              className="h-auto max-w-55 gap-1.5 rounded-lg border-border/70 bg-muted/50 px-2 py-1 text-foreground"
+      <Dialog onOpenChange={setIsContextModalOpen} open={isContextModalOpen}>
+        <DialogContent className="w-[min(92vw,46rem)]">
+          <DialogHeader>
+            <DialogTitle>Archivos en contexto</DialogTitle>
+            <DialogDescription>
+              Estos archivos permanecen activos para los siguientes prompts hasta que los elimines.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-center justify-between gap-2">
+            <Badge variant="secondary">{attachments.length} activos</Badge>
+            <Button
+              disabled={isSubmitting}
+              onClick={openFileDialog}
+              size="sm"
+              type="button"
               variant="outline"
             >
-              {attachment.kind === 'image' && attachment.previewUrl ? (
-                <Image
-                  alt={attachment.name}
-                  className="size-4 rounded object-cover"
-                  height={16}
-                  src={attachment.previewUrl}
-                  unoptimized
-                  width={16}
-                />
-              ) : (
-                getAttachmentIcon(attachment)
-              )}
+              <Paperclip data-icon="inline-start" />
+              Agregar archivos
+            </Button>
+          </div>
 
-              <span className="max-w-28 truncate">{attachment.name}</span>
-              <span className="text-[10px] text-muted-foreground">
-                {formatAttachmentSize(attachment.sizeBytes)}
-              </span>
+          {attachments.length ? (
+            <ScrollArea className="max-h-60 rounded-2xl border bg-muted/20 p-3">
+              <AttachmentsBadgeList
+                attachments={attachments}
+                isSubmitting={isSubmitting}
+                onRemoveAttachment={onRemoveAttachment}
+              />
+            </ScrollArea>
+          ) : (
+            <Empty className="rounded-2xl border-border/80 p-6">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <FileArchive />
+                </EmptyMedia>
+                <EmptyTitle>Sin archivos en contexto</EmptyTitle>
+                <EmptyDescription>
+                  Agrega adjuntos para que el modelo pueda usarlos en tus siguientes mensajes.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button disabled={isSubmitting} onClick={openFileDialog} type="button">
+                  <Paperclip data-icon="inline-start" />
+                  Adjuntar archivos
+                </Button>
+              </EmptyContent>
+            </Empty>
+          )}
 
-              <Button
-                aria-label={`Quitar ${attachment.name}`}
-                disabled={isSubmitting}
-                onClick={() => {
-                  void onRemoveAttachment(attachment.id);
-                }}
-                size="icon-xs"
-                type="button"
-                variant="ghost"
-              >
-                <X />
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Cerrar
               </Button>
-            </Badge>
-          ))}
-        </div>
-      ) : null}
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {liveErrorMessage ? (
         <p aria-live="polite" className="mt-1 text-xs text-destructive">

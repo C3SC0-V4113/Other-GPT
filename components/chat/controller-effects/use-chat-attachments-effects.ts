@@ -53,7 +53,7 @@ export function useChatAttachmentsEffects({
   const addFilesAsAttachments = useCallback(
     async (files: File[]) => {
       if (!files.length || isSubmitting) {
-        return;
+        return 0;
       }
 
       const remainingSlots = MAX_ATTACHMENTS_PER_SESSION - attachments.length;
@@ -63,7 +63,7 @@ export function useChatAttachmentsEffects({
           payload: `Limite alcanzado: maximo ${MAX_ATTACHMENTS_PER_SESSION} adjuntos por sesion.`,
           type: 'feedback/set-error-message',
         });
-        return;
+        return 0;
       }
 
       const acceptedFiles: File[] = [];
@@ -98,7 +98,7 @@ export function useChatAttachmentsEffects({
           payload: validationErrors[0] ?? 'No se pudieron adjuntar archivos.',
           type: 'feedback/set-error-message',
         });
-        return;
+        return 0;
       }
 
       dispatch({ payload: '', type: 'feedback/set-error-message' });
@@ -155,9 +155,11 @@ export function useChatAttachmentsEffects({
             type: 'feedback/set-error-message',
           });
         }
+        return nextAttachments.length;
       } catch (error) {
         const resolvedError = getErrorMessage(error);
         dispatch({ payload: resolvedError, type: 'feedback/set-error-message' });
+        throw error;
       }
     },
     [attachments.length, dispatch, isSubmitting]

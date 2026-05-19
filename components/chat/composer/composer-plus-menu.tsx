@@ -1,5 +1,6 @@
-import { ImagePlus, Paperclip, Plus } from 'lucide-react';
+import { FolderOpen, ImagePlus, Paperclip, Plus } from 'lucide-react';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,12 +11,16 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ComposerPlusMenuProps {
+  contextAttachmentCount: number;
+  onOpenAttachmentsContext: () => void;
   onAddAttachments: () => void;
   isSubmitting: boolean;
   onToggleImageMode: () => void;
 }
 
 export function ComposerPlusMenu({
+  contextAttachmentCount,
+  onOpenAttachmentsContext,
   isSubmitting,
   onAddAttachments,
   onToggleImageMode,
@@ -30,6 +35,13 @@ export function ComposerPlusMenu({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={onOpenAttachmentsContext}>
+              <FolderOpen />
+              <span>Archivos en contexto</span>
+              <Badge className="ml-auto" variant="secondary">
+                {contextAttachmentCount}
+              </Badge>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={onAddAttachments}>
               <Paperclip />
               <span>Adjuntar archivos</span>

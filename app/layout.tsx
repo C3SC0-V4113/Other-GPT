@@ -2,6 +2,7 @@ import { Geist, Geist_Mono, Montserrat } from 'next/font/google';
 import Script from 'next/script';
 
 import { ThemeProvider } from '@/components/theme/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 import { cn } from '@/lib/utils';
 
 import type { Metadata } from 'next';
@@ -58,6 +59,7 @@ export default function RootLayout({
           storageKey="otro-gpt-theme-mode"
         >
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

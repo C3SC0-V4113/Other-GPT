@@ -233,6 +233,8 @@ function useChatProviderValue(
       if (didRemoveAttachment && attachment?.previewUrl?.startsWith('blob:')) {
         URL.revokeObjectURL(attachment.previewUrl);
       }
+
+      return didRemoveAttachment;
     },
     [removeAttachmentEffect, state.composer.attachments]
   );
