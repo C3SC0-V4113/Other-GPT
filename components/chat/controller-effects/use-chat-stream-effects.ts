@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 
 import { getErrorMessage } from '@/components/chat/chat-controller-errors';
 import { parseApiErrorFromResponse } from '@/lib/chat-dtos';
+import { createClientId } from '@/lib/client-id';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
 import type { ChatAttachment } from '@/lib/chat-attachments';
@@ -90,29 +91,31 @@ export function useChatStreamEffects({
       dispatch({ payload: true, type: 'request/set-submitting' });
       dispatch({ payload: '', type: 'composer/set-input' });
 
-      const requestMessageId = crypto.randomUUID();
-      const assistantMessageId = crypto.randomUUID();
-      isManualStopRequestedRef.current = false;
-
-      dispatch({
-        payload: {
-          assistantMessageId,
-          requestMessageId,
-          userAttachments: attachments,
-          userMessage: trimmedInput,
-        },
-        type: 'messages/append-user-and-pending-assistant',
-      });
-      dispatch({
-        payload: assistantMessageId,
-        type: 'request/set-pending-assistant-message-id',
-      });
-
       const controller = new AbortController();
       requestAbortControllerRef.current = controller;
       let assistantContent = '';
+      let assistantMessageId: string | null = null;
 
       try {
+        const requestMessageId = createClientId();
+        const nextAssistantMessageId = createClientId();
+        assistantMessageId = nextAssistantMessageId;
+        isManualStopRequestedRef.current = false;
+
+        dispatch({
+          payload: {
+            assistantMessageId: nextAssistantMessageId,
+            requestMessageId,
+            userAttachments: attachments,
+            userMessage: trimmedInput,
+          },
+          type: 'messages/append-user-and-pending-assistant',
+        });
+        dispatch({
+          payload: nextAssistantMessageId,
+          type: 'request/set-pending-assistant-message-id',
+        });
+
         const response = await fetch('/api/chat', {
           body: JSON.stringify({ message: trimmedInput }),
           headers: { 'content-type': 'application/json' },
@@ -142,7 +145,7 @@ export function useChatStreamEffects({
           assistantContent += decoder.decode(value, { stream: true });
           dispatch({
             payload: {
-              assistantMessageId,
+              assistantMessageId: nextAssistantMessageId,
               content: assistantContent,
             },
             type: 'messages/update-assistant-stream',
@@ -153,14 +156,14 @@ export function useChatStreamEffects({
 
         await readNextChunk();
 
-        if (!assistantContent) {
+        if (!assistantContent && assistantMessageId) {
           dispatch({
             payload: { messageId: assistantMessageId },
             type: 'messages/remove-one',
           });
         } else {
           dispatch({
-            payload: { assistantMessageId },
+            payload: { assistantMessageId: nextAssistantMessageId },
             type: 'messages/complete-assistant',
           });
         }
@@ -169,12 +172,12 @@ export function useChatStreamEffects({
           if (isManualStopRetryEnabled && isManualStopRequestedRef.current) {
             dispatch({ payload: trimmedInput, type: 'messages/set-last-failed-prompt' });
 
-            if (!assistantContent) {
+            if (!assistantContent && assistantMessageId) {
               dispatch({
                 payload: { messageId: assistantMessageId },
                 type: 'messages/remove-one',
               });
-            } else {
+            } else if (assistantMessageId) {
               dispatch({
                 payload: {
                   assistantMessageId,
@@ -190,10 +193,14 @@ export function useChatStreamEffects({
 
         const resolvedError = getErrorMessage(error);
         dispatch({ payload: resolvedError, type: 'feedback/set-error-message' });
-        dispatch({
-          payload: { messageId: assistantMessageId },
-          type: 'messages/remove-one',
-        });
+
+        if (assistantMessageId) {
+          dispatch({
+            payload: { messageId: assistantMessageId },
+            type: 'messages/remove-one',
+          });
+        }
+
         dispatch({ payload: trimmedInput, type: 'messages/set-last-failed-prompt' });
         addErrorBubble(resolvedError, { retryPrompt: trimmedInput });
       } finally {

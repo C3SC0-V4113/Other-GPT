@@ -29,6 +29,8 @@ interface ComposerAttachmentsUploaderProps {
   onRemoveAttachment: (attachmentId: string) => Promise<void>;
 }
 
+type DropOverlayState = 'dragActive' | 'dragReject' | 'idle' | 'processing';
+
 function getAttachmentIcon(attachment: ChatAttachment) {
   if (attachment.kind === 'image') {
     return <FileImage />;
@@ -66,25 +68,31 @@ export function ComposerAttachmentsUploader({
   onRemoveAttachment,
 }: ComposerAttachmentsUploaderProps) {
   const [dropErrorMessage, setDropErrorMessage] = useState('');
-  const [isProcessingDrop, setIsProcessingDrop] = useState(false);
+  const [dropOverlayState, setDropOverlayState] = useState<DropOverlayState>('idle');
+
+  const clearDropFeedback = useCallback(() => {
+    setDropErrorMessage('');
+    setDropOverlayState((currentState) => (currentState === 'processing' ? currentState : 'idle'));
+  }, []);
 
   const handleDrop = useCallback(
     async (acceptedFiles: File[]) => {
-      setDropErrorMessage('');
+      clearDropFeedback();
 
       if (!acceptedFiles.length || isSubmitting) {
+        setDropOverlayState('idle');
         return;
       }
 
-      setIsProcessingDrop(true);
+      setDropOverlayState('processing');
 
       try {
         await onAddFiles(acceptedFiles);
       } finally {
-        setIsProcessingDrop(false);
+        setDropOverlayState('idle');
       }
     },
-    [isSubmitting, onAddFiles]
+    [clearDropFeedback, isSubmitting, onAddFiles]
   );
 
   const acceptedMimeTypes: Accept = useMemo(
@@ -118,41 +126,83 @@ export function ComposerAttachmentsUploader({
     maxSize: MAX_ATTACHMENT_SIZE_BYTES,
     noClick: true,
     noKeyboard: true,
+    onDragEnter: () => {
+      if (isSubmitting) {
+        return;
+      }
+
+      setDropOverlayState('dragActive');
+    },
+    onDragLeave: () => {
+      setDropOverlayState((currentState) =>
+        currentState === 'processing' ? currentState : 'idle'
+      );
+    },
     onDrop: (acceptedFiles: File[], rejections: FileRejection[]) => {
       if (rejections.length) {
         setDropErrorMessage('Archivo rechazado: formato o tamano no permitido.');
+        setDropOverlayState('dragReject');
       }
 
-      void handleDrop(acceptedFiles);
+      if (!rejections.length && !acceptedFiles.length) {
+        setDropOverlayState('idle');
+      }
+
+      if (acceptedFiles.length) {
+        void handleDrop(acceptedFiles);
+      }
     },
   });
 
-  const shouldShowOverlay = isDragActive || isDragReject || isProcessingDrop;
+  const openFileDialog = useCallback(() => {
+    clearDropFeedback();
+    open();
+  }, [clearDropFeedback, open]);
+
+  const resolvedDropOverlayState: DropOverlayState =
+    dropOverlayState === 'processing'
+      ? 'processing'
+      : isDragReject
+        ? 'dragReject'
+        : isDragActive
+          ? 'dragActive'
+          : dropOverlayState;
+
+  const shouldShowOverlay = resolvedDropOverlayState !== 'idle';
   const liveErrorMessage = dropErrorMessage || errorMessage;
 
   const overlayMessage = useMemo(() => {
-    if (isProcessingDrop) {
+    if (resolvedDropOverlayState === 'processing') {
       return 'Procesando adjuntos...';
     }
 
-    if (isDragReject) {
+    if (resolvedDropOverlayState === 'dragReject') {
       return 'Formato o tamano no valido.';
     }
 
     return 'Suelta para adjuntar.';
-  }, [isDragReject, isProcessingDrop]);
+  }, [resolvedDropOverlayState]);
 
   return (
-    <div {...getRootProps({ className: 'relative' })}>
+    <div
+      {...getRootProps({
+        className: 'relative',
+        onFocusCapture: clearDropFeedback,
+        onKeyDownCapture: clearDropFeedback,
+        onPointerDownCapture: clearDropFeedback,
+      })}
+    >
       <input {...getInputProps()} />
 
-      {children({ openFileDialog: open })}
+      {children({ openFileDialog })}
 
       {shouldShowOverlay ? (
         <div
           className={cn(
             'pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-xl border-2 border-dashed bg-muted/40 text-sm transition duration-150',
-            isDragReject ? 'border-destructive text-destructive' : 'border-primary text-foreground'
+            resolvedDropOverlayState === 'dragReject'
+              ? 'border-destructive text-destructive'
+              : 'border-primary text-foreground'
           )}
         >
           <span>{overlayMessage}</span>

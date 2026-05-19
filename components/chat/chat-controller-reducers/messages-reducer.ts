@@ -1,5 +1,6 @@
 import { toUiMessage } from '@/components/chat/chat-types';
 import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
+import { createClientId } from '@/lib/client-id';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
 import type { ChatState, ChatUiMessage } from '@/components/chat/chat-types';
@@ -26,7 +27,7 @@ export function reduceMessagesState(
           ...state.items,
           {
             content: { text: action.payload.message, type: 'text' },
-            id: crypto.randomUUID(),
+            id: createClientId(),
             kind: 'error',
             retryPrompt: action.payload.retryPrompt,
             role: 'system',
@@ -47,14 +48,14 @@ export function reduceMessagesState(
               text: action.payload.prompt,
               type: 'text',
             },
-            id: crypto.randomUUID(),
+            id: createClientId(),
             kind: 'message',
             role: 'user',
             status: 'complete',
           },
           {
             content: action.payload.image,
-            id: crypto.randomUUID(),
+            id: createClientId(),
             kind: 'message',
             role: 'assistant',
             status: 'complete',
