@@ -1,19 +1,15 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
-import {
-  isKnownInferenceIncompatibleAttachment,
-  toChatAttachmentSnapshot,
-} from '@/lib/chat-attachments';
+import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
 import { parseGenerateImageRequestBody } from '@/lib/chat-dtos';
 import {
   appendSessionMessage,
   CHAT_SESSION_COOKIE_NAME,
   getSessionAttachments,
-  removeSessionAttachmentsByIds,
 } from '@/lib/chat-session-store';
+import { toResponseInputContentFromAttachments } from '@/lib/openai-response-input-content';
 
-import type { ChatAttachment } from '@/lib/chat-attachments';
 import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
 
 function getImageSizeFromAspectRatio(
@@ -62,52 +58,11 @@ function getProviderErrorMessage(error: unknown): string {
 
 function isInvalidFileProviderError(error: unknown): boolean {
   const message = getProviderErrorMessage(error).toLowerCase();
-  return message.includes('invalid file');
-}
-
-async function deleteFilesFromOpenAI(fileIds: string[]): Promise<void> {
-  if (!fileIds.length || !process.env.OPENAI_API_KEY) {
-    return;
-  }
-
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-  await Promise.all(
-    fileIds.map(async (fileId) => {
-      try {
-        await openai.files.delete(fileId);
-      } catch {
-        // Best effort cleanup.
-      }
-    })
+  return (
+    message.includes('invalid file') ||
+    message.includes('expected context stuffing file type') ||
+    (message.includes('invalid input') && message.includes('input_file'))
   );
-}
-
-async function removeKnownIncompatibleAttachmentsFromSession(
-  sessionId: string,
-  attachments: ChatAttachment[]
-): Promise<number> {
-  const incompatibleAttachmentIds = attachments.reduce<string[]>((accumulator, attachment) => {
-    if (
-      isKnownInferenceIncompatibleAttachment({
-        filename: attachment.name,
-        mimeType: attachment.mimeType,
-      })
-    ) {
-      accumulator.push(attachment.id);
-    }
-
-    return accumulator;
-  }, []);
-
-  const removedAttachments = removeSessionAttachmentsByIds(sessionId, incompatibleAttachmentIds);
-
-  if (!removedAttachments.length) {
-    return 0;
-  }
-
-  await deleteFilesFromOpenAI(removedAttachments.map((attachment) => attachment.fileId));
-  return removedAttachments.length;
 }
 
 function getGeneratedImageBase64(response: OpenAI.Responses.Response): string | null {
@@ -159,13 +114,7 @@ export async function POST(request: Request): Promise<Response> {
         {
           content: [
             { text: prompt, type: 'input_text' },
-            ...activeAttachments.map((attachment) => {
-              const fileInput: { [key: string]: string } & { type: 'input_file' } = {
-                type: 'input_file',
-              };
-              fileInput['file_id'] = attachment.fileId;
-              return fileInput;
-            }),
+            ...toResponseInputContentFromAttachments(activeAttachments),
           ],
           role: 'user',
           type: 'message',
@@ -226,24 +175,10 @@ export async function POST(request: Request): Promise<Response> {
     });
   } catch (error) {
     if (isInvalidFileProviderError(error)) {
-      const removedCount = await removeKnownIncompatibleAttachmentsFromSession(
-        sessionId,
-        activeAttachments
-      );
-
-      if (removedCount > 0) {
-        return Response.json(
-          {
-            error: 'Se removio un adjunto incompatible (por ejemplo SVG). Reintenta la generacion.',
-          },
-          { status: 400 }
-        );
-      }
-
       return Response.json(
         {
           error:
-            'Uno de los adjuntos fue rechazado por el proveedor de IA. Quitalo manualmente y reintenta.',
+            'Uno de los adjuntos de imagen fue enviado con un formato no compatible para este request. Reintenta; si persiste, quita ese adjunto.',
         },
         { status: 400 }
       );

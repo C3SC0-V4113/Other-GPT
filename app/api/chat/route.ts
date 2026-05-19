@@ -1,10 +1,7 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
-import {
-  isKnownInferenceIncompatibleAttachment,
-  toChatAttachmentSnapshot,
-} from '@/lib/chat-attachments';
+import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
 import { parseChatRequestBody } from '@/lib/chat-dtos';
 import {
   appendSessionMessage,
@@ -12,8 +9,8 @@ import {
   clearSessionData,
   getSessionAttachments,
   getSessionMessages,
-  removeSessionAttachmentsByIds,
 } from '@/lib/chat-session-store';
+import { toResponseInputContentFromAttachments } from '@/lib/openai-response-input-content';
 
 import type { ChatAttachment } from '@/lib/chat-attachments';
 
@@ -45,40 +42,17 @@ function getProviderErrorMessage(error: unknown): string {
 
 function isInvalidFileProviderError(error: unknown): boolean {
   const message = getProviderErrorMessage(error).toLowerCase();
-  return message.includes('invalid file');
-}
-
-async function removeKnownIncompatibleAttachmentsFromSession(
-  sessionId: string,
-  attachments: ChatAttachment[]
-): Promise<number> {
-  const incompatibleAttachmentIds = attachments.reduce<string[]>((accumulator, attachment) => {
-    if (
-      isKnownInferenceIncompatibleAttachment({
-        filename: attachment.name,
-        mimeType: attachment.mimeType,
-      })
-    ) {
-      accumulator.push(attachment.id);
-    }
-
-    return accumulator;
-  }, []);
-
-  const removedAttachments = removeSessionAttachmentsByIds(sessionId, incompatibleAttachmentIds);
-
-  if (!removedAttachments.length) {
-    return 0;
-  }
-
-  await deleteFilesFromOpenAI(removedAttachments.map((attachment) => attachment.fileId));
-  return removedAttachments.length;
+  return (
+    message.includes('invalid file') ||
+    message.includes('expected context stuffing file type') ||
+    (message.includes('invalid input') && message.includes('input_file'))
+  );
 }
 
 function buildInputFromSessionMessages(
   sessionMessages: ReturnType<typeof getSessionMessages>,
   currentMessage: string,
-  currentFileIds: string[]
+  currentAttachments: ChatAttachment[]
 ) {
   return sessionMessages.reduce<OpenAI.Responses.ResponseInputItem[]>(
     (accumulator, message, index) => {
@@ -106,13 +80,7 @@ function buildInputFromSessionMessages(
             text: message.content.text,
             type: 'input_text',
           },
-          ...currentFileIds.map((fileId) => {
-            const fileInput: { [key: string]: string } & { type: 'input_file' } = {
-              type: 'input_file',
-            };
-            fileInput['file_id'] = fileId;
-            return fileInput;
-          }),
+          ...toResponseInputContentFromAttachments(currentAttachments),
         ],
         role: 'user',
         type: 'message',
@@ -184,11 +152,7 @@ export async function POST(request: Request): Promise<Response> {
   });
 
   const sessionMessages = getSessionMessages(sessionId);
-  const modelInput = buildInputFromSessionMessages(
-    sessionMessages,
-    userMessage,
-    activeAttachments.map((attachment) => attachment.fileId)
-  );
+  const modelInput = buildInputFromSessionMessages(sessionMessages, userMessage, activeAttachments);
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
@@ -204,24 +168,10 @@ export async function POST(request: Request): Promise<Response> {
     });
   } catch (error) {
     if (isInvalidFileProviderError(error)) {
-      const removedCount = await removeKnownIncompatibleAttachmentsFromSession(
-        sessionId,
-        activeAttachments
-      );
-
-      if (removedCount > 0) {
-        return Response.json(
-          {
-            error: 'Se removio un adjunto incompatible (por ejemplo SVG). Reintenta el mensaje.',
-          },
-          { status: 400 }
-        );
-      }
-
       return Response.json(
         {
           error:
-            'Uno de los adjuntos fue rechazado por el proveedor de IA. Quitalo manualmente y reintenta.',
+            'Uno de los adjuntos de imagen fue enviado con un formato no compatible para este request. Reintenta; si persiste, quita ese adjunto.',
         },
         { status: 400 }
       );

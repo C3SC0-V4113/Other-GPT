@@ -103,36 +103,6 @@ export function removeSessionAttachment(
   return removedAttachment;
 }
 
-export function removeSessionAttachmentsByIds(
-  sessionId: string,
-  attachmentIds: string[]
-): ChatAttachment[] {
-  if (!attachmentIds.length) {
-    return [];
-  }
-
-  const sessionState = sessionStore.get(sessionId);
-
-  if (!sessionState) {
-    return [];
-  }
-
-  const attachmentIdSet = new Set(attachmentIds);
-  const removedAttachments = sessionState.attachments.filter((attachment) =>
-    attachmentIdSet.has(attachment.id)
-  );
-
-  if (!removedAttachments.length) {
-    return [];
-  }
-
-  sessionState.attachments = sessionState.attachments.filter(
-    (attachment) => !attachmentIdSet.has(attachment.id)
-  );
-
-  return removedAttachments;
-}
-
 export function clearSessionData(sessionId: string): { fileIdsToDelete: string[] } {
   const existingSessionState = sessionStore.get(sessionId);
 
