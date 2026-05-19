@@ -1,13 +1,14 @@
 # ADR 0004: Adjuntos de Chat y Migracion a Responses API
 
 - Fecha: 2026-05-17
+- Actualizado: 2026-05-18
 - Estado: Accepted
 
 ## Contexto
 
 El chat soportaba texto e imagen, pero no permitia adjuntar archivos reutilizables en la sesion.
 Ademas, `POST /api/chat` estaba basado en `chat.completions`, lo que no es la via ideal para
-enviar `input_file` como contexto multimodal.
+enviar entradas de archivo e imagen como contexto multimodal.
 
 Se requeria:
 
@@ -22,13 +23,16 @@ Se requeria:
 2. Introducir adjuntos activos por sesion con endpoints dedicados:
    - `POST /api/chat/attachments`
    - `DELETE /api/chat/attachments/[attachmentId]`
-3. Enviar adjuntos al modelo como `input_file` en chat e imagen.
+3. Enviar adjuntos al modelo con mapeo por tipo:
+   - imagenes como `input_image`,
+   - documentos y texto como `input_file`.
 4. Mantener los adjuntos en sesion hasta que el usuario los elimine o limpie el chat.
 5. Al ejecutar `DELETE /api/chat`, limpiar estado local y borrar archivos remotos asociados.
 6. En UI:
-   - dropzone invisible en estado normal,
-   - overlay visible solo durante drag sobre composer,
-   - chips compactos con icono/mini-preview, truncado y accion de quitar.
+   - el menu `+` expone siempre "Archivos en contexto",
+   - la gestion de adjuntos ocurre en modal dedicado (lista compacta con preview/icono, nombre, tamano y quitar),
+   - el dropzone del composer se desactiva cuando el modal esta abierto,
+   - el modal habilita su propio dropzone con overlay durante drag y carga.
 
 ## Consecuencias
 

@@ -32,7 +32,8 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
   - `components/chat/chat-message-bubbles.tsx` define variantes compuestas por tipo de burbuja.
   - `components/chat/chat-bubble.tsx` define infraestructura compuesta (`Root`, `Header`, `Body`, `Footer`, `Actions`, `Action`).
 - Entrada de usuario:
-  - `components/chat/chat-composer-form.tsx` usa composición explícita del composer con controles shadcn (badge/select/tooltip/separator).
+  - `components/chat/chat-composer-form.tsx` usa composición explícita del composer con controles shadcn (select/tooltip/separator).
+  - `components/chat/composer/composer-attachments-uploader.tsx` orquesta dropzones y apertura del modal de adjuntos.
 
 ## Capacidades multimodales
 
@@ -43,7 +44,9 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
 - Adjuntos de archivos:
   - `POST /api/chat/attachments` para subir archivos del composer.
   - `DELETE /api/chat/attachments/[attachmentId]` para quitar adjuntos activos.
-  - adjuntos reutilizables por sesion y enviados como `input_file` en chat e imagen.
+  - adjuntos reutilizables por sesion:
+    - imagenes enviadas al modelo como `input_image`,
+    - documentos/texto enviados como `input_file`.
 - Speech-to-text:
   - `POST /api/audio/transcriptions` para transcribir audio del dictado.
 - Text-to-speech:
@@ -59,6 +62,7 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
 - Flujo:
   - `sendMessage()` agrega user + burbuja assistant `streaming`.
   - si hay adjuntos activos, cada prompt de usuario los incluye como contexto de archivo.
+  - la gestion de adjuntos vive en "Archivos en contexto" (menu `+`): listar, agregar y quitar desde modal.
   - modo imagen genera burbuja user (prompt) + burbuja assistant (imagen).
   - `stopGeneration()` aborta la peticion activa; conserva parcial como `interrupted`.
   - errores de red/API se renderizan in-stream como burbuja destructiva (`kind=error`).
