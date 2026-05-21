@@ -75,30 +75,77 @@ export interface ChatState {
   };
 }
 
+export interface ChatActionHandlers {
+  abortPendingRequest: () => void;
+  addErrorBubble: (message: string, options?: { retryPrompt?: string }) => void;
+  addFilesAsAttachments: (files: File[]) => Promise<number>;
+  clearLocalState: () => void;
+  copyMessageText: (messageId: string, messageText: string) => Promise<void>;
+  playMessageAudio: (messageId: string, messageText: string) => Promise<void>;
+  removeAttachment: (attachmentId: string) => Promise<boolean>;
+  resetFromInitialMessages: () => void;
+  retryLastFailedPrompt: () => Promise<void>;
+  sendMessage: () => Promise<void>;
+  setInput: (nextInput: string) => void;
+  setSelectedImageAspectRatio: (nextAspectRatio: ChatImageAspectRatio) => void;
+  stopGeneration: () => void;
+  stopPlayingAudio: () => void;
+  toggleImageGenerationMode: () => void;
+  toggleRecording: () => Promise<void>;
+}
+
+export interface ChatDerivedState {
+  isEmptyState: boolean;
+  isSendDisabled: boolean;
+}
+
 export interface ChatProviderValue {
-  actions: {
-    abortPendingRequest: () => void;
-    addErrorBubble: (message: string, options?: { retryPrompt?: string }) => void;
-    addFilesAsAttachments: (files: File[]) => Promise<number>;
-    clearLocalState: () => void;
-    copyMessageText: (messageId: string, messageText: string) => Promise<void>;
-    playMessageAudio: (messageId: string, messageText: string) => Promise<void>;
-    removeAttachment: (attachmentId: string) => Promise<boolean>;
-    resetFromInitialMessages: () => void;
-    retryLastFailedPrompt: () => Promise<void>;
-    sendMessage: () => Promise<void>;
-    setInput: (nextInput: string) => void;
-    setSelectedImageAspectRatio: (nextAspectRatio: ChatImageAspectRatio) => void;
-    stopGeneration: () => void;
-    stopPlayingAudio: () => void;
-    toggleImageGenerationMode: () => void;
-    toggleRecording: () => Promise<void>;
-  };
-  derived: {
-    isEmptyState: boolean;
-    isSendDisabled: boolean;
-  };
+  actions: ChatActionHandlers;
+  derived: ChatDerivedState;
   state: ChatState;
+}
+
+export interface ChatMessagesContextValue {
+  copiedMessageId: string | null;
+  copyMessageText: (messageId: string, messageText: string) => Promise<void>;
+  isEmptyState: boolean;
+  messages: ChatUiMessage[];
+  retryLastFailedPrompt: () => Promise<void>;
+}
+
+export interface ChatRuntimeContextValue {
+  abortPendingRequest: () => void;
+  addErrorBubble: (message: string, options?: { retryPrompt?: string }) => void;
+  clearLocalState: () => void;
+  errorMessage: string;
+  isSubmitting: boolean;
+  resetFromInitialMessages: () => void;
+  sendMessage: () => Promise<void>;
+  stopGeneration: () => void;
+}
+
+export interface ChatComposerStateContextValue {
+  addFilesAsAttachments: (files: File[]) => Promise<number>;
+  attachments: ChatAttachment[];
+  input: string;
+  isImageGenerationMode: boolean;
+  isRecording: boolean;
+  isSendDisabled: boolean;
+  isSubmitting: boolean;
+  isTranscribing: boolean;
+  removeAttachment: (attachmentId: string) => Promise<boolean>;
+  selectedImageAspectRatio: ChatImageAspectRatio;
+  setInput: (nextInput: string) => void;
+  setSelectedImageAspectRatio: (nextAspectRatio: ChatImageAspectRatio) => void;
+  toggleImageGenerationMode: () => void;
+  toggleRecording: () => Promise<void>;
+}
+
+export interface ChatAudioActionsContextValue {
+  playMessageAudio: (messageId: string, messageText: string) => Promise<void>;
+  playingMessageId: string | null;
+  stopPlayingAudio: () => void;
+  ttsLoadingMessageId: string | null;
 }
 
 export function toUiMessage(message: ChatMessage, index: number): ChatUiMessage {

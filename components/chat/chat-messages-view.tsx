@@ -71,17 +71,17 @@ function renderMessage(
       return (
         <MessageBubble.assistantText
           key={message.id}
-          copiedMessageId={options.copiedMessageId}
           copyMessageText={options.copyMessageText}
+          isCopied={options.copiedMessageId === message.id}
+          isPlaying={options.playingMessageId === message.id}
+          isTtsLoading={options.ttsLoadingMessageId === message.id}
           messageId={message.id}
-          playingMessageId={options.playingMessageId}
           playMessageAudio={options.playMessageAudio}
           retryLastFailedPrompt={options.retryLastFailedPrompt}
           retryPrompt={message.retryPrompt}
           status={message.status}
           stopPlayingAudio={options.stopPlayingAudio}
           text={message.content.text}
-          ttsLoadingMessageId={options.ttsLoadingMessageId}
         />
       );
     }

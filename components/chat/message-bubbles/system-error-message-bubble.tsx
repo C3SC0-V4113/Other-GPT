@@ -1,8 +1,10 @@
+import { memo } from 'react';
+
 import * as ChatBubble from '@/components/chat/chat-bubble';
 
 import type { SystemErrorMessageBubbleProps } from '@/components/chat/message-bubbles/types';
 
-export function SystemErrorMessageBubble({
+export const SystemErrorMessageBubble = memo(function SystemErrorMessageBubble({
   retryLastFailedPrompt,
   retryPrompt,
   text,
@@ -28,4 +30,4 @@ export function SystemErrorMessageBubble({
       </ChatBubble.Footer>
     </ChatBubble.Root>
   );
-}
+});

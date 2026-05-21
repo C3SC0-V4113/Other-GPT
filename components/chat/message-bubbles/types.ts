@@ -11,17 +11,17 @@ export interface UserTextMessageBubbleProps {
 }
 
 export interface AssistantTextMessageBubbleProps {
-  copiedMessageId: string | null;
   copyMessageText: (messageId: string, messageText: string) => Promise<void>;
+  isCopied: boolean;
+  isPlaying: boolean;
+  isTtsLoading: boolean;
   messageId: string;
-  playingMessageId: string | null;
   playMessageAudio: (messageId: string, messageText: string) => Promise<void>;
   retryLastFailedPrompt: () => Promise<void>;
   retryPrompt?: string;
   status: MessageBubbleStatus;
   stopPlayingAudio: () => void;
   text: string;
-  ttsLoadingMessageId: string | null;
 }
 
 export interface AssistantImageMessageBubbleProps {

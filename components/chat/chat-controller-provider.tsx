@@ -24,7 +24,15 @@ import {
   useChatStreamEffects,
 } from '@/components/chat/controller-effects';
 
-import type { ChatProviderValue } from '@/components/chat/chat-types';
+import type {
+  ChatActionHandlers,
+  ChatAudioActionsContextValue,
+  ChatComposerStateContextValue,
+  ChatDerivedState,
+  ChatMessagesContextValue,
+  ChatProviderValue,
+  ChatRuntimeContextValue,
+} from '@/components/chat/chat-types';
 import type { ChatAttachment } from '@/lib/chat-attachments';
 import type { ChatImageAspectRatio, ChatMessage } from '@/lib/chat-session-store';
 
@@ -276,7 +284,7 @@ function useChatProviderValue(
     };
   }, [clearCopyFeedbackTimeout, releaseAudioResources, state.composer.attachments]);
 
-  const actions = useMemo<ChatProviderValue['actions']>(
+  const actions = useMemo<ChatActionHandlers>(
     () => ({
       abortPendingRequest,
       addErrorBubble,
@@ -319,7 +327,7 @@ function useChatProviderValue(
     ]
   );
 
-  const derived = useMemo(
+  const derived = useMemo<ChatDerivedState>(
     () => ({
       isEmptyState: state.messages.items.length === 0,
       isSendDisabled: state.request.isSubmitting || !state.composer.input.trim(),
@@ -337,79 +345,154 @@ function useChatProviderValue(
   );
 }
 
-const ChatContext = createContext<ChatProviderValue | null>(null);
+const ChatMessagesContext = createContext<ChatMessagesContextValue | null>(null);
+const ChatRuntimeContext = createContext<ChatRuntimeContextValue | null>(null);
+const ChatComposerStateContext = createContext<ChatComposerStateContextValue | null>(null);
+const ChatAudioActionsContext = createContext<ChatAudioActionsContextValue | null>(null);
 
 export function ChatProvider({ children, initialAttachments, initialMessages }: ChatProviderProps) {
   const value = useChatProviderValue(initialMessages, initialAttachments);
+  const { actions, derived, state } = value;
 
-  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
+  const messagesValue = useMemo<ChatMessagesContextValue>(
+    () => ({
+      copiedMessageId: state.feedback.copiedMessageId,
+      copyMessageText: actions.copyMessageText,
+      isEmptyState: derived.isEmptyState,
+      messages: state.messages.items,
+      retryLastFailedPrompt: actions.retryLastFailedPrompt,
+    }),
+    [
+      actions.copyMessageText,
+      actions.retryLastFailedPrompt,
+      derived.isEmptyState,
+      state.feedback.copiedMessageId,
+      state.messages.items,
+    ]
+  );
+
+  const runtimeValue = useMemo<ChatRuntimeContextValue>(
+    () => ({
+      abortPendingRequest: actions.abortPendingRequest,
+      addErrorBubble: actions.addErrorBubble,
+      clearLocalState: actions.clearLocalState,
+      errorMessage: state.feedback.errorMessage,
+      isSubmitting: state.request.isSubmitting,
+      resetFromInitialMessages: actions.resetFromInitialMessages,
+      sendMessage: actions.sendMessage,
+      stopGeneration: actions.stopGeneration,
+    }),
+    [
+      actions.abortPendingRequest,
+      actions.addErrorBubble,
+      actions.clearLocalState,
+      actions.resetFromInitialMessages,
+      actions.sendMessage,
+      actions.stopGeneration,
+      state.feedback.errorMessage,
+      state.request.isSubmitting,
+    ]
+  );
+
+  const composerStateValue = useMemo<ChatComposerStateContextValue>(
+    () => ({
+      addFilesAsAttachments: actions.addFilesAsAttachments,
+      attachments: state.composer.attachments,
+      input: state.composer.input,
+      isImageGenerationMode: state.composer.isImageGenerationMode,
+      isRecording: state.recording.isRecording,
+      isSendDisabled: derived.isSendDisabled,
+      isSubmitting: state.request.isSubmitting,
+      isTranscribing: state.recording.isTranscribing,
+      removeAttachment: actions.removeAttachment,
+      selectedImageAspectRatio: state.composer.selectedImageAspectRatio,
+      setInput: actions.setInput,
+      setSelectedImageAspectRatio: actions.setSelectedImageAspectRatio,
+      toggleImageGenerationMode: actions.toggleImageGenerationMode,
+      toggleRecording: actions.toggleRecording,
+    }),
+    [
+      actions.addFilesAsAttachments,
+      actions.removeAttachment,
+      actions.setInput,
+      actions.setSelectedImageAspectRatio,
+      actions.toggleImageGenerationMode,
+      actions.toggleRecording,
+      derived.isSendDisabled,
+      state.composer.attachments,
+      state.composer.input,
+      state.composer.isImageGenerationMode,
+      state.composer.selectedImageAspectRatio,
+      state.recording.isRecording,
+      state.recording.isTranscribing,
+      state.request.isSubmitting,
+    ]
+  );
+
+  const audioActionsValue = useMemo<ChatAudioActionsContextValue>(
+    () => ({
+      playMessageAudio: actions.playMessageAudio,
+      playingMessageId: state.audioPlayback.playingMessageId,
+      stopPlayingAudio: actions.stopPlayingAudio,
+      ttsLoadingMessageId: state.audioPlayback.ttsLoadingMessageId,
+    }),
+    [
+      actions.playMessageAudio,
+      actions.stopPlayingAudio,
+      state.audioPlayback.playingMessageId,
+      state.audioPlayback.ttsLoadingMessageId,
+    ]
+  );
+
+  return (
+    <ChatRuntimeContext.Provider value={runtimeValue}>
+      <ChatComposerStateContext.Provider value={composerStateValue}>
+        <ChatMessagesContext.Provider value={messagesValue}>
+          <ChatAudioActionsContext.Provider value={audioActionsValue}>
+            {children}
+          </ChatAudioActionsContext.Provider>
+        </ChatMessagesContext.Provider>
+      </ChatComposerStateContext.Provider>
+    </ChatRuntimeContext.Provider>
+  );
 }
 
-function useChatContext(): ChatProviderValue {
-  const context = use(ChatContext);
+export function useChatMessages() {
+  const context = use(ChatMessagesContext);
 
   if (!context) {
-    throw new Error('Chat hooks must be used within ChatProvider.');
+    throw new Error('useChatMessages must be used within ChatProvider.');
   }
 
   return context;
 }
 
-export function useChatMessages() {
-  const { actions, derived, state } = useChatContext();
-
-  return {
-    copiedMessageId: state.feedback.copiedMessageId,
-    copyMessageText: actions.copyMessageText,
-    isEmptyState: derived.isEmptyState,
-    messages: state.messages.items,
-    retryLastFailedPrompt: actions.retryLastFailedPrompt,
-  };
-}
-
 export function useChatRuntime() {
-  const { actions, derived, state } = useChatContext();
+  const context = use(ChatRuntimeContext);
 
-  return {
-    abortPendingRequest: actions.abortPendingRequest,
-    addErrorBubble: actions.addErrorBubble,
-    clearLocalState: actions.clearLocalState,
-    errorMessage: state.feedback.errorMessage,
-    isSendDisabled: derived.isSendDisabled,
-    isSubmitting: state.request.isSubmitting,
-    resetFromInitialMessages: actions.resetFromInitialMessages,
-    sendMessage: actions.sendMessage,
-    stopGeneration: actions.stopGeneration,
-  };
+  if (!context) {
+    throw new Error('useChatRuntime must be used within ChatProvider.');
+  }
+
+  return context;
 }
 
 export function useChatComposerState() {
-  const { actions, state } = useChatContext();
+  const context = use(ChatComposerStateContext);
 
-  return {
-    addFilesAsAttachments: actions.addFilesAsAttachments,
-    attachments: state.composer.attachments,
-    input: state.composer.input,
-    isImageGenerationMode: state.composer.isImageGenerationMode,
-    isRecording: state.recording.isRecording,
-    isSubmitting: state.request.isSubmitting,
-    isTranscribing: state.recording.isTranscribing,
-    removeAttachment: actions.removeAttachment,
-    selectedImageAspectRatio: state.composer.selectedImageAspectRatio,
-    setInput: actions.setInput,
-    setSelectedImageAspectRatio: actions.setSelectedImageAspectRatio,
-    toggleImageGenerationMode: actions.toggleImageGenerationMode,
-    toggleRecording: actions.toggleRecording,
-  };
+  if (!context) {
+    throw new Error('useChatComposerState must be used within ChatProvider.');
+  }
+
+  return context;
 }
 
 export function useChatAudioActions() {
-  const { actions, state } = useChatContext();
+  const context = use(ChatAudioActionsContext);
 
-  return {
-    playMessageAudio: actions.playMessageAudio,
-    playingMessageId: state.audioPlayback.playingMessageId,
-    stopPlayingAudio: actions.stopPlayingAudio,
-    ttsLoadingMessageId: state.audioPlayback.ttsLoadingMessageId,
-  };
+  if (!context) {
+    throw new Error('useChatAudioActions must be used within ChatProvider.');
+  }
+
+  return context;
 }

@@ -1,5 +1,6 @@
 import { Download } from 'lucide-react';
 import Image from 'next/image';
+import { memo } from 'react';
 
 import * as ChatBubble from '@/components/chat/chat-bubble';
 import {
@@ -111,7 +112,7 @@ function AssistantCompleteImageActions({
   );
 }
 
-export function AssistantImageMessageBubble({
+export const AssistantImageMessageBubble = memo(function AssistantImageMessageBubble({
   content,
   retryLastFailedPrompt,
   retryPrompt,
@@ -157,4 +158,4 @@ export function AssistantImageMessageBubble({
       )}
     </ChatBubble.Root>
   );
-}
+});

@@ -45,7 +45,7 @@ export function ChatComposerProvider({ children }: ChatComposerProviderProps) {
       input: composer.input,
       isImageGenerationMode: composer.isImageGenerationMode,
       isRecording: composer.isRecording,
-      isSendDisabled: runtime.isSendDisabled,
+      isSendDisabled: composer.isSendDisabled,
       isSubmitting: runtime.isSubmitting,
       isTranscribing: composer.isTranscribing,
       removeAttachment: composer.removeAttachment,
