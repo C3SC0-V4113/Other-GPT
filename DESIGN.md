@@ -47,6 +47,8 @@ Si hay conflicto entre implementacion visual y este documento, **`DESIGN.md` tie
 
 - `streaming`: indicar `Generando...` en footer de burbuja assistant.
 - imagen en `streaming`: usar placeholder o preview parcial dentro de la misma burbuja assistant.
+- imagen final: respetar el aspect ratio solicitado, sin recorte visual por `object-cover`.
+- imagen final: exponer accion `Descargar` en el footer de la burbuja assistant completa.
 - `interrupted`: conservar contenido parcial y mostrar `Reintentar`.
 - `error`: burbuja destructiva con mensaje y accion `Reintentar`.
 - `empty`: estado inicial claro cuando no hay conversacion.
