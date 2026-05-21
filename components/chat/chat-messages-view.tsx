@@ -43,13 +43,14 @@ function renderMessage(
     );
   }
 
-  if (message.content.type === 'image') {
+  if (message.content.type === 'image' || message.content.type === 'image-stream') {
     return (
       <MessageBubble.assistantImage
+        content={message.content}
         key={message.id}
-        imageBase64={message.content.imageBase64}
-        mimeType={message.content.mimeType}
-        prompt={message.content.prompt}
+        retryLastFailedPrompt={options.retryLastFailedPrompt}
+        retryPrompt={message.retryPrompt}
+        status={message.status}
       />
     );
   }

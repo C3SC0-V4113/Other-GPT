@@ -79,6 +79,10 @@ function getGeneratedImageBase64(response: OpenAI.Responses.Response): string | 
   return null;
 }
 
+function toNdjsonLine(payload: Record<string, number | string>): Uint8Array {
+  return new TextEncoder().encode(`${JSON.stringify(payload)}\n`);
+}
+
 export async function POST(request: Request): Promise<Response> {
   if (!process.env.OPENAI_API_KEY) {
     return Response.json({ error: 'OPENAI_API_KEY is missing.' }, { status: 500 });
@@ -108,8 +112,17 @@ export async function POST(request: Request): Promise<Response> {
   const imageModel = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
   const size = getImageSizeFromAspectRatio(aspectRatio);
 
+  appendSessionMessage(sessionId, {
+    content: {
+      attachments: activeAttachments.map((attachment) => toChatAttachmentSnapshot(attachment)),
+      text: prompt,
+      type: 'text',
+    },
+    role: 'user',
+  });
+
   try {
-    const response = await openai.responses.create({
+    const stream = await openai.responses.create({
       input: [
         {
           content: [
@@ -123,55 +136,119 @@ export async function POST(request: Request): Promise<Response> {
       model,
       tools: [
         (() => {
-          const imageTool: {
-            model: string;
-            size: '1024x1024' | '1024x1536' | '1536x1024' | 'auto';
-            type: 'image_generation';
-            [key: string]: string;
-          } = {
+          const imageTool = {
+            ['output_format']: 'png' as const,
+            ['partial_images']: 2,
             model: imageModel,
             size,
-            type: 'image_generation',
+            type: 'image_generation' as const,
           };
-          imageTool['output_format'] = 'png';
           return imageTool;
         })(),
       ],
+      stream: true,
     });
+    const readableStream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        let finalResponse: OpenAI.Responses.Response | null = null;
+        let finalImageBase64: string | null = null;
 
-    const imageBase64 = getGeneratedImageBase64(response);
+        try {
+          for await (const event of stream) {
+            if (event.type === 'response.image_generation_call.partial_image') {
+              controller.enqueue(
+                toNdjsonLine({
+                  aspectRatio,
+                  imageBase64: event.partial_image_b64,
+                  mimeType: 'image/png',
+                  partialImageIndex: event.partial_image_index,
+                  prompt,
+                  type: 'partial_image',
+                })
+              );
+              continue;
+            }
 
-    if (!imageBase64) {
-      return Response.json(
-        { error: 'Image generation did not return image data.' },
-        { status: 502 }
-      );
-    }
+            if (event.type === 'response.output_item.done') {
+              if (
+                event.item.type === 'image_generation_call' &&
+                typeof event.item.result === 'string'
+              ) {
+                finalImageBase64 = event.item.result;
+              }
 
-    appendSessionMessage(sessionId, {
-      content: {
-        attachments: activeAttachments.map((attachment) => toChatAttachmentSnapshot(attachment)),
-        text: prompt,
-        type: 'text',
+              continue;
+            }
+
+            if (event.type === 'response.completed') {
+              finalResponse = event.response;
+            }
+          }
+
+          if (!finalResponse) {
+            controller.enqueue(
+              toNdjsonLine({
+                message: 'Image generation ended without a final response.',
+                type: 'error',
+              })
+            );
+            return;
+          }
+
+          const imageBase64 = finalImageBase64 ?? getGeneratedImageBase64(finalResponse);
+
+          if (!imageBase64) {
+            controller.enqueue(
+              toNdjsonLine({
+                message: 'Image generation did not return image data.',
+                type: 'error',
+              })
+            );
+            return;
+          }
+
+          appendSessionMessage(sessionId, {
+            content: {
+              aspectRatio,
+              imageBase64,
+              mimeType: 'image/png',
+              prompt,
+              type: 'image',
+            },
+            role: 'assistant',
+          });
+
+          controller.enqueue(
+            toNdjsonLine({
+              aspectRatio,
+              imageBase64,
+              mimeType: 'image/png',
+              prompt,
+              type: 'complete',
+            })
+          );
+        } catch (error) {
+          const message = isInvalidFileProviderError(error)
+            ? 'Uno de los adjuntos de imagen fue enviado con un formato no compatible para este request. Reintenta; si persiste, quita ese adjunto.'
+            : `No fue posible generar la imagen: ${getProviderErrorMessage(error)}`;
+
+          controller.enqueue(
+            toNdjsonLine({
+              message,
+              type: 'error',
+            })
+          );
+        } finally {
+          controller.close();
+        }
       },
-      role: 'user',
-    });
-    appendSessionMessage(sessionId, {
-      content: {
-        aspectRatio,
-        imageBase64,
-        mimeType: 'image/png',
-        prompt,
-        type: 'image',
-      },
-      role: 'assistant',
     });
 
-    return Response.json({
-      aspectRatio,
-      imageBase64,
-      mimeType: 'image/png',
-      prompt,
+    return new Response(readableStream, {
+      headers: {
+        'cache-control': 'no-store',
+        'content-type': 'application/x-ndjson; charset=utf-8',
+      },
     });
   } catch (error) {
     if (isInvalidFileProviderError(error)) {

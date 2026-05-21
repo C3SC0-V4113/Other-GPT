@@ -36,6 +36,7 @@ Se adopta la siguiente arquitectura base:
 
 - `ChatBubble.*` como patron obligatorio para mensajes, estados y acciones.
 - Errores in-stream como burbuja destructiva, sin banner global separado.
+- Imagen comparte el mismo contrato de estados del chat: preview parcial en `streaming`, conservacion en `interrupted`, y retry desde la misma burbuja.
 
 4. Layout de scroll controlado
 

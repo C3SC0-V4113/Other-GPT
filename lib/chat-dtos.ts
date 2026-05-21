@@ -25,12 +25,26 @@ export interface GenerateImageRequestDto {
   prompt: string;
 }
 
-export interface GenerateImageResponseDto {
-  aspectRatio: ChatImageAspectRatio;
-  imageBase64: string;
-  mimeType: string;
-  prompt: string;
-}
+export type GenerateImageStreamEventDto =
+  | {
+      aspectRatio: ChatImageAspectRatio;
+      imageBase64: string;
+      mimeType: string;
+      partialImageIndex: number;
+      prompt: string;
+      type: 'partial_image';
+    }
+  | {
+      aspectRatio: ChatImageAspectRatio;
+      imageBase64: string;
+      mimeType: string;
+      prompt: string;
+      type: 'complete';
+    }
+  | {
+      message: string;
+      type: 'error';
+    };
 
 export interface SpeechRequestDto {
   text: string;
@@ -156,34 +170,65 @@ export function parseSpeechRequestBody(payload: unknown): ParseResult<SpeechRequ
   return { data: { text }, ok: true };
 }
 
-export function parseGenerateImageResponse(
+export function parseGenerateImageStreamEvent(
   payload: unknown
-): ParseResult<GenerateImageResponseDto> {
-  if (!isRecord(payload)) {
-    return { error: 'Invalid image response received.', ok: false };
+): ParseResult<GenerateImageStreamEventDto> {
+  if (!isRecord(payload) || typeof payload.type !== 'string') {
+    return { error: 'Invalid image stream event received.', ok: false };
   }
 
-  if (!isChatImageAspectRatio(payload.aspectRatio)) {
-    return { error: 'Invalid image response received.', ok: false };
+  if (payload.type === 'error') {
+    if (typeof payload.message !== 'string') {
+      return { error: 'Invalid image stream event received.', ok: false };
+    }
+
+    return {
+      data: {
+        message: payload.message,
+        type: 'error',
+      },
+      ok: true,
+    };
   }
 
   if (
-    typeof payload.imageBase64 !== 'string' ||
-    typeof payload.mimeType !== 'string' ||
-    typeof payload.prompt !== 'string'
+    (payload.type === 'complete' || payload.type === 'partial_image') &&
+    isChatImageAspectRatio(payload.aspectRatio) &&
+    typeof payload.imageBase64 === 'string' &&
+    typeof payload.mimeType === 'string' &&
+    typeof payload.prompt === 'string'
   ) {
-    return { error: 'Invalid image response received.', ok: false };
+    if (payload.type === 'complete') {
+      return {
+        data: {
+          aspectRatio: payload.aspectRatio,
+          imageBase64: payload.imageBase64,
+          mimeType: payload.mimeType,
+          prompt: payload.prompt,
+          type: 'complete',
+        },
+        ok: true,
+      };
+    }
+
+    if (typeof payload.partialImageIndex !== 'number') {
+      return { error: 'Invalid image stream event received.', ok: false };
+    }
+
+    return {
+      data: {
+        aspectRatio: payload.aspectRatio,
+        imageBase64: payload.imageBase64,
+        mimeType: payload.mimeType,
+        partialImageIndex: payload.partialImageIndex,
+        prompt: payload.prompt,
+        type: 'partial_image',
+      },
+      ok: true,
+    };
   }
 
-  return {
-    data: {
-      aspectRatio: payload.aspectRatio,
-      imageBase64: payload.imageBase64,
-      mimeType: payload.mimeType,
-      prompt: payload.prompt,
-    },
-    ok: true,
-  };
+  return { error: 'Invalid image stream event received.', ok: false };
 }
 
 export function parseTranscriptionResponse(

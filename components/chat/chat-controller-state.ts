@@ -25,7 +25,7 @@ export function createInitialChatState(
     },
     messages: {
       items: initialMessages.map((message, index) => toUiMessage(message, index)),
-      lastFailedUserPrompt: null,
+      lastFailedRequest: null,
     },
     recording: {
       isRecording: false,

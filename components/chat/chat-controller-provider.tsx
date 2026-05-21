@@ -101,7 +101,6 @@ function useChatProviderValue(
       selectedImageAspectRatio: state.composer.selectedImageAspectRatio,
     },
     deps: {
-      addErrorBubble,
       dispatch,
     },
     refs: {
@@ -204,13 +203,31 @@ function useChatProviderValue(
   ]);
 
   const retryLastFailedPrompt = useCallback(async () => {
-    if (!state.messages.lastFailedUserPrompt || state.request.isSubmitting) {
+    const lastFailedRequest = state.messages.lastFailedRequest;
+
+    if (!lastFailedRequest || state.request.isSubmitting) {
       return;
     }
 
     dispatch({ type: 'messages/remove-errors' });
-    await sendChatMessage({ trimmedInput: state.messages.lastFailedUserPrompt });
-  }, [dispatch, sendChatMessage, state.messages.lastFailedUserPrompt, state.request.isSubmitting]);
+
+    if (lastFailedRequest.kind === 'image') {
+      dispatch({
+        payload: lastFailedRequest.aspectRatio ?? 'auto',
+        type: 'composer/set-aspect-ratio',
+      });
+      await sendImageMessage(lastFailedRequest.prompt);
+      return;
+    }
+
+    await sendChatMessage({ trimmedInput: lastFailedRequest.prompt });
+  }, [
+    dispatch,
+    sendChatMessage,
+    sendImageMessage,
+    state.messages.lastFailedRequest,
+    state.request.isSubmitting,
+  ]);
 
   const clearCopyFeedbackTimeout = useCallback(() => {
     const timeoutId = copyFeedbackTimeoutRef.current;

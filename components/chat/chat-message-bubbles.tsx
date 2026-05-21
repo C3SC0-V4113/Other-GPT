@@ -17,9 +17,12 @@ import Image from 'next/image';
 import * as ChatBubble from '@/components/chat/chat-bubble';
 import { ChatMarkdown } from '@/components/chat/chat-markdown';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatAttachmentSize } from '@/lib/chat-attachments';
 
+import type { ChatStreamingImageContent } from '@/components/chat/chat-types';
 import type { ChatAttachmentSnapshot } from '@/lib/chat-attachments';
+import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
 
 const messageStateLabels = {
   error: 'Error',
@@ -48,9 +51,18 @@ interface AssistantTextMessageBubbleProps {
 }
 
 interface AssistantImageMessageBubbleProps {
-  imageBase64: string;
-  mimeType: string;
-  prompt: string;
+  content:
+    | ChatStreamingImageContent
+    | {
+        aspectRatio: ChatImageAspectRatio;
+        imageBase64: string;
+        mimeType: string;
+        prompt: string;
+        type: 'image';
+      };
+  retryLastFailedPrompt: () => Promise<void>;
+  retryPrompt?: string;
+  status: 'complete' | 'error' | 'interrupted' | 'streaming';
 }
 
 interface SystemErrorMessageBubbleProps {
@@ -111,24 +123,81 @@ function UserTextMessageBubble({ attachments, messageId, text }: UserTextMessage
   );
 }
 
-function AssistantImageMessageBubble({
+function getImagePlaceholderHeightClass(aspectRatio: ChatImageAspectRatio): string {
+  if (aspectRatio === '16:9') {
+    return 'h-60 md:h-72';
+  }
+
+  if (aspectRatio === '9:16') {
+    return 'h-104 max-w-60';
+  }
+
+  return 'h-72';
+}
+
+function ImagePreview({
+  aspectRatio,
   imageBase64,
   mimeType,
   prompt,
-}: AssistantImageMessageBubbleProps) {
+}: {
+  aspectRatio: ChatImageAspectRatio;
+  imageBase64: string | null;
+  mimeType: string;
+  prompt: string;
+}) {
+  const frameClassName = getImagePlaceholderHeightClass(aspectRatio);
+
+  if (!imageBase64) {
+    return (
+      <div className={frameClassName}>
+        <Skeleton className="size-full rounded-xl border border-border" />
+      </div>
+    );
+  }
+
   return (
-    <ChatBubble.Root role="assistant" state="complete">
-      <ChatBubble.Body className="space-y-2 whitespace-normal">
-        <Image
-          alt={prompt}
-          className="max-h-104 w-full rounded-xl border border-border object-cover"
-          height={1024}
-          src={`data:${mimeType};base64,${imageBase64}`}
-          unoptimized
-          width={1024}
+    <Image
+      alt={prompt}
+      className="max-h-104 w-full rounded-xl border border-border object-cover"
+      height={1024}
+      sizes="(max-width: 768px) 100vw, 768px"
+      src={`data:${mimeType};base64,${imageBase64}`}
+      unoptimized
+      width={1024}
+    />
+  );
+}
+
+function AssistantImageMessageBubble({
+  content,
+  retryLastFailedPrompt,
+  retryPrompt,
+  status,
+}: AssistantImageMessageBubbleProps) {
+  const previewImageBase64 =
+    content.type === 'image' ? content.imageBase64 : content.partialImageBase64;
+  const statusMessage = content.type === 'image-stream' ? content.statusMessage : undefined;
+
+  return (
+    <ChatBubble.Root role="assistant" state={status}>
+      <ChatBubble.Body className="flex flex-col gap-2 whitespace-normal">
+        <ImagePreview
+          aspectRatio={content.aspectRatio}
+          imageBase64={previewImageBase64}
+          mimeType={content.mimeType}
+          prompt={content.prompt}
         />
-        <p className="text-xs text-muted-foreground">Prompt: {prompt}</p>
+        <p className="text-xs text-muted-foreground">Prompt: {content.prompt}</p>
+        {statusMessage ? <p className="text-xs opacity-90">{statusMessage}</p> : null}
       </ChatBubble.Body>
+      {status === 'complete' ? null : (
+        <AssistantStatusFooter
+          retryLastFailedPrompt={retryLastFailedPrompt}
+          retryPrompt={retryPrompt}
+          status={status}
+        />
+      )}
     </ChatBubble.Root>
   );
 }

@@ -170,7 +170,13 @@ export function useChatStreamEffects({
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
           if (isManualStopRetryEnabled && isManualStopRequestedRef.current) {
-            dispatch({ payload: trimmedInput, type: 'messages/set-last-failed-prompt' });
+            dispatch({
+              payload: {
+                kind: 'chat',
+                prompt: trimmedInput,
+              },
+              type: 'messages/set-last-failed-request',
+            });
 
             if (!assistantContent && assistantMessageId) {
               dispatch({
@@ -201,7 +207,13 @@ export function useChatStreamEffects({
           });
         }
 
-        dispatch({ payload: trimmedInput, type: 'messages/set-last-failed-prompt' });
+        dispatch({
+          payload: {
+            kind: 'chat',
+            prompt: trimmedInput,
+          },
+          type: 'messages/set-last-failed-request',
+        });
         addErrorBubble(resolvedError, { retryPrompt: trimmedInput });
       } finally {
         requestAbortControllerRef.current = null;

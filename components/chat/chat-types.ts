@@ -7,7 +7,26 @@ import type {
 } from '@/lib/chat-session-store';
 
 type ChatMessageStatus = 'complete' | 'error' | 'interrupted' | 'streaming';
-type ChatUiMessageContent = ChatImageMessageContent | ChatTextMessageContent;
+
+export interface ChatRetryRequest {
+  aspectRatio?: ChatImageAspectRatio;
+  kind: 'chat' | 'image';
+  prompt: string;
+}
+
+export interface ChatStreamingImageContent {
+  aspectRatio: ChatImageAspectRatio;
+  mimeType: string;
+  partialImageBase64: string | null;
+  prompt: string;
+  statusMessage?: string;
+  type: 'image-stream';
+}
+
+type ChatUiMessageContent =
+  | ChatImageMessageContent
+  | ChatStreamingImageContent
+  | ChatTextMessageContent;
 
 export type ChatUiMessage =
   | {
@@ -44,7 +63,7 @@ export interface ChatState {
   };
   messages: {
     items: ChatUiMessage[];
-    lastFailedUserPrompt: string | null;
+    lastFailedRequest: ChatRetryRequest | null;
   };
   recording: {
     isRecording: boolean;

@@ -1,3 +1,4 @@
+import type { ChatRetryRequest } from '@/components/chat/chat-types';
 import type { ChatAttachment } from '@/lib/chat-attachments';
 import type {
   ChatImageAspectRatio,
@@ -19,11 +20,13 @@ export type ChatAction =
   | { type: 'feedback/set-error-message'; payload: string }
   | { type: 'messages/append-error'; payload: { message: string; retryPrompt?: string } }
   | {
-      type: 'messages/append-image-exchange';
+      type: 'messages/append-user-and-pending-image-assistant';
       payload: {
-        image: ChatImageMessageContent;
-        prompt: string;
+        aspectRatio: ChatImageAspectRatio;
+        assistantMessageId: string;
+        requestMessageId: string;
         userAttachments: ChatAttachment[];
+        userMessage: string;
       };
     }
   | {
@@ -37,14 +40,43 @@ export type ChatAction =
     }
   | { type: 'messages/clear-all' }
   | { type: 'messages/complete-assistant'; payload: { assistantMessageId: string } }
+  | {
+      type: 'messages/complete-assistant-image';
+      payload: { assistantMessageId: string; image: ChatImageMessageContent };
+    }
+  | {
+      type: 'messages/error-assistant-image';
+      payload: {
+        assistantMessageId: string;
+        aspectRatio: ChatImageAspectRatio;
+        message: string;
+        retryPrompt: string;
+      };
+    }
   | { type: 'messages/hydrate'; payload: ChatMessage[] }
+  | {
+      type: 'messages/interrupted-assistant-image';
+      payload: {
+        assistantMessageId: string;
+        aspectRatio: ChatImageAspectRatio;
+        retryPrompt: string;
+      };
+    }
   | {
       type: 'messages/interrupted-assistant';
       payload: { assistantMessageId: string; retryPrompt: string };
     }
   | { type: 'messages/remove-errors' }
   | { type: 'messages/remove-one'; payload: { messageId: string } }
-  | { type: 'messages/set-last-failed-prompt'; payload: string | null }
+  | { type: 'messages/set-last-failed-request'; payload: ChatRetryRequest | null }
+  | {
+      type: 'messages/update-assistant-image-stream';
+      payload: {
+        assistantMessageId: string;
+        imageBase64: string;
+        message?: string;
+      };
+    }
   | {
       type: 'messages/update-assistant-stream';
       payload: { assistantMessageId: string; content: string };

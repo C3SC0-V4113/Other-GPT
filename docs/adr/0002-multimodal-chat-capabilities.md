@@ -33,7 +33,7 @@ Se adopta una extension multimodal v1 con estas decisiones:
 3. Rutas API separadas por capacidad
 
 - `POST /api/chat`: texto en streaming (existente).
-- `POST /api/images`: generacion de imagen por prompt y aspect ratio.
+- `POST /api/images`: generacion de imagen por prompt y aspect ratio, con previews parciales en streaming y evento final de imagen completa.
 - `POST /api/audio/transcriptions`: speech-to-text con `multipart/form-data`.
 - `POST /api/audio/speech`: text-to-speech on-demand para reproducir respuestas.
 
@@ -47,6 +47,10 @@ Se adopta una extension multimodal v1 con estas decisiones:
 - Burbujas `assistant` completas de texto agregan acciones:
   - `Escuchar` (TTS),
   - `Copiar` (clipboard).
+- Burbujas `assistant` de imagen comparten el contrato visual de `streaming / interrupted / error / retry`:
+  - placeholder inicial,
+  - previews parciales in-stream,
+  - misma burbuja conservada en cancelacion o error con `Reintentar`.
 
 ## Consequences
 
