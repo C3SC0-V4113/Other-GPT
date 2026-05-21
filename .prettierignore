@@ -9,3 +9,6 @@ out
 pnpm-lock.yaml
 yarn.lock
 package-lock.json
+.agents/skills/architecture-decision-records
+.agents/skills/systematic-debugging
+.agents/skills/verification-before-completion

@@ -1,5 +1,6 @@
 {
   "ignore": {
+    "files": [".agents/**"],
     "overrides": [
       {
         "files": ["components/ui/**"],

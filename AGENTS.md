@@ -64,6 +64,8 @@ Reference hierarchy for conflicts:
 
 - `project-architecture`
   - Trigger on any change to chat UI, component architecture, layout/scroll behavior, state flow, or theming.
+- `systematic-debugging`
+  - Trigger on bugs, failing checks, unexpected behavior, build/test/lint/typecheck/doctor failures before proposing fixes.
 - `vercel-composition-patterns`
   - Trigger on compound components, composable APIs, provider patterns, or refactors to reduce prop complexity.
 - `vercel-react-best-practices`
@@ -76,8 +78,12 @@ Reference hierarchy for conflicts:
   - Trigger on UI component work using shadcn patterns, composition, styling rules, registries, or CLI-driven component updates.
 - `decision-doc-sync`
   - Trigger when there are structural decisions (architecture, contracts, cross-cutting UX standards, conventions).
+- `architecture-decision-records`
+  - Trigger when creating, updating, superseding, or reviewing ADRs for significant technical decisions.
+- `verification-before-completion`
+  - Trigger before claiming work is complete, fixed, or passing; use as the evidence policy before project validation.
 - `project-min-evaluation`
-  - Trigger at implementation close before declaring completion.
+  - Trigger at implementation close before declaring completion; remains source of truth for exact project commands.
 
 ### Recommended invocation order
 
@@ -86,7 +92,11 @@ Reference hierarchy for conflicts:
 - State refactor (hooks/reducer/context/provider)
   - `project-architecture` -> `typescript-advanced-types` -> `vercel-composition-patterns` -> `project-min-evaluation`
 - Large structural change
-  - Apply the relevant flow above, then invoke `decision-doc-sync` before finalizing.
+  - Apply the relevant flow above, then invoke `decision-doc-sync`; use `architecture-decision-records` if an ADR is needed.
+- Debugging or failing validation
+  - `systematic-debugging` -> relevant domain skill -> `verification-before-completion` -> `project-min-evaluation`
+- Completion verification
+  - `verification-before-completion` -> `project-min-evaluation`
 
 ### Documentation sync guardrail
 
