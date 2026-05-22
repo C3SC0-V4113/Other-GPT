@@ -5,5 +5,5 @@ interface ComposerActionsRowProps {
 }
 
 export function ComposerActionsRow({ children }: ComposerActionsRowProps) {
-  return <div className="flex items-end gap-2">{children}</div>;
+  return <div className="flex w-full items-end gap-3">{children}</div>;
 }

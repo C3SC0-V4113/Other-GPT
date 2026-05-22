@@ -1,6 +1,6 @@
 import { ImagePlus, X } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface ComposerModeBadgeProps {
   onRemove: () => void;
@@ -8,17 +8,18 @@ interface ComposerModeBadgeProps {
 
 export function ComposerModeBadge({ onRemove }: ComposerModeBadgeProps) {
   return (
-    <Badge className="gap-1.5" variant="secondary">
+    <Button
+      aria-label="Desactivar modo imagen"
+      className="h-8 gap-2 rounded-3xl pr-2.5 shadow-sm"
+      onClick={onRemove}
+      type="button"
+      variant="secondary"
+    >
       <ImagePlus data-icon="inline-start" />
-      Modo imagen
-      <button
-        aria-label="Desactivar modo imagen"
-        className="rounded-full p-0.5 hover:bg-foreground/10"
-        onClick={onRemove}
-        type="button"
-      >
-        <X />
-      </button>
-    </Badge>
+      <span className="text-sm">Modo imagen</span>
+      <span aria-hidden="true" className="rounded-full bg-background/70 p-1">
+        <X className="size-3.5" />
+      </span>
+    </Button>
   );
 }

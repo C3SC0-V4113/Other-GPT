@@ -22,12 +22,13 @@ export function ComposerMicButton({
         <Button
           aria-label={isRecording ? 'Detener dictado' : 'Iniciar dictado'}
           disabled={isSubmitting || isTranscribing}
+          className="shadow-sm"
           onClick={() => {
             void onToggleRecording();
           }}
           size="icon-sm"
           type="button"
-          variant={isRecording ? 'destructive' : 'outline'}
+          variant={isRecording ? 'destructive' : 'secondary'}
         >
           <Mic />
         </Button>
