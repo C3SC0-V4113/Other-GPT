@@ -28,7 +28,7 @@ export default async function Home() {
       <ChatClient initialAttachments={initialAttachments} initialMessages={initialMessages}>
         <ChatHeader
           action={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <ThemeModeSelector />
               <ChatClearSessionButton />
             </div>

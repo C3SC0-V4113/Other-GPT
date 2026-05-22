@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useChatRuntime } from '@/components/chat/chat-controller-provider';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 
 export function ChatClearSessionButton() {
@@ -37,17 +48,39 @@ export function ChatClearSessionButton() {
   };
 
   return (
-    <Button
-      type="button"
-      variant="destructive"
-      size="sm"
-      disabled={isClearing || isSubmitting}
-      onClick={() => {
-        void handleClear();
-      }}
-    >
-      <Trash2 data-icon="inline-start" />
-      Eliminar
-    </Button>
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          aria-label="Borrar sesion actual"
+          className="shadow-sm"
+          disabled={isClearing || isSubmitting}
+          size="icon-sm"
+          type="button"
+          variant="destructive"
+        >
+          <Trash2 />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Borrar sesion actual</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta accion borrara la conversacion actual y tambien eliminara cualquier archivo adjunto
+            asociado a este chat. No se puede deshacer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isClearing}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isClearing}
+            onClick={() => {
+              void handleClear();
+            }}
+          >
+            Borrar sesion
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

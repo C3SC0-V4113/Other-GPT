@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
 type ThemeMode = 'dark' | 'light' | 'system';
 
@@ -27,18 +28,38 @@ const themeModes: Array<{
 ];
 
 export function ThemeModeSelector() {
-  const { setTheme, theme } = useTheme();
+  const { resolvedTheme, setTheme, theme } = useTheme();
   const isMounted = useSyncExternalStore(
     () => () => {},
     () => true,
     () => false
   );
+  const isDarkTheme = isMounted && resolvedTheme === 'dark';
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" type="button">
-          Theme
+        <Button
+          aria-label="Cambiar apariencia"
+          className="relative shadow-sm"
+          size="icon-sm"
+          type="button"
+          variant="outline"
+        >
+          <span aria-hidden="true" className="relative size-4">
+            <Sun
+              className={cn(
+                'absolute inset-0 transition-[opacity,transform] duration-180 [transition-timing-function:cubic-bezier(0.215,0.61,0.355,1)] motion-reduce:transition-none',
+                isDarkTheme ? 'scale-75 rotate-45 opacity-0' : 'scale-100 rotate-0 opacity-100'
+              )}
+            />
+            <Moon
+              className={cn(
+                'absolute inset-0 transition-[opacity,transform] duration-150 [transition-timing-function:cubic-bezier(0.215,0.61,0.355,1)] motion-reduce:transition-none',
+                isDarkTheme ? 'scale-100 rotate-0 opacity-100' : 'scale-75 -rotate-45 opacity-0'
+              )}
+            />
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
