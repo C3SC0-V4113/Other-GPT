@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import {
   ComposerAttachmentsContextModal,
   type AttachmentsDropOverlayState,
-} from '@/components/chat/composer/composer-attachments-context-modal';
+} from '@/components/chat/composer/attachments-context-modal';
 import { getIncludedChatAttachments, MAX_ATTACHMENT_SIZE_BYTES } from '@/lib/chat-attachments';
 
 import type { ChatAttachment } from '@/lib/chat-attachments';

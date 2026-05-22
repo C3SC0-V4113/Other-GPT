@@ -1,4 +1,5 @@
 export * from './composer-actions-row';
+export * from './attachments-context-modal';
 export * from './composer-attachments-uploader';
 export * from './composer-mic-button';
 export * from './composer-mode-badge';
