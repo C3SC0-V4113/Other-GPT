@@ -91,6 +91,7 @@ export function ChatComposerForm() {
     isTranscribing,
     selectedImageAspectRatio,
     removeAttachment,
+    setAttachmentIncludedInContext,
     sendMessage,
     setInput,
     setSelectedImageAspectRatio,
@@ -122,11 +123,13 @@ export function ChatComposerForm() {
         isSubmitting={isSubmitting}
         onAddFiles={addFilesAsAttachments}
         onRemoveAttachment={removeAttachment}
+        onSetAttachmentIncludedInContext={setAttachmentIncludedInContext}
       >
-        {({ contextAttachmentCount, openContextModal, openFileDialog }) => (
+        {({ contextAttachmentCount, totalAttachmentCount, openContextModal, openFileDialog }) => (
           <ComposerActionsRow>
             <ComposerPlusMenu
               contextAttachmentCount={contextAttachmentCount}
+              totalAttachmentCount={totalAttachmentCount}
               isSubmitting={isSubmitting}
               onAddAttachments={openFileDialog}
               onOpenAttachmentsContext={openContextModal}

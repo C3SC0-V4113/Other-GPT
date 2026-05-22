@@ -138,6 +138,7 @@ export function useChatAttachmentsEffects({
           return {
             fileId: '',
             id: attachment.id,
+            isIncludedInContext: attachment.isIncludedInContext,
             kind: attachment.kind,
             mimeType: attachment.mimeType,
             name: attachment.name,
@@ -200,8 +201,46 @@ export function useChatAttachmentsEffects({
     [dispatch, isSubmitting]
   );
 
+  const setAttachmentIncludedInContext = useCallback(
+    async (attachmentId: string, isIncludedInContext: boolean) => {
+      if (!attachmentId || isSubmitting) {
+        return false;
+      }
+
+      dispatch({ payload: '', type: 'feedback/set-error-message' });
+
+      try {
+        const response = await fetch(`/api/chat/attachments/${attachmentId}`, {
+          body: JSON.stringify({ isIncludedInContext }),
+          headers: { 'content-type': 'application/json' },
+          method: 'PATCH',
+        });
+
+        if (!response.ok) {
+          const errorMessage = await parseApiErrorFromResponse(
+            response,
+            'No fue posible actualizar el adjunto.'
+          );
+          throw new Error(errorMessage);
+        }
+
+        dispatch({
+          payload: { attachmentId, isIncludedInContext },
+          type: 'composer/set-attachment-context',
+        });
+        return true;
+      } catch (error) {
+        const resolvedError = getErrorMessage(error);
+        dispatch({ payload: resolvedError, type: 'feedback/set-error-message' });
+        return false;
+      }
+    },
+    [dispatch, isSubmitting]
+  );
+
   return {
     addFilesAsAttachments,
     removeAttachment,
+    setAttachmentIncludedInContext,
   };
 }

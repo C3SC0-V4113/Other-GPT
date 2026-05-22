@@ -9,6 +9,7 @@ export interface ChatRequestDto {
 
 interface ChatAttachmentDto {
   id: string;
+  isIncludedInContext: boolean;
   kind: ChatAttachmentKind;
   mimeType: string;
   name: string;
@@ -23,6 +24,10 @@ export interface UploadChatAttachmentsResponseDto {
 export interface GenerateImageRequestDto {
   aspectRatio: ChatImageAspectRatio;
   prompt: string;
+}
+
+export interface UpdateChatAttachmentContextRequestDto {
+  isIncludedInContext: boolean;
 }
 
 export type GenerateImageStreamEventDto =
@@ -108,6 +113,7 @@ export function parseUploadChatAttachmentsResponse(
 
     if (
       typeof item.id !== 'string' ||
+      typeof item.isIncludedInContext !== 'boolean' ||
       typeof item.name !== 'string' ||
       typeof item.mimeType !== 'string' ||
       typeof item.sizeBytes !== 'number' ||
@@ -119,6 +125,7 @@ export function parseUploadChatAttachmentsResponse(
 
     attachments.push({
       id: item.id,
+      isIncludedInContext: item.isIncludedInContext,
       kind: item.kind,
       mimeType: item.mimeType,
       name: item.name,
@@ -151,6 +158,21 @@ export function parseGenerateImageRequestBody(
     data: {
       aspectRatio: payload.aspectRatio,
       prompt,
+    },
+    ok: true,
+  };
+}
+
+export function parseUpdateChatAttachmentContextRequestBody(
+  payload: unknown
+): ParseResult<UpdateChatAttachmentContextRequestDto> {
+  if (!isRecord(payload) || typeof payload.isIncludedInContext !== 'boolean') {
+    return { error: 'isIncludedInContext must be a boolean.', ok: false };
+  }
+
+  return {
+    data: {
+      isIncludedInContext: payload.isIncludedInContext,
     },
     ok: true,
   };

@@ -120,18 +120,21 @@ function useChatProviderValue(
     },
   });
 
-  const { addFilesAsAttachments, removeAttachment: removeAttachmentEffect } =
-    useChatAttachmentsEffects({
-      composer: {
-        attachments: state.composer.attachments,
-      },
-      deps: {
-        dispatch,
-      },
-      request: {
-        isSubmitting: state.request.isSubmitting,
-      },
-    });
+  const {
+    addFilesAsAttachments,
+    removeAttachment: removeAttachmentEffect,
+    setAttachmentIncludedInContext: setAttachmentIncludedInContextEffect,
+  } = useChatAttachmentsEffects({
+    composer: {
+      attachments: state.composer.attachments,
+    },
+    deps: {
+      dispatch,
+    },
+    request: {
+      isSubmitting: state.request.isSubmitting,
+    },
+  });
 
   const { copyMessageText } = useChatClipboardEffects({
     deps: {
@@ -264,6 +267,12 @@ function useChatProviderValue(
     [removeAttachmentEffect, state.composer.attachments]
   );
 
+  const setAttachmentIncludedInContext = useCallback(
+    async (attachmentId: string, isIncludedInContext: boolean) =>
+      setAttachmentIncludedInContextEffect(attachmentId, isIncludedInContext),
+    [setAttachmentIncludedInContextEffect]
+  );
+
   useEffect(() => {
     return () => {
       requestAbortControllerRef.current?.abort();
@@ -296,6 +305,7 @@ function useChatProviderValue(
       resetFromInitialMessages,
       retryLastFailedPrompt,
       sendMessage,
+      setAttachmentIncludedInContext,
       setInput: (nextInput: string) => {
         dispatch({ payload: nextInput, type: 'composer/set-input' });
       },
@@ -321,6 +331,7 @@ function useChatProviderValue(
       resetFromInitialMessages,
       retryLastFailedPrompt,
       sendMessage,
+      setAttachmentIncludedInContext,
       stopGeneration,
       stopPlayingAudio,
       toggleRecording,
@@ -405,6 +416,7 @@ export function ChatProvider({ children, initialAttachments, initialMessages }: 
       isSubmitting: state.request.isSubmitting,
       isTranscribing: state.recording.isTranscribing,
       removeAttachment: actions.removeAttachment,
+      setAttachmentIncludedInContext: actions.setAttachmentIncludedInContext,
       selectedImageAspectRatio: state.composer.selectedImageAspectRatio,
       setInput: actions.setInput,
       setSelectedImageAspectRatio: actions.setSelectedImageAspectRatio,
@@ -414,6 +426,7 @@ export function ChatProvider({ children, initialAttachments, initialMessages }: 
     [
       actions.addFilesAsAttachments,
       actions.removeAttachment,
+      actions.setAttachmentIncludedInContext,
       actions.setInput,
       actions.setSelectedImageAspectRatio,
       actions.toggleImageGenerationMode,

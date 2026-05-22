@@ -1,7 +1,12 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
-import { CHAT_SESSION_COOKIE_NAME, removeSessionAttachment } from '@/lib/chat-session-store';
+import { parseUpdateChatAttachmentContextRequestBody } from '@/lib/chat-dtos';
+import {
+  CHAT_SESSION_COOKIE_NAME,
+  removeSessionAttachment,
+  updateSessionAttachmentContext,
+} from '@/lib/chat-session-store';
 
 interface AttachmentRouteContext {
   params: Promise<{ attachmentId: string }>;
@@ -39,6 +44,50 @@ export async function DELETE(
     } catch {
       // Attachment is already removed from the session. Ignore remote cleanup failures.
     }
+  }
+
+  return new Response(null, { status: 204 });
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: AttachmentRouteContext
+): Promise<Response> {
+  const { attachmentId } = await params;
+
+  if (!attachmentId) {
+    return Response.json({ error: 'Attachment id is required.' }, { status: 400 });
+  }
+
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body.' }, { status: 400 });
+  }
+
+  const parsedBody = parseUpdateChatAttachmentContextRequestBody(body);
+
+  if (!parsedBody.ok) {
+    return Response.json({ error: parsedBody.error }, { status: 400 });
+  }
+
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get(CHAT_SESSION_COOKIE_NAME)?.value;
+
+  if (!sessionId) {
+    return Response.json({ error: 'Session not found.' }, { status: 404 });
+  }
+
+  const updatedAttachment = updateSessionAttachmentContext(
+    sessionId,
+    attachmentId,
+    parsedBody.data.isIncludedInContext
+  );
+
+  if (!updatedAttachment) {
+    return Response.json({ error: 'Attachment not found.' }, { status: 404 });
   }
 
   return new Response(null, { status: 204 });

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import { getErrorMessage } from '@/components/chat/chat-controller-errors';
+import { getIncludedChatAttachments } from '@/lib/chat-attachments';
 import { parseApiErrorFromResponse, parseGenerateImageStreamEvent } from '@/lib/chat-dtos';
 import { createClientId } from '@/lib/client-id';
 
@@ -46,6 +47,7 @@ export function useChatImageEffects({ composer, deps, refs, request }: UseChatIm
       const controller = new AbortController();
       const requestMessageId = createClientId();
       const assistantMessageId = createClientId();
+      const contextAttachments = getIncludedChatAttachments(attachments);
       requestAbortControllerRef.current = controller;
 
       try {
@@ -54,7 +56,7 @@ export function useChatImageEffects({ composer, deps, refs, request }: UseChatIm
             aspectRatio: selectedImageAspectRatio,
             assistantMessageId,
             requestMessageId,
-            userAttachments: attachments,
+            userAttachments: contextAttachments,
             userMessage: trimmedInput,
           },
           type: 'messages/append-user-and-pending-image-assistant',

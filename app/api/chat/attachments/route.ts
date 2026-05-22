@@ -38,6 +38,7 @@ function getSessionId(cookieStore: Awaited<ReturnType<typeof cookies>>): string 
 function toPublicAttachment(attachment: ChatAttachment) {
   return {
     id: attachment.id,
+    isIncludedInContext: attachment.isIncludedInContext,
     kind: attachment.kind,
     mimeType: attachment.mimeType,
     name: attachment.name,
@@ -137,6 +138,7 @@ export async function POST(request: Request): Promise<Response> {
       return {
         fileId: uploadedFile.id,
         id: crypto.randomUUID(),
+        isIncludedInContext: true,
         kind: getChatAttachmentKind({ filename: file.name, mimeType: file.type }),
         mimeType: file.type || 'application/octet-stream',
         name: file.name,

@@ -62,8 +62,8 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
   - `content.type`: `text | image`
 - Flujo:
   - `sendMessage()` agrega user + burbuja assistant `streaming`.
-  - si hay adjuntos activos, cada prompt de usuario los incluye como contexto de archivo.
-  - la gestion de adjuntos vive en "Archivos en contexto" (menu `+`): listar, agregar y quitar desde modal.
+  - si hay adjuntos marcados `en contexto`, cada prompt de usuario los incluye como contexto de archivo.
+  - la gestion de adjuntos vive en "Archivos en contexto" (menu `+`): listar, agregar, incluir/excluir del contexto y eliminar desde modal.
   - modo imagen agrega de inmediato burbuja user (prompt) + burbuja assistant `streaming`.
   - la burbuja assistant de imagen muestra `Skeleton`, luego previews parciales, y finalmente la imagen completa respetando el aspect ratio solicitado.
   - `stopGeneration()` aborta la peticion activa; conserva parcial como `interrupted`.

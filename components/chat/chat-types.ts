@@ -86,6 +86,10 @@ export interface ChatActionHandlers {
   resetFromInitialMessages: () => void;
   retryLastFailedPrompt: () => Promise<void>;
   sendMessage: () => Promise<void>;
+  setAttachmentIncludedInContext: (
+    attachmentId: string,
+    isIncludedInContext: boolean
+  ) => Promise<boolean>;
   setInput: (nextInput: string) => void;
   setSelectedImageAspectRatio: (nextAspectRatio: ChatImageAspectRatio) => void;
   stopGeneration: () => void;
@@ -134,6 +138,10 @@ export interface ChatComposerStateContextValue {
   isSubmitting: boolean;
   isTranscribing: boolean;
   removeAttachment: (attachmentId: string) => Promise<boolean>;
+  setAttachmentIncludedInContext: (
+    attachmentId: string,
+    isIncludedInContext: boolean
+  ) => Promise<boolean>;
   selectedImageAspectRatio: ChatImageAspectRatio;
   setInput: (nextInput: string) => void;
   setSelectedImageAspectRatio: (nextAspectRatio: ChatImageAspectRatio) => void;

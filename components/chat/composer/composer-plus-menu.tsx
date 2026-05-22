@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 
 interface ComposerPlusMenuProps {
   contextAttachmentCount: number;
+  totalAttachmentCount: number;
   onOpenAttachmentsContext: () => void;
   onAddAttachments: () => void;
   isSubmitting: boolean;
@@ -20,6 +21,7 @@ interface ComposerPlusMenuProps {
 
 export function ComposerPlusMenu({
   contextAttachmentCount,
+  totalAttachmentCount,
   onOpenAttachmentsContext,
   isSubmitting,
   onAddAttachments,
@@ -39,7 +41,7 @@ export function ComposerPlusMenu({
               <FolderOpen />
               <span>Archivos en contexto</span>
               <Badge className="ml-auto" variant="secondary">
-                {contextAttachmentCount}
+                {contextAttachmentCount}/{totalAttachmentCount}
               </Badge>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onAddAttachments}>

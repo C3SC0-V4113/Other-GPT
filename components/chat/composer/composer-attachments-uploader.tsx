@@ -8,7 +8,7 @@ import {
   ComposerAttachmentsContextModal,
   type AttachmentsDropOverlayState,
 } from '@/components/chat/composer/composer-attachments-context-modal';
-import { MAX_ATTACHMENT_SIZE_BYTES } from '@/lib/chat-attachments';
+import { getIncludedChatAttachments, MAX_ATTACHMENT_SIZE_BYTES } from '@/lib/chat-attachments';
 
 import type { ChatAttachment } from '@/lib/chat-attachments';
 
@@ -16,6 +16,7 @@ interface ComposerAttachmentsUploaderProps {
   attachments: ChatAttachment[];
   children: (controls: {
     contextAttachmentCount: number;
+    totalAttachmentCount: number;
     openContextModal: () => void;
     openFileDialog: () => void;
   }) => ReactNode;
@@ -23,6 +24,10 @@ interface ComposerAttachmentsUploaderProps {
   isSubmitting: boolean;
   onAddFiles: (files: File[]) => Promise<number>;
   onRemoveAttachment: (attachmentId: string) => Promise<boolean>;
+  onSetAttachmentIncludedInContext: (
+    attachmentId: string,
+    isIncludedInContext: boolean
+  ) => Promise<boolean>;
 }
 
 interface DropFeedbackState {
@@ -358,8 +363,10 @@ export function ComposerAttachmentsUploader({
   isSubmitting,
   onAddFiles,
   onRemoveAttachment,
+  onSetAttachmentIncludedInContext,
 }: ComposerAttachmentsUploaderProps) {
   const [isContextModalOpen, setIsContextModalOpen] = useState(false);
+  const contextAttachmentCount = getIncludedChatAttachments(attachments).length;
 
   const dropzones = useAttachmentsDropzones({
     isContextModalOpen,
@@ -383,7 +390,8 @@ export function ComposerAttachmentsUploader({
       <input {...dropzones.composer.getInputProps()} />
 
       {children({
-        contextAttachmentCount: attachments.length,
+        contextAttachmentCount,
+        totalAttachmentCount: attachments.length,
         openContextModal,
         openFileDialog: dropzones.composer.openFileDialog,
       })}
@@ -413,6 +421,7 @@ export function ComposerAttachmentsUploader({
           }
         }}
         onRemoveAttachment={onRemoveAttachment}
+        onSetAttachmentIncludedInContext={onSetAttachmentIncludedInContext}
       />
 
       {dropzones.composer.errorMessage || errorMessage ? (

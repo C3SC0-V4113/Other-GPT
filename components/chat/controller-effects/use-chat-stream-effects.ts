@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import { getErrorMessage } from '@/components/chat/chat-controller-errors';
+import { getIncludedChatAttachments } from '@/lib/chat-attachments';
 import { parseApiErrorFromResponse } from '@/lib/chat-dtos';
 import { createClientId } from '@/lib/client-id';
 
@@ -99,6 +100,7 @@ export function useChatStreamEffects({
       try {
         const requestMessageId = createClientId();
         const nextAssistantMessageId = createClientId();
+        const contextAttachments = getIncludedChatAttachments(attachments);
         assistantMessageId = nextAssistantMessageId;
         isManualStopRequestedRef.current = false;
 
@@ -106,7 +108,7 @@ export function useChatStreamEffects({
           payload: {
             assistantMessageId: nextAssistantMessageId,
             requestMessageId,
-            userAttachments: attachments,
+            userAttachments: contextAttachments,
             userMessage: trimmedInput,
           },
           type: 'messages/append-user-and-pending-assistant',

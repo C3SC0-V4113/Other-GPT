@@ -62,6 +62,7 @@ export type ChatAttachmentKind =
 export interface ChatAttachment {
   fileId: string;
   id: string;
+  isIncludedInContext: boolean;
   kind: ChatAttachmentKind;
   mimeType: string;
   name: string;
@@ -72,10 +73,17 @@ export interface ChatAttachment {
 
 export interface ChatAttachmentSnapshot {
   id: string;
+  isIncludedInContext: boolean;
   kind: ChatAttachmentKind;
   mimeType: string;
   name: string;
   sizeBytes: number;
+}
+
+export function getIncludedChatAttachments<T extends Pick<ChatAttachment, 'isIncludedInContext'>>(
+  attachments: T[]
+): T[] {
+  return attachments.filter((attachment) => attachment.isIncludedInContext);
 }
 
 function getFileExtension(filename: string): string | null {
@@ -193,6 +201,7 @@ export function isKnownInferenceIncompatibleAttachment({
 export function toChatAttachmentSnapshot(attachment: ChatAttachment): ChatAttachmentSnapshot {
   return {
     id: attachment.id,
+    isIncludedInContext: attachment.isIncludedInContext,
     kind: attachment.kind,
     mimeType: attachment.mimeType,
     name: attachment.name,

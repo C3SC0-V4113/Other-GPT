@@ -1,3 +1,5 @@
+import { getIncludedChatAttachments } from '@/lib/chat-attachments';
+
 import type { ChatAttachment, ChatAttachmentSnapshot } from '@/lib/chat-attachments';
 
 export const CHAT_SESSION_COOKIE_NAME = 'otro_gpt_session_id';
@@ -131,4 +133,29 @@ export function getSessionAttachments(sessionId?: string): ChatAttachment[] {
   }
 
   return sessionStore.get(sessionId)?.attachments ?? [];
+}
+
+export function getSessionContextAttachments(sessionId?: string): ChatAttachment[] {
+  return getIncludedChatAttachments(getSessionAttachments(sessionId));
+}
+
+export function updateSessionAttachmentContext(
+  sessionId: string,
+  attachmentId: string,
+  isIncludedInContext: boolean
+): ChatAttachment | null {
+  const sessionState = sessionStore.get(sessionId);
+
+  if (!sessionState) {
+    return null;
+  }
+
+  const attachment = sessionState.attachments.find((candidate) => candidate.id === attachmentId);
+
+  if (!attachment) {
+    return null;
+  }
+
+  attachment.isIncludedInContext = isIncludedInContext;
+  return attachment;
 }

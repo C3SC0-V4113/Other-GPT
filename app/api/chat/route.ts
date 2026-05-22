@@ -7,7 +7,7 @@ import {
   appendSessionMessage,
   CHAT_SESSION_COOKIE_NAME,
   clearSessionData,
-  getSessionAttachments,
+  getSessionContextAttachments,
   getSessionMessages,
 } from '@/lib/chat-session-store';
 import { toResponseInputContentFromAttachments } from '@/lib/openai-response-input-content';
@@ -140,7 +140,7 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
-  const activeAttachments = getSessionAttachments(sessionId);
+  const activeAttachments = getSessionContextAttachments(sessionId);
 
   appendSessionMessage(sessionId, {
     content: {

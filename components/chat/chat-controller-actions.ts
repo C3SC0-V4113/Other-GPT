@@ -10,6 +10,10 @@ export type ChatAction =
   | { type: 'audio/set-playing-message-id'; payload: string | null }
   | { type: 'audio/set-tts-loading-message-id'; payload: string | null }
   | { type: 'composer/add-attachments'; payload: ChatAttachment[] }
+  | {
+      type: 'composer/set-attachment-context';
+      payload: { attachmentId: string; isIncludedInContext: boolean };
+    }
   | { type: 'composer/remove-attachment'; payload: { attachmentId: string } }
   | { type: 'composer/set-aspect-ratio'; payload: ChatImageAspectRatio }
   | { type: 'composer/set-image-mode'; payload: boolean }

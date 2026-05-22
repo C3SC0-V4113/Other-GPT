@@ -6,7 +6,7 @@ import { parseGenerateImageRequestBody } from '@/lib/chat-dtos';
 import {
   appendSessionMessage,
   CHAT_SESSION_COOKIE_NAME,
-  getSessionAttachments,
+  getSessionContextAttachments,
 } from '@/lib/chat-session-store';
 import { toResponseInputContentFromAttachments } from '@/lib/openai-response-input-content';
 
@@ -105,7 +105,7 @@ export async function POST(request: Request): Promise<Response> {
   const { aspectRatio, prompt } = parsedBody.data;
   const cookieStore = await cookies();
   const sessionId = getSessionId(cookieStore);
-  const activeAttachments = getSessionAttachments(sessionId);
+  const activeAttachments = getSessionContextAttachments(sessionId);
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';

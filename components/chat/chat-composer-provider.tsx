@@ -22,6 +22,10 @@ interface ChatComposerContextValue {
   isSubmitting: boolean;
   isTranscribing: boolean;
   removeAttachment: (attachmentId: string) => Promise<boolean>;
+  setAttachmentIncludedInContext: (
+    attachmentId: string,
+    isIncludedInContext: boolean
+  ) => Promise<boolean>;
   selectedImageAspectRatio: ChatImageAspectRatio;
   sendMessage: () => Promise<void>;
   setInput: (nextInput: string) => void;
@@ -49,6 +53,7 @@ export function ChatComposerProvider({ children }: ChatComposerProviderProps) {
       isSubmitting: runtime.isSubmitting,
       isTranscribing: composer.isTranscribing,
       removeAttachment: composer.removeAttachment,
+      setAttachmentIncludedInContext: composer.setAttachmentIncludedInContext,
       selectedImageAspectRatio: composer.selectedImageAspectRatio,
       sendMessage: runtime.sendMessage,
       setInput: composer.setInput,

@@ -13,6 +13,18 @@ export function reduceComposerState(
         ...state,
         attachments: [...state.attachments, ...action.payload],
       };
+    case 'composer/set-attachment-context':
+      return {
+        ...state,
+        attachments: state.attachments.map((attachment) =>
+          attachment.id === action.payload.attachmentId
+            ? {
+                ...attachment,
+                isIncludedInContext: action.payload.isIncludedInContext,
+              }
+            : attachment
+        ),
+      };
     case 'composer/remove-attachment':
       return {
         ...state,
