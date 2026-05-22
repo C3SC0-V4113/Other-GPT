@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2 } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -25,7 +25,7 @@ export function AttachmentInlineRemoveConfirm({
   onRequestConfirm,
 }: AttachmentInlineRemoveConfirmProps) {
   return (
-    <div className="relative h-8 w-28 shrink-0">
+    <div className="relative h-8 w-16 shrink-0 max-[380px]:w-14 sm:w-28">
       <div
         aria-hidden={isOpen}
         className={cn(
@@ -38,9 +38,10 @@ export function AttachmentInlineRemoveConfirm({
       >
         <Button
           aria-label={`Quitar ${attachmentName}`}
-          disabled={isDisabled}
+          disabled={isDisabled || isOpen}
           onClick={onRequestConfirm}
           size="icon-xs"
+          tabIndex={isOpen ? -1 : 0}
           type="button"
           variant="ghost"
         >
@@ -57,9 +58,23 @@ export function AttachmentInlineRemoveConfirm({
         )}
       >
         <Button
+          aria-label={`Cancelar eliminacion de ${attachmentName}`}
+          className="sm:hidden"
+          disabled={isDisabled || !isOpen}
+          onClick={onCancel}
+          size="icon-xs"
+          tabIndex={isOpen ? 0 : -1}
+          type="button"
+          variant="ghost"
+        >
+          <X />
+        </Button>
+        <Button
+          className="hidden sm:inline-flex"
           disabled={isDisabled || !isOpen}
           onClick={onCancel}
           size="xs"
+          tabIndex={isOpen ? 0 : -1}
           type="button"
           variant="ghost"
         >
@@ -70,6 +85,7 @@ export function AttachmentInlineRemoveConfirm({
           disabled={isDisabled || !isOpen}
           onClick={onConfirm}
           size="icon-xs"
+          tabIndex={isOpen ? 0 : -1}
           type="button"
           variant="destructive"
         >

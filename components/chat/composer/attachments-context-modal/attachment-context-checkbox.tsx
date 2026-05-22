@@ -1,37 +1,28 @@
 'use client';
 
+import { useAttachmentsContextRow } from '@/components/chat/composer/attachments-context-modal/attachments-context-row-context';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
-interface AttachmentContextCheckboxProps {
-  attachmentName: string;
-  isChecked: boolean;
-  isDisabled: boolean;
-  onCheckedChange: (checked: boolean) => void;
-}
+export function AttachmentContextCheckbox() {
+  const { attachment, isDisabled, onToggleContext } = useAttachmentsContextRow();
 
-export function AttachmentContextCheckbox({
-  attachmentName,
-  isChecked,
-  isDisabled,
-  onCheckedChange,
-}: AttachmentContextCheckboxProps) {
   return (
-    <div className="flex size-9 shrink-0 items-center justify-center">
+    <div className="flex size-8 shrink-0 items-center justify-center sm:size-9">
       <Checkbox
         aria-label={
-          isChecked
-            ? `Excluir ${attachmentName} del contexto`
-            : `Incluir ${attachmentName} en el contexto`
+          attachment.isIncludedInContext
+            ? `Excluir ${attachment.name} del contexto`
+            : `Incluir ${attachment.name} en el contexto`
         }
-        checked={isChecked}
+        checked={attachment.isIncludedInContext}
         className={cn(
           'transition-[transform,opacity] duration-150 motion-reduce:transition-none',
           isDisabled ? 'opacity-60' : 'opacity-100'
         )}
         disabled={isDisabled}
         onCheckedChange={(checked) => {
-          onCheckedChange(checked === true);
+          onToggleContext(checked === true);
         }}
       />
     </div>

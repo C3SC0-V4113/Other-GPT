@@ -3,8 +3,11 @@
 import { FileArchive, Paperclip } from 'lucide-react';
 
 import { AttachmentsContextList } from '@/components/chat/composer/attachments-context-modal/attachments-context-list';
+import {
+  AttachmentsContextModalProvider,
+  useAttachmentsContextModalState,
+} from '@/components/chat/composer/attachments-context-modal/attachments-context-modal-context';
 import { type ComposerAttachmentsContextModalProps } from '@/components/chat/composer/attachments-context-modal/types';
-import { useOptimisticAttachmentsState } from '@/components/chat/composer/attachments-context-modal/use-optimistic-attachments-state';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,40 +27,25 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getIncludedChatAttachments } from '@/lib/chat-attachments';
 import { cn } from '@/lib/utils';
 
-export function ComposerAttachmentsContextModal({
-  attachments,
+type ComposerAttachmentsContextModalContentProps = Omit<
+  ComposerAttachmentsContextModalProps,
+  'attachments' | 'isSubmitting' | 'onRemoveAttachment' | 'onSetAttachmentIncludedInContext'
+>;
+
+function ComposerAttachmentsContextModalContent({
   dropErrorMessage,
   dropOverlayMessage,
   dropOverlayState,
   getDropzoneInputProps,
   getDropzoneRootProps,
   isOpen,
-  isSubmitting,
   onAddFiles,
   onOpenChange,
-  onRemoveAttachment,
-  onSetAttachmentIncludedInContext,
-}: ComposerAttachmentsContextModalProps) {
+}: ComposerAttachmentsContextModalContentProps) {
   const isDropOverlayVisible = dropOverlayState !== 'idle';
-  const {
-    confirmingAttachmentId,
-    exitingAttachmentIds,
-    optimisticAttachments,
-    removingAttachmentIds,
-    removeAttachment,
-    setConfirmingAttachmentId,
-    toggleContext,
-    updatingAttachmentIds,
-  } = useOptimisticAttachmentsState({
-    attachments,
-    isSubmitting,
-    onRemoveAttachment,
-    onSetAttachmentIncludedInContext,
-  });
-  const contextAttachmentCount = getIncludedChatAttachments(optimisticAttachments).length;
+  const { attachments, contextAttachmentCount, isSubmitting } = useAttachmentsContextModalState();
 
   return (
     <Dialog onOpenChange={onOpenChange} open={isOpen}>
@@ -72,7 +60,7 @@ export function ComposerAttachmentsContextModal({
 
         <div className="flex flex-col gap-2 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <p className="text-xs text-muted-foreground">
-            {contextAttachmentCount} en contexto / {optimisticAttachments.length} guardados
+            {contextAttachmentCount} en contexto / {attachments.length} guardados
           </p>
           <Button
             className="w-full sm:w-auto"
@@ -96,28 +84,9 @@ export function ComposerAttachmentsContextModal({
           >
             <input {...getDropzoneInputProps()} />
 
-            {optimisticAttachments.length ? (
+            {attachments.length ? (
               <ScrollArea className="h-full min-h-0 pr-2">
-                <AttachmentsContextList
-                  attachments={optimisticAttachments}
-                  confirmingAttachmentId={confirmingAttachmentId}
-                  exitingAttachmentIds={exitingAttachmentIds}
-                  isSubmitting={isSubmitting}
-                  onCancelRemove={(attachmentId) => {
-                    setConfirmingAttachmentId((currentId) =>
-                      currentId === attachmentId ? null : currentId
-                    );
-                  }}
-                  onConfirmRemove={removeAttachment}
-                  onRequestRemove={(attachmentId) => {
-                    setConfirmingAttachmentId(attachmentId);
-                  }}
-                  onToggleContext={(attachment, isIncludedInContext) => {
-                    void toggleContext(attachment, isIncludedInContext);
-                  }}
-                  removingAttachmentIds={removingAttachmentIds}
-                  updatingAttachmentIds={updatingAttachmentIds}
-                />
+                <AttachmentsContextList />
               </ScrollArea>
             ) : (
               <Empty className="rounded-xl border-border/60 p-6 sm:p-8">
@@ -176,5 +145,24 @@ export function ComposerAttachmentsContextModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function ComposerAttachmentsContextModal({
+  attachments,
+  isSubmitting,
+  onRemoveAttachment,
+  onSetAttachmentIncludedInContext,
+  ...contentProps
+}: ComposerAttachmentsContextModalProps) {
+  return (
+    <AttachmentsContextModalProvider
+      attachments={attachments}
+      isSubmitting={isSubmitting}
+      onRemoveAttachment={onRemoveAttachment}
+      onSetAttachmentIncludedInContext={onSetAttachmentIncludedInContext}
+    >
+      <ComposerAttachmentsContextModalContent {...contentProps} />
+    </AttachmentsContextModalProvider>
   );
 }

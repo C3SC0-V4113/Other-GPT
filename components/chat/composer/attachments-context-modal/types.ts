@@ -20,11 +20,3 @@ export interface ComposerAttachmentsContextModalProps {
     isIncludedInContext: boolean
   ) => Promise<boolean>;
 }
-
-export interface AttachmentContextRowState {
-  isConfirmingRemove: boolean;
-  isDisabled: boolean;
-  isExiting: boolean;
-  isRemoving: boolean;
-  isUpdatingContext: boolean;
-}
