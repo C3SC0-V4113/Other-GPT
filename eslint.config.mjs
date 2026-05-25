@@ -3,8 +3,11 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier/flat';
 import importPlugin from 'eslint-plugin-import';
+import playwrightPlugin from 'eslint-plugin-playwright';
 import reactDoctor from 'eslint-plugin-react-doctor';
 import reactYouMightNotNeedAnEffect from 'eslint-plugin-react-you-might-not-need-an-effect';
+import testingLibraryPlugin from 'eslint-plugin-testing-library';
+import vitestPlugin from 'eslint-plugin-vitest';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -121,6 +124,38 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    files: [
+      '**/*.{test,spec}.{js,jsx,ts,tsx,mjs,mts,cjs,cts}',
+      'tests/unit/**/*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}',
+      'tests/integration/**/*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}',
+    ],
+    ignores: ['tests/e2e/**', 'e2e/**', 'playwright/**'],
+    plugins: vitestPlugin.configs.recommended.plugins,
+    languageOptions: vitestPlugin.configs.env.languageOptions,
+    rules: {
+      ...vitestPlugin.configs.recommended.rules,
+      'vitest/no-disabled-tests': 'warn',
+      'vitest/no-focused-tests': 'error',
+    },
+  },
+  {
+    files: [
+      '**/*.{test,spec}.{js,jsx,ts,tsx,mjs,mts,cjs,cts}',
+      'tests/unit/**/*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}',
+      'tests/integration/**/*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}',
+    ],
+    ignores: ['tests/e2e/**', 'e2e/**', 'playwright/**'],
+    ...testingLibraryPlugin.configs['flat/react'],
+  },
+  {
+    files: [
+      'tests/e2e/**/*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}',
+      'e2e/**/*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}',
+      'playwright/**/*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}',
+    ],
+    ...playwrightPlugin.configs['flat/recommended'],
+  },
   prettier,
   // Override default ignores of eslint-config-next.
   globalIgnores([
@@ -130,6 +165,9 @@ const eslintConfig = defineConfig([
     'build/**',
     'next-env.d.ts',
     '.agents/**',
+    'coverage/**',
+    'playwright-report/**',
+    'test-results/**',
   ]),
 ]);
 
