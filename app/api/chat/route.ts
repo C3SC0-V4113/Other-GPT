@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 
 import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
 import { parseChatRequestBody } from '@/lib/chat-dtos';
+import { buildChatInstructions } from '@/lib/chat-instructions';
 import {
   appendSessionMessage,
   CHAT_SESSION_COOKIE_NAME,
@@ -161,8 +162,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     stream = await openai.responses.create({
       input: modelInput,
-      instructions:
-        'When using information from attached files, explicitly cite file names in square brackets, for example: [spec.pdf].',
+      instructions: buildChatInstructions(),
       model,
       stream: true,
     });
