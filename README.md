@@ -92,16 +92,32 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
 npm run dev
 ```
 
+## Testing
+
+```bash
+npm run test
+npm run test:watch
+npm run test:e2e
+npm run test:e2e:ui
+npm run test:all
+```
+
+`npm run test` ejecuta Vitest para pruebas unitarias e integracion ligera. `npm run
+test:e2e` ejecuta Playwright contra la aplicacion levantada por `webServer`.
+
 ## Quality gates obligatorios
 
 ```bash
 npm run lint
 npm run typecheck
 npm run format:check
+npm run test
 npm run check
 ```
 
 Notas:
 
 - No usar `next lint` (usar ESLint CLI).
+- `npm run check` incluye lint, typecheck, format check, Vitest y React Doctor.
+- Playwright e2e queda como validacion manual con `npm run test:e2e` o `npm run test:all`.
 - Si cambias dependencias/config de tooling, ejecutar `npm install` antes de validar.

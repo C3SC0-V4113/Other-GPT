@@ -6,6 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:all": "npm run test && npm run test:e2e",
     "lint": "eslint . --no-warn-ignored --max-warnings 0",
     "lint:fix": "eslint . --fix --no-warn-ignored --max-warnings 0",
     "doctor": "react-doctor . --fail-on warning",
@@ -16,7 +21,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck && npm run format:check && npm run doctor:ci",
+    "check": "npm run lint && npm run typecheck && npm run format:check && npm run test && npm run doctor:ci",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -73,7 +78,6 @@
     "shadcn": "^4.6.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.7"
   },
   "overrides": {
