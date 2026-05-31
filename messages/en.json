@@ -1,0 +1,117 @@
+{
+  "themeSelector": {
+    "ariaLabel": "Change appearance",
+    "label": "Appearance",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "languageSelector": {
+    "ariaLabel": "Change language",
+    "label": "Language",
+    "english": "English",
+    "spanish": "Español"
+  },
+  "clearSession": {
+    "ariaLabel": "Clear current session",
+    "title": "Clear current session",
+    "description": "This action will clear the current conversation and also remove any attachments associated with this chat. It cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Clear session",
+    "error": "Unable to clear the chat right now."
+  },
+  "emptyState": {
+    "title": "Start a conversation",
+    "description": "Type your first message or turn on image mode from the + button."
+  },
+  "composer": {
+    "placeholderMessage": "Send a message...",
+    "placeholderImage": "Describe the image to generate...",
+    "plusMenu": {
+      "contextFiles": "Files in context",
+      "attachFiles": "Attach files",
+      "generateImages": "Generate images",
+      "options": "Composer options"
+    },
+    "imageMode": {
+      "badgeLabel": "Image mode",
+      "disableAriaLabel": "Turn off image mode"
+    },
+    "mic": {
+      "start": "Start dictation",
+      "stop": "Stop dictation"
+    },
+    "submit": {
+      "send": "Send message",
+      "generateImage": "Generate image",
+      "stop": "Stop generation"
+    },
+    "ratio": {
+      "ariaLabel": "Select aspect ratio",
+      "placeholder": "Aspect ratio",
+      "auto": "Auto"
+    },
+    "dropOverlay": {
+      "processing": "Processing attachments...",
+      "invalid": "Invalid format or size.",
+      "drop": "Drop to attach."
+    }
+  },
+  "attachmentsModal": {
+    "title": "Files in context",
+    "description": "Files stay saved until you delete them. You can remove them from the context without deleting them from the session.",
+    "summary": "{context} in context / {total} saved",
+    "addFiles": "Add files",
+    "emptyTitle": "No saved files",
+    "emptyDescription": "Add attachments so the model can use them in your next messages.",
+    "attachFiles": "Attach files",
+    "close": "Close",
+    "cancel": "Cancel",
+    "includeAriaLabel": "Include {name} in the context",
+    "excludeAriaLabel": "Exclude {name} from the context",
+    "removeAriaLabel": "Remove {name}",
+    "cancelRemoveAriaLabel": "Cancel removal of {name}",
+    "confirmRemoveAriaLabel": "Confirm removal of {name}"
+  },
+  "message": {
+    "statusError": "Error",
+    "statusInterrupted": "Interrupted",
+    "statusStreaming": "Generating...",
+    "retry": "Retry",
+    "ready": "Done",
+    "loading": "Loading...",
+    "stop": "Stop",
+    "listen": "Listen",
+    "copied": "Copied",
+    "copy": "Copy",
+    "errorHeader": "Error"
+  },
+  "errors": {
+    "attachFailed": "Unable to attach files.",
+    "attachmentTooLarge": "{name}: exceeds the 20MB limit.",
+    "attachmentUnsupported": "{name}: unsupported format.",
+    "attachmentSessionLimit": "Limit reached: maximum {max} attachments per session.",
+    "attachmentUploadLimit": "Only {max} files are allowed per upload.",
+    "attachmentRemainingSlots": "Only {remaining} attachment slots remain in the current session.",
+    "uploadFailed": "Unable to upload files.",
+    "uploadToContextFailed": "Unable to upload files to the context.",
+    "removeFailed": "Unable to remove the attachment.",
+    "removeRetry": "Unable to remove the attachment. Please try again.",
+    "updateFailed": "Unable to update the attachment.",
+    "contextUpdateRetry": "Unable to update the attachment context. Please try again.",
+    "dropRejected": "File rejected: format or size not allowed.",
+    "addedToContextOne": "1 file added to the context.",
+    "addedToContextMany": "{count} files added to the context.",
+    "copyFailed": "Unable to copy the message right now.",
+    "recordingUnsupported": "Audio recording is not supported in this browser.",
+    "micAccessFailed": "Unable to access your microphone.",
+    "transcribeFailed": "Unable to transcribe audio.",
+    "ttsFailed": "TTS request failed.",
+    "noAudioContent": "No audio content received.",
+    "requestFailed": "Request failed.",
+    "noResponseStream": "No response stream available.",
+    "imageRequestFailed": "Image request failed.",
+    "invalidImageStreamEvent": "Invalid image stream event received.",
+    "imageResponseEnded": "Image response ended before completion."
+  }
+}

@@ -1,4 +1,5 @@
 import { Send, Square } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -18,11 +19,12 @@ export function ComposerSubmitButton({
   onSend,
   onStop,
 }: ComposerSubmitButtonProps) {
+  const t = useTranslations('composer.submit');
   const actionLabel = isSubmitting
-    ? 'Detener generacion'
+    ? t('stop')
     : isImageGenerationMode
-      ? 'Generar imagen'
-      : 'Enviar mensaje';
+      ? t('generateImage')
+      : t('send');
 
   if (isSubmitting) {
     return (

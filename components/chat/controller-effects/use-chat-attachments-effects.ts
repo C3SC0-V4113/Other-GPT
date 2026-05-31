@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 
 import { getErrorMessage } from '@/components/chat/chat-controller-errors';
@@ -25,17 +26,21 @@ interface UseChatAttachmentsEffectsParams {
   };
 }
 
+type AttachmentValidationError =
+  | { key: 'attachmentTooLarge'; params: { name: string } }
+  | { key: 'attachmentUnsupported'; params: { name: string } };
+
 function isImageFile(file: File): boolean {
   return file.type.toLowerCase().startsWith('image/');
 }
 
-function getAttachmentValidationError(file: File): string | null {
+function getAttachmentValidationError(file: File): AttachmentValidationError | null {
   if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
-    return `${file.name}: supera el limite de 20MB.`;
+    return { key: 'attachmentTooLarge', params: { name: file.name } };
   }
 
   if (!isSupportedChatAttachment({ filename: file.name, mimeType: file.type })) {
-    return `${file.name}: formato no soportado.`;
+    return { key: 'attachmentUnsupported', params: { name: file.name } };
   }
 
   return null;
@@ -46,6 +51,7 @@ export function useChatAttachmentsEffects({
   deps,
   request,
 }: UseChatAttachmentsEffectsParams) {
+  const t = useTranslations('errors');
   const { attachments } = composer;
   const { dispatch } = deps;
   const { isSubmitting } = request;
@@ -60,7 +66,7 @@ export function useChatAttachmentsEffects({
 
       if (remainingSlots <= 0) {
         dispatch({
-          payload: `Limite alcanzado: maximo ${MAX_ATTACHMENTS_PER_SESSION} adjuntos por sesion.`,
+          payload: t('attachmentSessionLimit', { max: MAX_ATTACHMENTS_PER_SESSION }),
           type: 'feedback/set-error-message',
         });
         return 0;
@@ -73,7 +79,7 @@ export function useChatAttachmentsEffects({
         const validationError = getAttachmentValidationError(file);
 
         if (validationError) {
-          validationErrors.push(validationError);
+          validationErrors.push(t(validationError.key, validationError.params));
           continue;
         }
 
@@ -84,18 +90,16 @@ export function useChatAttachmentsEffects({
       const cappedBySession = cappedByUpload.slice(0, remainingSlots);
 
       if (acceptedFiles.length > MAX_ATTACHMENTS_PER_UPLOAD) {
-        validationErrors.push(`Solo se permiten ${MAX_ATTACHMENTS_PER_UPLOAD} archivos por carga.`);
+        validationErrors.push(t('attachmentUploadLimit', { max: MAX_ATTACHMENTS_PER_UPLOAD }));
       }
 
       if (cappedByUpload.length > remainingSlots) {
-        validationErrors.push(
-          `Solo quedan ${remainingSlots} cupos de adjuntos en la sesion actual.`
-        );
+        validationErrors.push(t('attachmentRemainingSlots', { remaining: remainingSlots }));
       }
 
       if (!cappedBySession.length) {
         dispatch({
-          payload: validationErrors[0] ?? 'No se pudieron adjuntar archivos.',
+          payload: validationErrors[0] ?? t('attachFailed'),
           type: 'feedback/set-error-message',
         });
         return 0;
@@ -116,10 +120,7 @@ export function useChatAttachmentsEffects({
         });
 
         if (!response.ok) {
-          const errorMessage = await parseApiErrorFromResponse(
-            response,
-            'No fue posible subir archivos.'
-          );
+          const errorMessage = await parseApiErrorFromResponse(response, t('uploadFailed'));
           throw new Error(errorMessage);
         }
 
@@ -163,7 +164,7 @@ export function useChatAttachmentsEffects({
         throw error;
       }
     },
-    [attachments.length, dispatch, isSubmitting]
+    [attachments.length, dispatch, isSubmitting, t]
   );
 
   const removeAttachment = useCallback(
@@ -180,10 +181,7 @@ export function useChatAttachmentsEffects({
         });
 
         if (!response.ok) {
-          const errorMessage = await parseApiErrorFromResponse(
-            response,
-            'No fue posible eliminar el adjunto.'
-          );
+          const errorMessage = await parseApiErrorFromResponse(response, t('removeFailed'));
           throw new Error(errorMessage);
         }
 
@@ -198,7 +196,7 @@ export function useChatAttachmentsEffects({
         return false;
       }
     },
-    [dispatch, isSubmitting]
+    [dispatch, isSubmitting, t]
   );
 
   const setAttachmentIncludedInContext = useCallback(
@@ -217,10 +215,7 @@ export function useChatAttachmentsEffects({
         });
 
         if (!response.ok) {
-          const errorMessage = await parseApiErrorFromResponse(
-            response,
-            'No fue posible actualizar el adjunto.'
-          );
+          const errorMessage = await parseApiErrorFromResponse(response, t('updateFailed'));
           throw new Error(errorMessage);
         }
 
@@ -235,7 +230,7 @@ export function useChatAttachmentsEffects({
         return false;
       }
     },
-    [dispatch, isSubmitting]
+    [dispatch, isSubmitting, t]
   );
 
   return {

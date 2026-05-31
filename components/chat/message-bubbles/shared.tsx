@@ -6,6 +6,7 @@ import {
   FileType2,
   Presentation,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import * as ChatBubble from '@/components/chat/chat-bubble';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +15,10 @@ import { formatAttachmentSize } from '@/lib/chat-attachments';
 import type { AssistantTextMessageBubbleProps } from '@/components/chat/message-bubbles/types';
 import type { ChatAttachmentSnapshot } from '@/lib/chat-attachments';
 
-const messageStateLabels = {
-  error: 'Error',
-  interrupted: 'Interrumpido',
-  streaming: 'Generando...',
+const messageStateLabelKeys = {
+  error: 'statusError',
+  interrupted: 'statusInterrupted',
+  streaming: 'statusStreaming',
 } as const;
 
 function getAttachmentIcon(attachment: ChatAttachmentSnapshot) {
@@ -69,13 +70,15 @@ export function AssistantStatusFooter({
   retryPrompt,
   status,
 }: Pick<AssistantTextMessageBubbleProps, 'retryLastFailedPrompt' | 'retryPrompt' | 'status'>) {
+  const t = useTranslations('message');
+
   if (status === 'complete') {
     return null;
   }
 
   return (
     <ChatBubble.Footer>
-      <span>{messageStateLabels[status]}</span>
+      <span>{t(messageStateLabelKeys[status])}</span>
 
       {status === 'interrupted' || (status === 'error' && retryPrompt) ? (
         <ChatBubble.Actions>
@@ -85,7 +88,7 @@ export function AssistantStatusFooter({
             }}
             variant={status === 'error' ? 'destructive' : 'ghost'}
           >
-            Reintentar
+            {t('retry')}
           </ChatBubble.Action>
         </ChatBubble.Actions>
       ) : null}

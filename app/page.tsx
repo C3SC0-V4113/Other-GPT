@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { ChatClearSessionButton } from '@/components/chat/chat-clear-session-button';
 import { ChatClient } from '@/components/chat/chat-client';
 import { ChatHeader } from '@/components/chat/chat-header';
+import { LanguageSelector } from '@/components/i18n/language-selector';
 import { ThemeModeSelector } from '@/components/theme/theme-mode-selector';
 import {
   CHAT_SESSION_COOKIE_NAME,
@@ -29,6 +30,7 @@ export default async function Home() {
         <ChatHeader
           action={
             <div className="flex items-center gap-1.5">
+              <LanguageSelector />
               <ThemeModeSelector />
               <ChatClearSessionButton />
             </div>

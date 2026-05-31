@@ -1,4 +1,5 @@
 import { Check, Copy, Square, Volume2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { memo } from 'react';
 
 import * as ChatBubble from '@/components/chat/chat-bubble';
@@ -27,13 +28,15 @@ function AssistantCompleteActions({
   | 'stopPlayingAudio'
   | 'text'
 >) {
+  const t = useTranslations('message');
+
   if (!text.trim()) {
     return null;
   }
 
   return (
     <ChatBubble.Footer>
-      <span>Listo</span>
+      <span>{t('ready')}</span>
       <ChatBubble.Actions>
         <ChatBubble.Action
           onClick={() => {
@@ -47,16 +50,16 @@ function AssistantCompleteActions({
           variant={isPlaying ? 'secondary' : 'ghost'}
         >
           {isTtsLoading ? (
-            'Cargando...'
+            t('loading')
           ) : isPlaying ? (
             <>
               <Square data-icon="inline-start" />
-              Detener
+              {t('stop')}
             </>
           ) : (
             <>
               <Volume2 data-icon="inline-start" />
-              Escuchar
+              {t('listen')}
             </>
           )}
         </ChatBubble.Action>
@@ -70,12 +73,12 @@ function AssistantCompleteActions({
           {isCopied ? (
             <>
               <Check data-icon="inline-start" />
-              Copiado
+              {t('copied')}
             </>
           ) : (
             <>
               <Copy data-icon="inline-start" />
-              Copiar
+              {t('copy')}
             </>
           )}
         </ChatBubble.Action>

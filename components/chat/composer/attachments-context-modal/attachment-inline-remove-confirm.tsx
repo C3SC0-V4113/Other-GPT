@@ -1,6 +1,7 @@
 'use client';
 
 import { Trash2, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,8 @@ export function AttachmentInlineRemoveConfirm({
   onConfirm,
   onRequestConfirm,
 }: AttachmentInlineRemoveConfirmProps) {
+  const t = useTranslations('attachmentsModal');
+
   return (
     <div className="relative h-8 w-16 shrink-0 max-[380px]:w-14 sm:w-28">
       <div
@@ -37,7 +40,7 @@ export function AttachmentInlineRemoveConfirm({
         )}
       >
         <Button
-          aria-label={`Quitar ${attachmentName}`}
+          aria-label={t('removeAriaLabel', { name: attachmentName })}
           disabled={isDisabled || isOpen}
           onClick={onRequestConfirm}
           size="icon-xs"
@@ -58,7 +61,7 @@ export function AttachmentInlineRemoveConfirm({
         )}
       >
         <Button
-          aria-label={`Cancelar eliminacion de ${attachmentName}`}
+          aria-label={t('cancelRemoveAriaLabel', { name: attachmentName })}
           className="sm:hidden"
           disabled={isDisabled || !isOpen}
           onClick={onCancel}
@@ -78,10 +81,10 @@ export function AttachmentInlineRemoveConfirm({
           type="button"
           variant="ghost"
         >
-          Cancelar
+          {t('cancel')}
         </Button>
         <Button
-          aria-label={`Confirmar eliminacion de ${attachmentName}`}
+          aria-label={t('confirmRemoveAriaLabel', { name: attachmentName })}
           disabled={isDisabled || !isOpen}
           onClick={onConfirm}
           size="icon-xs"

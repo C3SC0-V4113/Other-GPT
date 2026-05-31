@@ -1,4 +1,5 @@
 import { FolderOpen, ImagePlus, Paperclip, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,8 @@ export function ComposerPlusMenu({
   onAddAttachments,
   onToggleImageMode,
 }: ComposerPlusMenuProps) {
+  const t = useTranslations('composer.plusMenu');
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -39,23 +42,23 @@ export function ComposerPlusMenu({
           <DropdownMenuContent align="start">
             <DropdownMenuItem onClick={onOpenAttachmentsContext}>
               <FolderOpen />
-              <span>Archivos en contexto</span>
+              <span>{t('contextFiles')}</span>
               <Badge className="ml-auto" variant="secondary">
                 {contextAttachmentCount}/{totalAttachmentCount}
               </Badge>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onAddAttachments}>
               <Paperclip />
-              <span>Adjuntar archivos</span>
+              <span>{t('attachFiles')}</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onToggleImageMode}>
               <ImagePlus />
-              <span>Generar imagenes</span>
+              <span>{t('generateImages')}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </TooltipTrigger>
-      <TooltipContent sideOffset={6}>Opciones del composer</TooltipContent>
+      <TooltipContent sideOffset={6}>{t('options')}</TooltipContent>
     </Tooltip>
   );
 }

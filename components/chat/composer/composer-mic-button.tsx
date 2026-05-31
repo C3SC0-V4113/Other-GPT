@@ -1,4 +1,5 @@
 import { Mic } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -16,11 +17,13 @@ export function ComposerMicButton({
   isTranscribing,
   onToggleRecording,
 }: ComposerMicButtonProps) {
+  const t = useTranslations('composer.mic');
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          aria-label={isRecording ? 'Detener dictado' : 'Iniciar dictado'}
+          aria-label={isRecording ? t('stop') : t('start')}
           disabled={isSubmitting || isTranscribing}
           className="shadow-sm"
           onClick={() => {
@@ -33,9 +36,7 @@ export function ComposerMicButton({
           <Mic />
         </Button>
       </TooltipTrigger>
-      <TooltipContent sideOffset={6}>
-        {isRecording ? 'Detener dictado' : 'Iniciar dictado'}
-      </TooltipContent>
+      <TooltipContent sideOffset={6}>{isRecording ? t('stop') : t('start')}</TooltipContent>
     </Tooltip>
   );
 }

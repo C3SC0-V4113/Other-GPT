@@ -7,7 +7,7 @@ import {
 
 describe('buildChatInstructions', () => {
   it('includes the assistant identity and project purpose', () => {
-    const instructions = buildChatInstructions();
+    const instructions = buildChatInstructions('es');
 
     expect(instructions).toContain('Eres other-GPT.');
     expect(instructions).toContain(
@@ -15,8 +15,13 @@ describe('buildChatInstructions', () => {
     );
   });
 
+  it('adds a default-language directive matching the active locale', () => {
+    expect(buildChatInstructions('es')).toContain('Responde por defecto en español.');
+    expect(buildChatInstructions('en')).toContain('Respond by default in English.');
+  });
+
   it('includes conditional image restrictions tied to the composer menu', () => {
-    const instructions = buildChatInstructions();
+    const instructions = buildChatInstructions('es');
 
     expect(instructions).toContain(
       'En el chat normal no debes generar, crear, editar ni transformar imagenes.'
@@ -38,7 +43,7 @@ describe('buildChatInstructions', () => {
   });
 
   it('preserves the attached file citation instruction', () => {
-    const instructions = buildChatInstructions();
+    const instructions = buildChatInstructions('es');
 
     expect(instructions).toContain(CHAT_ATTACHMENT_CITATION_INSTRUCTION);
     expect(instructions).toContain('[spec.pdf]');

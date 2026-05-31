@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { memo } from 'react';
 
 import * as ChatBubble from '@/components/chat/chat-bubble';
@@ -9,12 +10,14 @@ export const SystemErrorMessageBubble = memo(function SystemErrorMessageBubble({
   retryPrompt,
   text,
 }: SystemErrorMessageBubbleProps) {
+  const t = useTranslations('message');
+
   return (
     <ChatBubble.Root role="system" state="error">
-      <ChatBubble.Header>Error</ChatBubble.Header>
+      <ChatBubble.Header>{t('errorHeader')}</ChatBubble.Header>
       <ChatBubble.Body>{text}</ChatBubble.Body>
       <ChatBubble.Footer>
-        <span>Error</span>
+        <span>{t('errorHeader')}</span>
         {retryPrompt ? (
           <ChatBubble.Actions>
             <ChatBubble.Action
@@ -23,7 +26,7 @@ export const SystemErrorMessageBubble = memo(function SystemErrorMessageBubble({
               }}
               variant="destructive"
             >
-              Reintentar
+              {t('retry')}
             </ChatBubble.Action>
           </ChatBubble.Actions>
         ) : null}

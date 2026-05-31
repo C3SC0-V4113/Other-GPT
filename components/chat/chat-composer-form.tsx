@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 
 import { useChatComposer } from '@/components/chat/chat-composer-provider';
@@ -58,6 +59,8 @@ function ComposerInput({
   onValueChange: (value: string) => void;
   value: string;
 }) {
+  const t = useTranslations('composer');
+
   return (
     <div className="relative min-w-0 flex-1">
       <Textarea
@@ -68,7 +71,7 @@ function ComposerInput({
           onValueChange(event.target.value);
         }}
         onKeyDown={onKeyDown}
-        placeholder={isImageMode ? 'Describe la imagen a generar...' : 'Send a message...'}
+        placeholder={isImageMode ? t('placeholderImage') : t('placeholderMessage')}
         rows={1}
         value={value}
       />

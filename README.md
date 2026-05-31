@@ -21,8 +21,9 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
 ## Mapa de componentes del chat
 
 - Shell de pantalla:
-  - `app/page.tsx` compone header, selector de tema y chat.
+  - `app/page.tsx` compone header, selector de idioma, selector de tema y chat.
   - `components/chat/chat-header.tsx` mantiene markup server-side.
+  - `components/i18n/language-selector.tsx` es la isla cliente del selector de idioma.
 - Estado y comportamiento:
   - `components/chat/chat-controller-reducer.ts` define estado y acciones por dominio.
   - `components/chat/chat-controller-provider.tsx` orquesta side effects y hooks por dominio.
@@ -85,6 +86,29 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
   - `enableSystem`
   - persistencia local con `storageKey="otro-gpt-theme-mode"`.
 - Selector de tema en header con opciones `System / Light / Dark`.
+
+## Internacionalizacion (i18n)
+
+- Libreria `next-intl` en modo **sin i18n routing** (no cambia la URL).
+- Idiomas base: `en` y `es`. Idioma por defecto tomado del sistema (`Accept-Language`).
+- Resolucion server-first del locale:
+  - `i18n/request.ts` (`getRequestConfig`) carga `messages/{locale}.json`.
+  - `i18n/locale.ts#getUserLocale` lee la cookie `NEXT_LOCALE`; si no existe negocia `Accept-Language`
+    con `negotiator` + `@formatjs/intl-localematcher` y cae a `defaultLocale`.
+  - `i18n/actions.ts#changeLocaleAction` persiste la eleccion en la cookie `NEXT_LOCALE`.
+- Render:
+  - Server Components: `getTranslations` / `getLocale`.
+  - Client Components: `useTranslations` / `useLocale` via `NextIntlClientProvider` (en `app/layout.tsx`).
+- `<html lang>` es dinamico segun el locale resuelto.
+- Selector de idioma (`components/i18n/language-selector.tsx`): unica isla cliente; cambia la cookie y
+  ejecuta `router.refresh()`. En desktop usa boton + menu con el idioma activo visible; en mobile se
+  reduce a un boton de icono. Aislado para no re-renderizar el arbol completo.
+- LLM: `buildChatInstructions(locale)` agrega una directiva de idioma por defecto (el modelo se adapta
+  si el usuario escribe en otro idioma). `POST /api/chat` resuelve el locale con `getUserLocale()`.
+- Los mensajes de error de las APIs **no** se localizan (decision de alcance, ver ADR 0005).
+- Type-safety de claves: augmentation de next-intl en `global.d.ts`, validada por `npm run typecheck`.
+- Agregar un idioma: crear `messages/<locale>.json`, ampliar `locales` en `i18n/config.ts` y el mapeo
+  del selector.
 
 ## Desarrollo local
 

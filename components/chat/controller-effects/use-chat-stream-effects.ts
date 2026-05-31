@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 
 import { getErrorMessage } from '@/components/chat/chat-controller-errors';
@@ -41,6 +42,7 @@ export function useChatStreamEffects({
   refs,
   request,
 }: UseChatStreamEffectsParams) {
+  const t = useTranslations('errors');
   const { addErrorBubble, dispatch } = deps;
   const { attachments } = composer;
   const { isManualStopRetryEnabled } = options;
@@ -126,12 +128,12 @@ export function useChatStreamEffects({
         });
 
         if (!response.ok) {
-          const errorMessage = await parseApiErrorFromResponse(response, 'Request failed.');
+          const errorMessage = await parseApiErrorFromResponse(response, t('requestFailed'));
           throw new Error(errorMessage);
         }
 
         if (!response.body) {
-          throw new Error('No response stream available.');
+          throw new Error(t('noResponseStream'));
         }
 
         const reader = response.body.getReader();
@@ -232,6 +234,7 @@ export function useChatStreamEffects({
       isManualStopRequestedRef,
       isSubmitting,
       requestAbortControllerRef,
+      t,
     ]
   );
 

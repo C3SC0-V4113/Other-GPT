@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 
 import { getErrorMessage } from '@/components/chat/chat-controller-errors';
@@ -28,6 +29,7 @@ interface UseChatImageEffectsParams {
 }
 
 export function useChatImageEffects({ composer, deps, refs, request }: UseChatImageEffectsParams) {
+  const t = useTranslations('errors');
   const { dispatch } = deps;
   const { isManualStopRequestedRef, requestAbortControllerRef } = refs;
   const { isSubmitting } = request;
@@ -77,7 +79,7 @@ export function useChatImageEffects({ composer, deps, refs, request }: UseChatIm
         });
 
         if (!response.ok) {
-          const errorMessage = await parseApiErrorFromResponse(response, 'Image request failed.');
+          const errorMessage = await parseApiErrorFromResponse(response, t('imageRequestFailed'));
           dispatch({ payload: errorMessage, type: 'feedback/set-error-message' });
           dispatch({
             payload: {
@@ -100,7 +102,7 @@ export function useChatImageEffects({ composer, deps, refs, request }: UseChatIm
         }
 
         if (!response.body) {
-          throw new Error('No response stream available.');
+          throw new Error(t('noResponseStream'));
         }
 
         const reader = response.body.getReader();
@@ -125,7 +127,7 @@ export function useChatImageEffects({ composer, deps, refs, request }: UseChatIm
           try {
             payload = JSON.parse(trimmedLine) as unknown;
           } catch {
-            throw new Error('Invalid image stream event received.');
+            throw new Error(t('invalidImageStreamEvent'));
           }
 
           const parsedEvent = parseGenerateImageStreamEvent(payload);
@@ -210,7 +212,7 @@ export function useChatImageEffects({ composer, deps, refs, request }: UseChatIm
         }
 
         if (!didComplete && !didFail) {
-          throw new Error('Image response ended before completion.');
+          throw new Error(t('imageResponseEnded'));
         }
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
@@ -261,6 +263,7 @@ export function useChatImageEffects({ composer, deps, refs, request }: UseChatIm
       requestAbortControllerRef,
       selectedImageAspectRatio,
       attachments,
+      t,
     ]
   );
 

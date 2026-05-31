@@ -62,11 +62,19 @@ Si hay conflicto entre implementacion visual y este documento, **`DESIGN.md` tie
 - Selector de tema en header.
 - El diseno debe mantener contraste suficiente en ambos modos.
 
+## 6.1) Internacionalizacion (i18n)
+
+- Selector de idioma en el header, junto al selector de tema, usando el mismo patron de boton con menu.
+- En desktop el selector de idioma muestra icono + idioma activo; en mobile se reduce a icono con `aria-label` localizado.
+- Idiomas base `en` / `es`; idioma por defecto tomado del sistema.
+- Todo texto visible proviene de diccionarios (`messages/{locale}.json`); prohibido hardcodear texto.
+- Cambiar idioma no cambia la URL (estrategia sin routing) y re-renderiza la UI server-side.
+
 ## 7) Accesibilidad
 
 - Focus visible en elementos interactivos.
 - Navegacion por teclado funcional para acciones principales.
-- Etiquetas y textos de accion explicitos.
+- Etiquetas y textos de accion explicitos (incluye `aria-label` localizados).
 - Objetivos tactiles adecuados en controles de header y composer.
 
 ## 8) Motion e interaccion

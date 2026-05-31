@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { startTransition, useCallback, useEffect, useOptimistic, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -61,6 +62,7 @@ export function useOptimisticAttachmentsState({
   onRemoveAttachment,
   onSetAttachmentIncludedInContext,
 }: UseOptimisticAttachmentsStateParams) {
+  const t = useTranslations('errors');
   const [confirmingAttachmentId, setConfirmingAttachmentId] = useState<string | null>(null);
   const [exitingAttachmentIds, setExitingAttachmentIds] = useState<Set<string>>(() => new Set());
   const [removingAttachmentIds, setRemovingAttachmentIds] = useState<Set<string>>(() => new Set());
@@ -119,7 +121,7 @@ export function useOptimisticAttachmentsState({
               type: 'set-context',
             });
           });
-          toast.error('No fue posible actualizar el contexto del adjunto. Intenta nuevamente.');
+          toast.error(t('contextUpdateRetry'));
         }
       } finally {
         setUpdatingAttachmentIds((currentIds) => {
@@ -134,6 +136,7 @@ export function useOptimisticAttachmentsState({
       isSubmitting,
       onSetAttachmentIncludedInContext,
       removingAttachmentIds,
+      t,
       updatingAttachmentIds,
     ]
   );
@@ -173,7 +176,7 @@ export function useOptimisticAttachmentsState({
                   type: 'restore',
                 });
               });
-              toast.error('No fue posible eliminar el adjunto. Intenta nuevamente.');
+              toast.error(t('removeRetry'));
             }
           } finally {
             setExitingAttachmentIds((currentIds) => {
@@ -197,6 +200,7 @@ export function useOptimisticAttachmentsState({
       isSubmitting,
       onRemoveAttachment,
       removingAttachmentIds,
+      t,
       updatingAttachmentIds,
     ]
   );

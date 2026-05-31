@@ -1,6 +1,7 @@
 'use client';
 
 import { MessageCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef } from 'react';
 
 import { useChatAudioActions, useChatMessages } from '@/components/chat/chat-controller-provider';
@@ -93,6 +94,7 @@ function renderMessage(
 }
 
 export function ChatMessagesView() {
+  const t = useTranslations('emptyState');
   const { copiedMessageId, copyMessageText, isEmptyState, messages, retryLastFailedPrompt } =
     useChatMessages();
   const { playMessageAudio, playingMessageId, stopPlayingAudio, ttsLoadingMessageId } =
@@ -119,10 +121,8 @@ export function ChatMessagesView() {
                 <EmptyMedia variant="icon">
                   <MessageCircle />
                 </EmptyMedia>
-                <EmptyTitle>Inicia una conversacion</EmptyTitle>
-                <EmptyDescription>
-                  Escribe tu primer mensaje o activa el modo imagen desde el boton +.
-                </EmptyDescription>
+                <EmptyTitle>{t('title')}</EmptyTitle>
+                <EmptyDescription>{t('description')}</EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : null}

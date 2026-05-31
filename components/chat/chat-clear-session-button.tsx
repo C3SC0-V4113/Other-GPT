@@ -2,6 +2,7 @@
 
 import { Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import { useChatRuntime } from '@/components/chat/chat-controller-provider';
@@ -19,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 export function ChatClearSessionButton() {
+  const t = useTranslations('clearSession');
   const { refresh } = useRouter();
   const [isClearing, setIsClearing] = useState(false);
   const { abortPendingRequest, addErrorBubble, clearLocalState, isSubmitting } = useChatRuntime();
@@ -41,7 +43,7 @@ export function ChatClearSessionButton() {
       clearLocalState();
       refresh();
     } catch {
-      addErrorBubble('Unable to clear the chat right now.');
+      addErrorBubble(t('error'));
     } finally {
       setIsClearing(false);
     }
@@ -51,7 +53,7 @@ export function ChatClearSessionButton() {
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button
-          aria-label="Borrar sesion actual"
+          aria-label={t('ariaLabel')}
           className="shadow-sm"
           disabled={isClearing || isSubmitting}
           size="icon-sm"
@@ -63,21 +65,18 @@ export function ChatClearSessionButton() {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Borrar sesion actual</AlertDialogTitle>
-          <AlertDialogDescription>
-            Esta accion borrara la conversacion actual y tambien eliminara cualquier archivo adjunto
-            asociado a este chat. No se puede deshacer.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{t('title')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('description')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isClearing}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={isClearing}>{t('cancel')}</AlertDialogCancel>
           <AlertDialogAction
             disabled={isClearing}
             onClick={() => {
               void handleClear();
             }}
           >
-            Borrar sesion
+            {t('confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

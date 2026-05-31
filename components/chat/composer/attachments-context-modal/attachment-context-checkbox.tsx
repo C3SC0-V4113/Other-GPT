@@ -1,10 +1,13 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import { useAttachmentsContextRow } from '@/components/chat/composer/attachments-context-modal/attachments-context-row-context';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
 export function AttachmentContextCheckbox() {
+  const t = useTranslations('attachmentsModal');
   const { attachment, isDisabled, onToggleContext } = useAttachmentsContextRow();
 
   return (
@@ -12,8 +15,8 @@ export function AttachmentContextCheckbox() {
       <Checkbox
         aria-label={
           attachment.isIncludedInContext
-            ? `Excluir ${attachment.name} del contexto`
-            : `Incluir ${attachment.name} en el contexto`
+            ? t('excludeAriaLabel', { name: attachment.name })
+            : t('includeAriaLabel', { name: attachment.name })
         }
         checked={attachment.isIncludedInContext}
         className={cn(

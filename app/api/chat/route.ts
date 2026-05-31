@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
+import { getUserLocale } from '@/i18n/locale';
 import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
 import { parseChatRequestBody } from '@/lib/chat-dtos';
 import { buildChatInstructions } from '@/lib/chat-instructions';
@@ -154,6 +155,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const sessionMessages = getSessionMessages(sessionId);
   const modelInput = buildInputFromSessionMessages(sessionMessages, userMessage, activeAttachments);
+  const locale = await getUserLocale();
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
@@ -162,7 +164,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     stream = await openai.responses.create({
       input: modelInput,
-      instructions: buildChatInstructions(),
+      instructions: buildChatInstructions(locale),
       model,
       stream: true,
     });

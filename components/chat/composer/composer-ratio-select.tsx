@@ -1,3 +1,5 @@
+import { useTranslations } from 'next-intl';
+
 import {
   Select,
   SelectContent,
@@ -9,8 +11,8 @@ import {
 
 import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
 
-const aspectRatioOptions: Array<{ label: string; value: ChatImageAspectRatio }> = [
-  { label: 'Auto', value: 'auto' },
+const aspectRatioOptions: Array<{ label: string | null; value: ChatImageAspectRatio }> = [
+  { label: null, value: 'auto' },
   { label: '1:1', value: '1:1' },
   { label: '16:9', value: '16:9' },
   { label: '9:16', value: '9:16' },
@@ -27,16 +29,18 @@ export function ComposerRatioSelect({
   onValueChange,
   value,
 }: ComposerRatioSelectProps) {
+  const t = useTranslations('composer.ratio');
+
   return (
     <Select disabled={isDisabled} onValueChange={onValueChange} value={value}>
-      <SelectTrigger aria-label="Seleccionar aspect ratio" size="sm">
-        <SelectValue placeholder="Aspect ratio" />
+      <SelectTrigger aria-label={t('ariaLabel')} size="sm">
+        <SelectValue placeholder={t('placeholder')} />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
           {aspectRatioOptions.map((option) => (
             <SelectItem key={option.value} value={option.value}>
-              {option.label}
+              {option.label ?? t('auto')}
             </SelectItem>
           ))}
         </SelectGroup>

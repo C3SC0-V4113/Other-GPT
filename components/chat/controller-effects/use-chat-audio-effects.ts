@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 
 import { getErrorMessage } from '@/components/chat/chat-controller-errors';
@@ -21,6 +22,7 @@ interface UseChatAudioEffectsParams {
 }
 
 export function useChatAudioEffects({ deps, refs, runtime }: UseChatAudioEffectsParams) {
+  const t = useTranslations('errors');
   const { addErrorBubble, dispatch } = deps;
   const { audioElementRef, audioUrlRef } = refs;
   const { playingMessageId } = runtime;
@@ -73,13 +75,13 @@ export function useChatAudioEffects({ deps, refs, runtime }: UseChatAudioEffects
 
         if (!response.ok) {
           const payload = await response.json();
-          throw new Error(parseApiErrorMessage(payload) || 'TTS request failed.');
+          throw new Error(parseApiErrorMessage(payload) || t('ttsFailed'));
         }
 
         const blob = await response.blob();
 
         if (!blob.size) {
-          throw new Error('No audio content received.');
+          throw new Error(t('noAudioContent'));
         }
 
         const audioUrl = URL.createObjectURL(blob);
@@ -108,6 +110,7 @@ export function useChatAudioEffects({ deps, refs, runtime }: UseChatAudioEffects
       playingMessageId,
       releaseAudioResources,
       stopPlayingAudio,
+      t,
     ]
   );
 

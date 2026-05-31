@@ -76,6 +76,8 @@ Reference hierarchy for conflicts:
   - Trigger on Next.js 16 conventions: RSC boundaries, route handlers, file conventions, data fetching and runtime usage.
 - `shadcn`
   - Trigger on UI component work using shadcn patterns, composition, styling rules, registries, or CLI-driven component updates.
+- `i18n-conventions`
+  - Trigger on any user-facing text, translation/message changes, the language selector, locale resolution, or propagating the locale to the LLM.
 - `decision-doc-sync`
   - Trigger when there are structural decisions (architecture, contracts, cross-cutting UX standards, conventions).
 - `architecture-decision-records`
@@ -89,6 +91,8 @@ Reference hierarchy for conflicts:
 
 - New UI feature
   - `project-architecture` -> `vercel-composition-patterns` -> `vercel-react-best-practices` -> `next-best-practices` -> `project-min-evaluation`
+- User-facing text or localization change
+  - `i18n-conventions` -> `project-architecture` -> `project-min-evaluation`
 - State refactor (hooks/reducer/context/provider)
   - `project-architecture` -> `typescript-advanced-types` -> `vercel-composition-patterns` -> `project-min-evaluation`
 - Large structural change

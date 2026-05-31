@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 
 import { getErrorMessage } from '@/components/chat/chat-controller-errors';
@@ -23,6 +24,7 @@ interface UseChatRecordingEffectsParams {
 }
 
 export function useChatRecordingEffects({ deps, recording, refs }: UseChatRecordingEffectsParams) {
+  const t = useTranslations('errors');
   const { addErrorBubble, dispatch } = deps;
   const { isRecording, isTranscribing } = recording;
   const { mediaRecorderRef, mediaStreamRef, recordedChunksRef } = refs;
@@ -42,7 +44,7 @@ export function useChatRecordingEffects({ deps, recording, refs }: UseChatRecord
     }
 
     if (!navigator.mediaDevices || typeof MediaRecorder === 'undefined') {
-      addErrorBubble('Audio recording is not supported in this browser.');
+      addErrorBubble(t('recordingUnsupported'));
       return;
     }
 
@@ -97,7 +99,7 @@ export function useChatRecordingEffects({ deps, recording, refs }: UseChatRecord
 
           if (!response.ok) {
             const payload = await response.json();
-            throw new Error(parseApiErrorMessage(payload) || 'Unable to transcribe audio.');
+            throw new Error(parseApiErrorMessage(payload) || t('transcribeFailed'));
           }
 
           const payload = await response.json();
@@ -122,7 +124,7 @@ export function useChatRecordingEffects({ deps, recording, refs }: UseChatRecord
       mediaRecorder.start();
       dispatch({ payload: true, type: 'recording/set-recording' });
     } catch {
-      addErrorBubble('Unable to access your microphone.');
+      addErrorBubble(t('micAccessFailed'));
       dispatch({ payload: false, type: 'recording/set-recording' });
     }
   }, [
@@ -133,6 +135,7 @@ export function useChatRecordingEffects({ deps, recording, refs }: UseChatRecord
     mediaRecorderRef,
     mediaStreamRef,
     recordedChunksRef,
+    t,
   ]);
 
   return { toggleRecording };

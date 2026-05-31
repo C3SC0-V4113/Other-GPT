@@ -1,0 +1,117 @@
+{
+  "themeSelector": {
+    "ariaLabel": "Cambiar apariencia",
+    "label": "Apariencia",
+    "system": "Sistema",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
+  "languageSelector": {
+    "ariaLabel": "Cambiar idioma",
+    "label": "Idioma",
+    "english": "English",
+    "spanish": "Español"
+  },
+  "clearSession": {
+    "ariaLabel": "Borrar sesión actual",
+    "title": "Borrar sesión actual",
+    "description": "Esta acción borrará la conversación actual y también eliminará cualquier archivo adjunto asociado a este chat. No se puede deshacer.",
+    "cancel": "Cancelar",
+    "confirm": "Borrar sesión",
+    "error": "No se pudo borrar el chat en este momento."
+  },
+  "emptyState": {
+    "title": "Inicia una conversación",
+    "description": "Escribe tu primer mensaje o activa el modo imagen desde el botón +."
+  },
+  "composer": {
+    "placeholderMessage": "Escribe un mensaje...",
+    "placeholderImage": "Describe la imagen a generar...",
+    "plusMenu": {
+      "contextFiles": "Archivos en contexto",
+      "attachFiles": "Adjuntar archivos",
+      "generateImages": "Generar imágenes",
+      "options": "Opciones del composer"
+    },
+    "imageMode": {
+      "badgeLabel": "Modo imagen",
+      "disableAriaLabel": "Desactivar modo imagen"
+    },
+    "mic": {
+      "start": "Iniciar dictado",
+      "stop": "Detener dictado"
+    },
+    "submit": {
+      "send": "Enviar mensaje",
+      "generateImage": "Generar imagen",
+      "stop": "Detener generación"
+    },
+    "ratio": {
+      "ariaLabel": "Seleccionar aspect ratio",
+      "placeholder": "Aspect ratio",
+      "auto": "Auto"
+    },
+    "dropOverlay": {
+      "processing": "Procesando adjuntos...",
+      "invalid": "Formato o tamaño no válido.",
+      "drop": "Suelta para adjuntar."
+    }
+  },
+  "attachmentsModal": {
+    "title": "Archivos en contexto",
+    "description": "Los archivos quedan guardados hasta que los elimines. Puedes quitarlos del contexto sin borrarlos de la sesión.",
+    "summary": "{context} en contexto / {total} guardados",
+    "addFiles": "Agregar archivos",
+    "emptyTitle": "Sin archivos guardados",
+    "emptyDescription": "Agrega adjuntos para que el modelo pueda usarlos en tus siguientes mensajes.",
+    "attachFiles": "Adjuntar archivos",
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "includeAriaLabel": "Incluir {name} en el contexto",
+    "excludeAriaLabel": "Excluir {name} del contexto",
+    "removeAriaLabel": "Quitar {name}",
+    "cancelRemoveAriaLabel": "Cancelar eliminación de {name}",
+    "confirmRemoveAriaLabel": "Confirmar eliminación de {name}"
+  },
+  "message": {
+    "statusError": "Error",
+    "statusInterrupted": "Interrumpido",
+    "statusStreaming": "Generando...",
+    "retry": "Reintentar",
+    "ready": "Listo",
+    "loading": "Cargando...",
+    "stop": "Detener",
+    "listen": "Escuchar",
+    "copied": "Copiado",
+    "copy": "Copiar",
+    "errorHeader": "Error"
+  },
+  "errors": {
+    "attachFailed": "No se pudieron adjuntar archivos.",
+    "attachmentTooLarge": "{name}: supera el límite de 20MB.",
+    "attachmentUnsupported": "{name}: formato no soportado.",
+    "attachmentSessionLimit": "Límite alcanzado: máximo {max} adjuntos por sesión.",
+    "attachmentUploadLimit": "Solo se permiten {max} archivos por carga.",
+    "attachmentRemainingSlots": "Solo quedan {remaining} cupos de adjuntos en la sesión actual.",
+    "uploadFailed": "No fue posible subir archivos.",
+    "uploadToContextFailed": "No fue posible subir archivos al contexto.",
+    "removeFailed": "No fue posible eliminar el adjunto.",
+    "removeRetry": "No fue posible eliminar el adjunto. Intenta nuevamente.",
+    "updateFailed": "No fue posible actualizar el adjunto.",
+    "contextUpdateRetry": "No fue posible actualizar el contexto del adjunto. Intenta nuevamente.",
+    "dropRejected": "Archivo rechazado: formato o tamaño no permitido.",
+    "addedToContextOne": "1 archivo agregado al contexto.",
+    "addedToContextMany": "{count} archivos agregados al contexto.",
+    "copyFailed": "No se pudo copiar el mensaje en este momento.",
+    "recordingUnsupported": "La grabación de audio no es compatible con este navegador.",
+    "micAccessFailed": "No se pudo acceder a tu micrófono.",
+    "transcribeFailed": "No fue posible transcribir el audio.",
+    "ttsFailed": "La solicitud de audio falló.",
+    "noAudioContent": "No se recibió contenido de audio.",
+    "requestFailed": "La solicitud falló.",
+    "noResponseStream": "No hay flujo de respuesta disponible.",
+    "imageRequestFailed": "La solicitud de imagen falló.",
+    "invalidImageStreamEvent": "Se recibió un evento de flujo de imagen no válido.",
+    "imageResponseEnded": "La respuesta de imagen terminó antes de completarse."
+  }
+}

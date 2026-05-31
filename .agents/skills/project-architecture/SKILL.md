@@ -25,6 +25,12 @@ Usa esta skill cuando el cambio toque UI, arquitectura de componentes, flujo del
    - `System / Light / Dark`.
    - default `system`.
    - persistencia local con `next-themes`.
+6. Mantener estrategia de i18n (`next-intl`, sin routing):
+   - todo texto visible proviene de `messages/{locale}.json`; prohibido literal hardcodeado.
+   - locale resuelto en servidor (`getUserLocale`): cookie `NEXT_LOCALE` -> `Accept-Language` -> default.
+   - Server Components usan `getTranslations`/`getLocale`; Client Components `useTranslations`/`useLocale`.
+   - el selector de idioma es la unica isla cliente: cambia la cookie y hace `router.refresh()`.
+   - al agregar claves, mantener paridad entre `en.json` y `es.json` (validado por test + typecheck).
 
 ## Checklist previo a cierre
 
@@ -32,6 +38,7 @@ Usa esta skill cuando el cambio toque UI, arquitectura de componentes, flujo del
 - ¿Se preservo el flujo de estados del chat y acciones retry?
 - ¿La UI respeta `DESIGN.md`?
 - ¿Se mantuvo el comportamiento de scroll y header/composer fijos?
+- ¿Todo texto nuevo visible se agrego a los diccionarios (en/es) en lugar de hardcodearse?
 
 ## Referencias
 

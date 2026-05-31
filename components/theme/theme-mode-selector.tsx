@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, Laptop, Moon, Sun } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore } from 'react';
 
@@ -19,15 +20,16 @@ type ThemeMode = 'dark' | 'light' | 'system';
 
 const themeModes: Array<{
   icon: typeof Sun;
-  label: string;
+  labelKey: 'dark' | 'light' | 'system';
   value: ThemeMode;
 }> = [
-  { icon: Laptop, label: 'System', value: 'system' },
-  { icon: Sun, label: 'Light', value: 'light' },
-  { icon: Moon, label: 'Dark', value: 'dark' },
+  { icon: Laptop, labelKey: 'system', value: 'system' },
+  { icon: Sun, labelKey: 'light', value: 'light' },
+  { icon: Moon, labelKey: 'dark', value: 'dark' },
 ];
 
 export function ThemeModeSelector() {
+  const t = useTranslations('themeSelector');
   const { resolvedTheme, setTheme, theme } = useTheme();
   const isMounted = useSyncExternalStore(
     () => () => {},
@@ -40,7 +42,7 @@ export function ThemeModeSelector() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          aria-label="Cambiar apariencia"
+          aria-label={t('ariaLabel')}
           className="relative shadow-sm"
           size="icon-sm"
           type="button"
@@ -63,7 +65,7 @@ export function ThemeModeSelector() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('label')}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {themeModes.map((mode) => {
           const ModeIcon = mode.icon;
@@ -77,7 +79,7 @@ export function ThemeModeSelector() {
               }}
             >
               <ModeIcon />
-              <span>{mode.label}</span>
+              <span>{t(mode.labelKey)}</span>
               {isActive ? <Check className="ml-auto" /> : null}
             </DropdownMenuItem>
           );

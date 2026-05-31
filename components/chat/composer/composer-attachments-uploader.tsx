@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { useDropzone, type Accept, type FileRejection } from 'react-dropzone';
 import { toast } from 'sonner';
@@ -59,16 +60,21 @@ function getToastErrorMessage(error: unknown, fallbackMessage: string): string {
   return fallbackMessage;
 }
 
-function getOverlayMessage(state: AttachmentsDropOverlayState): string {
+function getOverlayMessageKey(
+  state: AttachmentsDropOverlayState
+):
+  | 'composer.dropOverlay.drop'
+  | 'composer.dropOverlay.invalid'
+  | 'composer.dropOverlay.processing' {
   if (state === 'processing') {
-    return 'Procesando adjuntos...';
+    return 'composer.dropOverlay.processing';
   }
 
   if (state === 'dragReject') {
-    return 'Formato o tamano no valido.';
+    return 'composer.dropOverlay.invalid';
   }
 
-  return 'Suelta para adjuntar.';
+  return 'composer.dropOverlay.drop';
 }
 
 function useAttachmentsDropzones({
@@ -76,6 +82,7 @@ function useAttachmentsDropzones({
   isSubmitting,
   onAddFiles,
 }: UseAttachmentsDropzonesParams) {
+  const t = useTranslations();
   const [dropFeedback, setDropFeedback] = useState<DropFeedbackState>({
     composer: {
       errorMessage: '',
@@ -180,17 +187,17 @@ function useAttachmentsDropzones({
         if (attachedCount > 0) {
           toast.success(
             attachedCount === 1
-              ? '1 archivo agregado al contexto.'
-              : `${attachedCount} archivos agregados al contexto.`
+              ? t('errors.addedToContextOne')
+              : t('errors.addedToContextMany', { count: attachedCount })
           );
         }
       } catch (error) {
-        toast.error(getToastErrorMessage(error, 'No fue posible subir archivos al contexto.'));
+        toast.error(getToastErrorMessage(error, t('errors.uploadToContextFailed')));
       } finally {
         setOverlayState('idle');
       }
     },
-    [isSubmitting, onAddFiles]
+    [isSubmitting, onAddFiles, t]
   );
 
   const acceptedMimeTypes: Accept = useMemo(
@@ -244,7 +251,7 @@ function useAttachmentsDropzones({
     },
     onDrop: (acceptedFiles: File[], rejections: FileRejection[]) => {
       if (rejections.length) {
-        setComposerDropErrorMessage('Archivo rechazado: formato o tamano no permitido.');
+        setComposerDropErrorMessage(t('errors.dropRejected'));
         setComposerDropOverlayState('dragReject');
       }
 
@@ -287,7 +294,7 @@ function useAttachmentsDropzones({
     },
     onDrop: (acceptedFiles: File[], rejections: FileRejection[]) => {
       if (rejections.length) {
-        setModalDropErrorMessage('Archivo rechazado: formato o tamano no permitido.');
+        setModalDropErrorMessage(t('errors.dropRejected'));
         setModalDropOverlayState('dragReject');
       }
 
@@ -338,7 +345,7 @@ function useAttachmentsDropzones({
       clearDropFeedback: clearComposerDropFeedback,
       errorMessage: dropFeedback.composer.errorMessage,
       getInputProps: getComposerInputProps,
-      getOverlayMessage: () => getOverlayMessage(resolvedComposerDropOverlayState),
+      getOverlayMessage: () => t(getOverlayMessageKey(resolvedComposerDropOverlayState)),
       getRootProps: getComposerRootProps,
       openFileDialog: openComposerDialog,
       shouldShowOverlay: resolvedComposerDropOverlayState !== 'idle',
@@ -347,7 +354,7 @@ function useAttachmentsDropzones({
       clearDropFeedback: clearModalDropFeedback,
       errorMessage: dropFeedback.modal.errorMessage,
       getInputProps: getModalInputProps,
-      getOverlayMessage: () => getOverlayMessage(resolvedModalDropOverlayState),
+      getOverlayMessage: () => t(getOverlayMessageKey(resolvedModalDropOverlayState)),
       getRootProps: getModalRootProps,
       openFileDialog: openModalDialog,
       resolvedOverlayState: resolvedModalDropOverlayState,

@@ -1,6 +1,7 @@
 'use client';
 
 import { FileArchive, Paperclip } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { AttachmentsContextList } from '@/components/chat/composer/attachments-context-modal/attachments-context-list';
 import {
@@ -44,6 +45,7 @@ function ComposerAttachmentsContextModalContent({
   onAddFiles,
   onOpenChange,
 }: ComposerAttachmentsContextModalContentProps) {
+  const t = useTranslations('attachmentsModal');
   const isDropOverlayVisible = dropOverlayState !== 'idle';
   const { attachments, contextAttachmentCount, isSubmitting } = useAttachmentsContextModalState();
 
@@ -51,16 +53,13 @@ function ComposerAttachmentsContextModalContent({
     <Dialog onOpenChange={onOpenChange} open={isOpen}>
       <DialogContent className="max-h-[min(88dvh,42rem)] w-[min(92vw,46rem)] gap-0 overflow-hidden p-0 sm:max-h-[min(85dvh,44rem)]">
         <DialogHeader className="border-b px-4 py-4 sm:px-5">
-          <DialogTitle>Archivos en contexto</DialogTitle>
-          <DialogDescription className="mt-1 leading-relaxed">
-            Los archivos quedan guardados hasta que los elimines. Puedes quitarlos del contexto sin
-            borrarlos de la sesion.
-          </DialogDescription>
+          <DialogTitle>{t('title')}</DialogTitle>
+          <DialogDescription className="mt-1 leading-relaxed">{t('description')}</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-2 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <p className="text-xs text-muted-foreground">
-            {contextAttachmentCount} en contexto / {attachments.length} guardados
+            {t('summary', { context: contextAttachmentCount, total: attachments.length })}
           </p>
           <Button
             className="w-full sm:w-auto"
@@ -71,7 +70,7 @@ function ComposerAttachmentsContextModalContent({
             variant="outline"
           >
             <Paperclip data-icon="inline-start" />
-            Agregar archivos
+            {t('addFiles')}
           </Button>
         </div>
 
@@ -94,10 +93,8 @@ function ComposerAttachmentsContextModalContent({
                   <EmptyMedia variant="icon">
                     <FileArchive />
                   </EmptyMedia>
-                  <EmptyTitle>Sin archivos guardados</EmptyTitle>
-                  <EmptyDescription>
-                    Agrega adjuntos para que el modelo pueda usarlos en tus siguientes mensajes.
-                  </EmptyDescription>
+                  <EmptyTitle>{t('emptyTitle')}</EmptyTitle>
+                  <EmptyDescription>{t('emptyDescription')}</EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
                   <Button
@@ -107,7 +104,7 @@ function ComposerAttachmentsContextModalContent({
                     type="button"
                   >
                     <Paperclip data-icon="inline-start" />
-                    Adjuntar archivos
+                    {t('attachFiles')}
                   </Button>
                 </EmptyContent>
               </Empty>
@@ -139,7 +136,7 @@ function ComposerAttachmentsContextModalContent({
         <DialogFooter className="border-t px-4 py-3 sm:px-5">
           <DialogClose asChild>
             <Button className="w-full sm:w-auto" type="button" variant="outline">
-              Cerrar
+              {t('close')}
             </Button>
           </DialogClose>
         </DialogFooter>
