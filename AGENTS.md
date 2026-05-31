@@ -51,6 +51,20 @@ These checks are mandatory for any agent making code or config changes in this r
 - ADR index and architecture decisions: `docs/adr/README.md`
 - Decision documentation sync skill: `.agents/skills/decision-doc-sync/SKILL.md`
 
+## Claude Code Compatibility
+
+This repo follows the generic agent standard (`AGENTS.md` + `.agents/skills/`) while staying
+compatible with Claude Code, which discovers a different layout:
+
+- **Instructions:** `CLAUDE.md` is a pointer (`@AGENTS.md`); Claude Code auto-loads `CLAUDE.md` and
+  imports this file. No policy is duplicated.
+- **Skills:** `.claude/skills` is a **symlink** to `.agents/skills` (the single source of truth).
+  Claude Code only scans `.claude/skills/`, so this bridge exposes every project skill to it.
+  Edit skills **only** under `.agents/skills/`; new skills are exposed automatically.
+- **Windows checkout:** the symlink needs `git config core.symlinks true` and Developer Mode to
+  materialize. If neither is available, recreate it as a junction:
+  `cmd /c mklink /J .claude\skills .agents\skills`.
+
 ## Skill Invocation Checklist
 
 Use this checklist to decide **when** to invoke each skill.  

@@ -38,6 +38,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Claude Code: settings locales por máquina (no versionar).
+# Nota: .claude/skills SÍ se versiona (symlink a .agents/skills).
+.claude/settings.local.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
