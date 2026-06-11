@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AuthForm } from '@/components/auth/auth-form';
+import { EmailForm } from '@/components/auth/email-form';
 import en from '@/messages/en.json';
 
 const { replaceMock, refreshMock } = vi.hoisted(() => ({
@@ -24,98 +24,76 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-function renderAuthForm() {
+function renderEmailForm(defaultEmail?: string) {
   return render(
     <NextIntlClientProvider locale="en" messages={en}>
-      <AuthForm />
+      <EmailForm defaultEmail={defaultEmail} />
     </NextIntlClientProvider>
   );
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  // `mockReset` also clears the queued `mockResolvedValueOnce` values so they
-  // don't leak across tests (clearAllMocks keeps the once-queue).
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
 });
 
-describe('AuthForm', () => {
-  it('routes an existing email to the login step (rebote) and signs in', async () => {
+describe('EmailForm', () => {
+  it('navigates to /login/password for an existing email', async () => {
     const user = userEvent.setup();
-    fetchMock
-      .mockResolvedValueOnce(jsonResponse({ email: 'a@b.com', exists: true, nextStep: 'LOGIN' }))
-      .mockResolvedValueOnce(jsonResponse({ user: { email: 'a@b.com' } }));
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ email: 'a@b.com', exists: true, nextStep: 'LOGIN' })
+    );
 
-    renderAuthForm();
+    renderEmailForm();
 
     await user.type(screen.getByLabelText('Email'), 'a@b.com');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
-    // Rebound to login (not register).
-    const signIn = await screen.findByRole('button', { name: 'Sign in' });
-    expect(screen.queryByRole('button', { name: 'Create account' })).toBeNull();
-
-    await user.type(screen.getByLabelText('Password'), 'supersecret');
-    await user.click(signIn);
-
     await waitFor(() => {
-      expect(replaceMock).toHaveBeenCalledWith('/');
+      expect(replaceMock).toHaveBeenCalledWith('/login/password?email=a%40b.com');
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      '/api/auth/login',
-      expect.objectContaining({ method: 'POST' })
-    );
+    expect(refreshMock).not.toHaveBeenCalled();
   });
 
-  it('routes a new email to the register step and creates the account', async () => {
+  it('navigates to /login/register for a new email', async () => {
     const user = userEvent.setup();
-    fetchMock
-      .mockResolvedValueOnce(
-        jsonResponse({ email: 'new@b.com', exists: false, nextStep: 'REGISTER' })
-      )
-      .mockResolvedValueOnce(jsonResponse({ user: { email: 'new@b.com' } }, 201));
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ email: 'new@b.com', exists: false, nextStep: 'REGISTER' })
+    );
 
-    renderAuthForm();
+    renderEmailForm();
 
     await user.type(screen.getByLabelText('Email'), 'new@b.com');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
-    const createAccount = await screen.findByRole('button', { name: 'Create account' });
-    await user.type(screen.getByLabelText('Password'), 'longenough');
-    await user.click(createAccount);
-
     await waitFor(() => {
-      expect(replaceMock).toHaveBeenCalledWith('/');
+      expect(replaceMock).toHaveBeenCalledWith('/login/register?email=new%40b.com');
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      '/api/auth/register',
-      expect.objectContaining({ method: 'POST' })
-    );
+    expect(refreshMock).not.toHaveBeenCalled();
   });
 
-  it('shows a localized error on invalid credentials', async () => {
+  it('shows a localized error on server failure', async () => {
     const user = userEvent.setup();
-    fetchMock
-      .mockResolvedValueOnce(jsonResponse({ email: 'a@b.com', exists: true, nextStep: 'LOGIN' }))
-      .mockResolvedValueOnce(jsonResponse({ error: { code: 'INVALID_CREDENTIALS' } }, 401));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: { code: 'INVALID_CREDENTIALS' } }, 401));
 
-    renderAuthForm();
+    renderEmailForm();
 
     await user.type(screen.getByLabelText('Email'), 'a@b.com');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
-    await user.type(await screen.findByLabelText('Password'), 'wrongpass');
-    await user.click(screen.getByRole('button', { name: 'Sign in' }));
 
     expect(await screen.findByText('Wrong email or password.')).toBeTruthy();
     expect(replaceMock).not.toHaveBeenCalled();
   });
 
+  it('pre-fills email from defaultEmail prop', () => {
+    renderEmailForm('prefilled@b.com');
+    expect((screen.getByLabelText('Email') as HTMLInputElement).value).toBe('prefilled@b.com');
+  });
+
   it('blocks a malformed email client-side before any request', async () => {
     const user = userEvent.setup();
-    renderAuthForm();
+    renderEmailForm();
 
     await user.type(screen.getByLabelText('Email'), 'not-an-email');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
@@ -124,29 +102,11 @@ describe('AuthForm', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('blocks a too-short password on register client-side', async () => {
-    const user = userEvent.setup();
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse({ email: 'new@b.com', exists: false, nextStep: 'REGISTER' })
-    );
-
-    renderAuthForm();
-
-    await user.type(screen.getByLabelText('Email'), 'new@b.com');
-    await user.click(screen.getByRole('button', { name: 'Continue' }));
-    await user.type(await screen.findByLabelText('Password'), '123');
-    await user.click(screen.getByRole('button', { name: 'Create account' }));
-
-    expect(await screen.findByText('Password must be at least 8 characters.')).toBeTruthy();
-    // Only the email-check call happened; register was never attempted.
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-  });
-
   it('shows an unreachable error when the network fails', async () => {
     const user = userEvent.setup();
     fetchMock.mockRejectedValueOnce(new Error('network down'));
 
-    renderAuthForm();
+    renderEmailForm();
 
     await user.type(screen.getByLabelText('Email'), 'a@b.com');
     await user.click(screen.getByRole('button', { name: 'Continue' }));

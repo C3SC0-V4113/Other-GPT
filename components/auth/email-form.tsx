@@ -3,6 +3,7 @@
 import { registerEmailCheckRequestSchema } from '@cesco_valle/identity-contracts/user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoaderCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -22,18 +23,14 @@ import { postJson, readServerErrorKey, type AuthErrorKey } from './auth-client';
 
 import type { RegisterEmailCheckRequest } from '@cesco_valle/identity-contracts/user';
 
-type EmailFormProps = {
-  defaultEmail: string;
-  onResolved: (email: string, nextStep: 'LOGIN' | 'REGISTER') => void;
-};
-
-export function EmailForm({ defaultEmail, onResolved }: EmailFormProps) {
+export function EmailForm({ defaultEmail }: { defaultEmail?: string }) {
   const t = useTranslations('auth');
+  const { replace } = useRouter();
   const [serverError, setServerError] = useState<AuthErrorKey | null>(null);
 
   const form = useForm<RegisterEmailCheckRequest>({
     resolver: zodResolver(registerEmailCheckRequestSchema),
-    defaultValues: { email: defaultEmail },
+    defaultValues: { email: defaultEmail ?? '' },
   });
 
   const onSubmit = async (values: RegisterEmailCheckRequest) => {
@@ -45,7 +42,12 @@ export function EmailForm({ defaultEmail, onResolved }: EmailFormProps) {
         return;
       }
       const data = (await response.json()) as { nextStep: 'LOGIN' | 'REGISTER' };
-      onResolved(values.email, data.nextStep);
+      const encoded = encodeURIComponent(values.email);
+      const path =
+        data.nextStep === 'LOGIN'
+          ? `/login/password?email=${encoded}`
+          : `/login/register?email=${encoded}`;
+      replace(path);
     } catch {
       setServerError('unreachable');
     }
