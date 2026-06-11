@@ -113,5 +113,39 @@
     "imageRequestFailed": "Image request failed.",
     "invalidImageStreamEvent": "Invalid image stream event received.",
     "imageResponseEnded": "Image response ended before completion."
+  },
+  "auth": {
+    "title": "Sign in to other-GPT",
+    "subtitle": "Use your portfolio account to continue.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "continue": "Continue",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Your password",
+    "displayNameLabel": "Display name (optional)",
+    "displayNamePlaceholder": "How should we call you?",
+    "createAccountTitle": "Create your account",
+    "createAccountSubtitle": "This email is new here. Set a password to register.",
+    "welcomeBackTitle": "Welcome back",
+    "welcomeBackSubtitle": "Enter your password to sign in.",
+    "register": "Create account",
+    "login": "Sign in",
+    "useAnotherEmail": "Use another email",
+    "loading": "Please wait...",
+    "signedInAs": "Signed in as {email}",
+    "signOut": "Sign out",
+    "errors": {
+      "emailRequired": "Enter your email.",
+      "emailInvalid": "Enter a valid email address.",
+      "passwordRequired": "Enter your password.",
+      "passwordTooShort": "Password must be at least 8 characters.",
+      "invalidCredentials": "Wrong email or password.",
+      "userBanned": "This account is suspended.",
+      "membershipBlocked": "Your access to this app is not active. Contact an admin.",
+      "projectDisabled": "This app is temporarily unavailable.",
+      "emailExists": "That email already has an account. Sign in instead.",
+      "generic": "Something went wrong. Please try again.",
+      "unreachable": "Could not reach the server. Try again shortly."
+    }
   }
 }

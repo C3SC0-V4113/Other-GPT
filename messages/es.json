@@ -113,5 +113,39 @@
     "imageRequestFailed": "La solicitud de imagen falló.",
     "invalidImageStreamEvent": "Se recibió un evento de flujo de imagen no válido.",
     "imageResponseEnded": "La respuesta de imagen terminó antes de completarse."
+  },
+  "auth": {
+    "title": "Inicia sesión en other-GPT",
+    "subtitle": "Usa tu cuenta del portafolio para continuar.",
+    "emailLabel": "Correo",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "continue": "Continuar",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "Tu contraseña",
+    "displayNameLabel": "Nombre para mostrar (opcional)",
+    "displayNamePlaceholder": "¿Cómo te llamamos?",
+    "createAccountTitle": "Crea tu cuenta",
+    "createAccountSubtitle": "Este correo es nuevo aquí. Define una contraseña para registrarte.",
+    "welcomeBackTitle": "Bienvenido de nuevo",
+    "welcomeBackSubtitle": "Ingresa tu contraseña para entrar.",
+    "register": "Crear cuenta",
+    "login": "Entrar",
+    "useAnotherEmail": "Usar otro correo",
+    "loading": "Espera un momento...",
+    "signedInAs": "Sesión de {email}",
+    "signOut": "Cerrar sesión",
+    "errors": {
+      "emailRequired": "Ingresa tu correo.",
+      "emailInvalid": "Ingresa un correo válido.",
+      "passwordRequired": "Ingresa tu contraseña.",
+      "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
+      "invalidCredentials": "Correo o contraseña incorrectos.",
+      "userBanned": "Esta cuenta está suspendida.",
+      "membershipBlocked": "Tu acceso a esta app no está activo. Contacta a un admin.",
+      "projectDisabled": "Esta app no está disponible por ahora.",
+      "emailExists": "Ese correo ya tiene cuenta. Inicia sesión.",
+      "generic": "Algo salió mal. Inténtalo de nuevo.",
+      "unreachable": "No se pudo contactar al servidor. Inténtalo en breve."
+    }
   }
 }
