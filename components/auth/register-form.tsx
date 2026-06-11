@@ -33,16 +33,15 @@ export function RegisterForm({ email }: RegisterFormProps) {
 
   const form = useForm<ProjectAuthRegisterRequest>({
     resolver: zodResolver(projectAuthRegisterRequestSchema),
-    defaultValues: { email, password: '', displayName: '' },
+    // displayName is optional: keep it `undefined` (not '') so the optional schema
+    // passes when left blank.
+    defaultValues: { email, password: '', displayName: undefined },
   });
 
   const onSubmit = async (values: ProjectAuthRegisterRequest) => {
     setServerError(null);
     try {
-      const response = await postJson('/api/auth/register', {
-        ...values,
-        displayName: values.displayName?.trim() ? values.displayName.trim() : undefined,
-      });
+      const response = await postJson('/api/auth/register', values);
       if (!response.ok) {
         setServerError(await readServerErrorKey(response));
         return;
@@ -76,6 +75,10 @@ export function RegisterForm({ email }: RegisterFormProps) {
                   placeholder={t('displayNamePlaceholder')}
                   {...field}
                   value={field.value ?? ''}
+                  onChange={(event) => {
+                    // Empty input → undefined so the optional schema is satisfied.
+                    field.onChange(event.target.value === '' ? undefined : event.target.value);
+                  }}
                 />
               </FormControl>
               <FormMessage />
