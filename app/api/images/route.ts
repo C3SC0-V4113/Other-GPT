@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
+import { requireSession } from '@/lib/auth';
 import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
 import { parseGenerateImageRequestBody } from '@/lib/chat-dtos';
 import {
@@ -84,6 +85,11 @@ function toNdjsonLine(payload: Record<string, number | string>): Uint8Array {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const unauthorized = await requireSession();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   if (!process.env.OPENAI_API_KEY) {
     return Response.json({ error: 'OPENAI_API_KEY is missing.' }, { status: 500 });
   }

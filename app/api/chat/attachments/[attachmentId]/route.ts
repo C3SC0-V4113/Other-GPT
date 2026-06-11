@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
+import { requireSession } from '@/lib/auth';
 import { parseUpdateChatAttachmentContextRequestBody } from '@/lib/chat-dtos';
 import {
   CHAT_SESSION_COOKIE_NAME,
@@ -17,6 +18,12 @@ export async function DELETE(
   { params }: AttachmentRouteContext
 ): Promise<Response> {
   void request;
+
+  const unauthorized = await requireSession();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   const { attachmentId } = await params;
 
   if (!attachmentId) {
@@ -53,6 +60,11 @@ export async function PATCH(
   request: Request,
   { params }: AttachmentRouteContext
 ): Promise<Response> {
+  const unauthorized = await requireSession();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   const { attachmentId } = await params;
 
   if (!attachmentId) {

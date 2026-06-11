@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
+import { requireSession } from '@/lib/auth';
 import {
   getChatAttachmentKind,
   isKnownInferenceIncompatibleAttachment,
@@ -48,6 +49,11 @@ function toPublicAttachment(attachment: ChatAttachment) {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const unauthorized = await requireSession();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   if (!process.env.OPENAI_API_KEY) {
     return Response.json({ error: 'OPENAI_API_KEY is missing.' }, { status: 500 });
   }

@@ -1,8 +1,14 @@
 import OpenAI from 'openai';
 
+import { requireSession } from '@/lib/auth';
 import { parseSpeechRequestBody } from '@/lib/chat-dtos';
 
 export async function POST(request: Request): Promise<Response> {
+  const unauthorized = await requireSession();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   if (!process.env.OPENAI_API_KEY) {
     return Response.json({ error: 'OPENAI_API_KEY is missing.' }, { status: 500 });
   }

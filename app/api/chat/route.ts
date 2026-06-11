@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
 import { getUserLocale } from '@/i18n/locale';
+import { requireSession } from '@/lib/auth';
 import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
 import { parseChatRequestBody } from '@/lib/chat-dtos';
 import { buildChatInstructions } from '@/lib/chat-instructions';
@@ -95,6 +96,11 @@ function buildInputFromSessionMessages(
 }
 
 export async function DELETE(): Promise<Response> {
+  const unauthorized = await requireSession();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   const cookieStore = await cookies();
   const sessionId = cookieStore.get(CHAT_SESSION_COOKIE_NAME)?.value;
 
@@ -109,6 +115,11 @@ export async function DELETE(): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const unauthorized = await requireSession();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   if (!process.env.OPENAI_API_KEY) {
     return Response.json({ error: 'OPENAI_API_KEY is missing.' }, { status: 500 });
   }

@@ -1,10 +1,13 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
+import { UserMenu } from '@/components/auth/user-menu';
 import { ChatClearSessionButton } from '@/components/chat/chat-clear-session-button';
 import { ChatClient } from '@/components/chat/chat-client';
 import { ChatHeader } from '@/components/chat/chat-header';
 import { LanguageSelector } from '@/components/i18n/language-selector';
 import { ThemeModeSelector } from '@/components/theme/theme-mode-selector';
+import { getCurrentUser } from '@/lib/auth';
 import {
   CHAT_SESSION_COOKIE_NAME,
   getSessionAttachments,
@@ -19,6 +22,18 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
+  // Authoritative gate: an absent/invalid session (or unreachable API) → login.
+  let user = null;
+  try {
+    user = await getCurrentUser();
+  } catch {
+    user = null;
+  }
+
+  if (!user) {
+    redirect('/login');
+  }
+
   const cookieStore = await cookies();
   const sessionId = cookieStore.get(CHAT_SESSION_COOKIE_NAME)?.value;
   const initialMessages = getSessionMessages(sessionId);
@@ -33,6 +48,7 @@ export default async function Home() {
               <LanguageSelector />
               <ThemeModeSelector />
               <ChatClearSessionButton />
+              <UserMenu email={user.user.email} />
             </div>
           }
         />

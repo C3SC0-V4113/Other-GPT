@@ -3,11 +3,12 @@ import 'server-only';
 import { ApiError, createUserAuthClient } from '@cesco_valle/identity-auth-sdk/user';
 import { cookies } from 'next/headers';
 
+import { PROJECT_SLUG } from './auth-shared';
+
 import type { UserAuthClient } from '@cesco_valle/identity-auth-sdk/user';
 import type { ProjectAuthResponse } from '@cesco_valle/identity-contracts/user';
 
-/** other-gpt maps to this project slug in identity-service. */
-export const PROJECT_SLUG = 'other-gpt';
+export { PROJECT_SLUG } from './auth-shared';
 
 let client: UserAuthClient | undefined;
 
@@ -67,4 +68,26 @@ export async function getCurrentUser(): Promise<ProjectAuthResponse | null> {
     }
     throw error;
   }
+}
+
+/**
+ * Guard for data Route Handlers: returns a `401` response when there is no valid
+ * session, or `null` to proceed. Uses the lightweight `hasValidSession` check and
+ * fails closed if identity-service is unreachable.
+ */
+export async function requireSession(): Promise<Response | null> {
+  const cookie = (await cookies()).toString();
+  let isValid = false;
+  try {
+    isValid = await getAuthClient().hasValidSession(PROJECT_SLUG, { cookie });
+  } catch {
+    isValid = false;
+  }
+  if (!isValid) {
+    return Response.json(
+      { error: { code: 'AUTHENTICATION_REQUIRED', message: 'Sign in required.' } },
+      { status: 401 }
+    );
+  }
+  return null;
 }
