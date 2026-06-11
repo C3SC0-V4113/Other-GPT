@@ -7,10 +7,14 @@ import { getCurrentUser } from '@/lib/auth';
 
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
-  title: 'Sign in',
-  description: 'Authenticate to use otro-GPT.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('auth');
+
+  return {
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+  };
+}
 
 export default async function LoginPage({
   searchParams,

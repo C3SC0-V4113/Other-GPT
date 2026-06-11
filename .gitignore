@@ -26,6 +26,7 @@
 .DS_Store
 *.pem
 .atl/
+.engram/
 
 # debug
 npm-debug.log*

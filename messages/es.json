@@ -131,6 +131,12 @@
     "register": "Crear cuenta",
     "login": "Entrar",
     "useAnotherEmail": "Usar otro correo",
+    "metaTitle": "Inicia sesión en other-GPT",
+    "metaDescription": "Autentícate para usar other-GPT.",
+    "metaPasswordTitle": "Ingresa tu contraseña",
+    "metaPasswordDescription": "Ingresa tu contraseña para entrar a other-GPT.",
+    "metaRegisterTitle": "Crea una cuenta",
+    "metaRegisterDescription": "Regístrate para usar other-GPT.",
     "signedInAs": "Sesión de {email}",
     "signOut": "Cerrar sesión",
     "errors": {

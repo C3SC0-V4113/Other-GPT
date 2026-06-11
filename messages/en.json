@@ -131,6 +131,12 @@
     "register": "Create account",
     "login": "Sign in",
     "useAnotherEmail": "Use another email",
+    "metaTitle": "Sign in to other-GPT",
+    "metaDescription": "Authenticate to use other-GPT.",
+    "metaPasswordTitle": "Enter your password",
+    "metaPasswordDescription": "Enter your password to sign in to other-GPT.",
+    "metaRegisterTitle": "Create an account",
+    "metaRegisterDescription": "Register a new account to use other-GPT.",
     "signedInAs": "Signed in as {email}",
     "signOut": "Sign out",
     "errors": {

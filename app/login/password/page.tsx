@@ -8,10 +8,14 @@ import { getCurrentUser } from '@/lib/auth';
 
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
-  title: 'Sign in',
-  description: 'Enter your password to sign in.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('auth');
+
+  return {
+    title: t('metaPasswordTitle'),
+    description: t('metaPasswordDescription'),
+  };
+}
 
 export default async function LoginPasswordPage({
   searchParams,
@@ -29,13 +33,11 @@ export default async function LoginPasswordPage({
     redirect('/');
   }
 
-  const { email } = await searchParams;
+  const [{ email }, t] = await Promise.all([searchParams, getTranslations('auth')]);
 
   if (!email) {
     redirect('/login');
   }
-
-  const t = await getTranslations('auth');
 
   return (
     <Card className="w-full max-w-sm">

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 
+import { LanguageMenuItems } from '@/components/i18n/language-selector';
 import { ThemeModeMenuItems } from '@/components/theme/theme-mode-selector';
 import { Button } from '@/components/ui/button';
 import {
@@ -54,6 +55,8 @@ export function UserMenu({ email, displayName }: UserMenuProps) {
         <DropdownMenuLabel className="max-w-48 truncate">{displayName ?? email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ThemeModeMenuItems />
+        <DropdownMenuSeparator />
+        <LanguageMenuItems />
         <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={isPending}
