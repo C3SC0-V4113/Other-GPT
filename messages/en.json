@@ -131,7 +131,6 @@
     "register": "Create account",
     "login": "Sign in",
     "useAnotherEmail": "Use another email",
-    "loading": "Please wait...",
     "signedInAs": "Signed in as {email}",
     "signOut": "Sign out",
     "errors": {

@@ -28,9 +28,43 @@ const themeModes: Array<{
   { icon: Moon, labelKey: 'dark', value: 'dark' },
 ];
 
+export function ThemeModeMenuItems() {
+  const t = useTranslations('themeSelector');
+  const { setTheme, theme } = useTheme();
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
+  return (
+    <>
+      <DropdownMenuLabel>{t('label')}</DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      {themeModes.map((mode) => {
+        const ModeIcon = mode.icon;
+        const isActive = isMounted && theme === mode.value;
+
+        return (
+          <DropdownMenuItem
+            key={mode.value}
+            onClick={() => {
+              setTheme(mode.value);
+            }}
+          >
+            <ModeIcon />
+            <span>{t(mode.labelKey)}</span>
+            {isActive ? <Check className="ml-auto" /> : null}
+          </DropdownMenuItem>
+        );
+      })}
+    </>
+  );
+}
+
 export function ThemeModeSelector() {
   const t = useTranslations('themeSelector');
-  const { resolvedTheme, setTheme, theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const isMounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -65,25 +99,7 @@ export function ThemeModeSelector() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>{t('label')}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {themeModes.map((mode) => {
-          const ModeIcon = mode.icon;
-          const isActive = isMounted && theme === mode.value;
-
-          return (
-            <DropdownMenuItem
-              key={mode.value}
-              onClick={() => {
-                setTheme(mode.value);
-              }}
-            >
-              <ModeIcon />
-              <span>{t(mode.labelKey)}</span>
-              {isActive ? <Check className="ml-auto" /> : null}
-            </DropdownMenuItem>
-          );
-        })}
+        <ThemeModeMenuItems />
       </DropdownMenuContent>
     </DropdownMenu>
   );

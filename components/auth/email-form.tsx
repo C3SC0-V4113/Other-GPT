@@ -2,6 +2,7 @@
 
 import { registerEmailCheckRequestSchema } from '@cesco_valle/identity-contracts/user';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { LoaderCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -83,7 +84,13 @@ export function EmailForm({ defaultEmail, onResolved }: EmailFormProps) {
           </p>
         ) : null}
         <Button type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? t('loading') : t('continue')}
+          {form.formState.isSubmitting ? (
+            <LoaderCircle
+              data-icon="inline-start"
+              className="animate-spin motion-reduce:animate-none"
+            />
+          ) : null}
+          {t('continue')}
         </Button>
       </form>
     </Form>

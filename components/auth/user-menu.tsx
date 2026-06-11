@@ -1,10 +1,11 @@
 'use client';
 
-import { LogOut, UserRound } from 'lucide-react';
+import { LoaderCircle, LogOut, UserRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 
+import { ThemeModeMenuItems } from '@/components/theme/theme-mode-selector';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,9 +18,10 @@ import {
 
 type UserMenuProps = {
   email: string;
+  displayName?: string | null;
 };
 
-export function UserMenu({ email }: UserMenuProps) {
+export function UserMenu({ email, displayName }: UserMenuProps) {
   const t = useTranslations('auth');
   const { replace, refresh } = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -39,7 +41,7 @@ export function UserMenu({ email }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          aria-label={t('signedInAs', { email })}
+          aria-label={t('signedInAs', { email: displayName ?? email })}
           disabled={isPending}
           size="icon-sm"
           type="button"
@@ -49,10 +51,23 @@ export function UserMenu({ email }: UserMenuProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>{t('signedInAs', { email })}</DropdownMenuLabel>
+        <DropdownMenuLabel className="max-w-48 truncate">{displayName ?? email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled={isPending} onClick={handleSignOut}>
-          <LogOut />
+        <ThemeModeMenuItems />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          disabled={isPending}
+          onClick={handleSignOut}
+          className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+        >
+          {isPending ? (
+            <LoaderCircle
+              data-icon="inline-start"
+              className="animate-spin motion-reduce:animate-none"
+            />
+          ) : (
+            <LogOut />
+          )}
           <span>{t('signOut')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

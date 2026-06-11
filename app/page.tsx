@@ -6,7 +6,6 @@ import { ChatClearSessionButton } from '@/components/chat/chat-clear-session-but
 import { ChatClient } from '@/components/chat/chat-client';
 import { ChatHeader } from '@/components/chat/chat-header';
 import { LanguageSelector } from '@/components/i18n/language-selector';
-import { ThemeModeSelector } from '@/components/theme/theme-mode-selector';
 import { getCurrentUser } from '@/lib/auth';
 import {
   CHAT_SESSION_COOKIE_NAME,
@@ -46,9 +45,8 @@ export default async function Home() {
           action={
             <div className="flex items-center gap-1.5">
               <LanguageSelector />
-              <ThemeModeSelector />
               <ChatClearSessionButton />
-              <UserMenu email={user.user.email} />
+              <UserMenu email={user.user.email} displayName={user.user.displayName} />
             </div>
           }
         />

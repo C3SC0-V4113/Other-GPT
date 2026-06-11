@@ -2,6 +2,7 @@
 
 import { projectAuthLoginRequestSchema } from '@cesco_valle/identity-contracts/user';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { LoaderCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -84,7 +85,13 @@ export function LoginForm({ email }: LoginFormProps) {
           </p>
         ) : null}
         <Button type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? t('loading') : t('login')}
+          {form.formState.isSubmitting ? (
+            <LoaderCircle
+              data-icon="inline-start"
+              className="animate-spin motion-reduce:animate-none"
+            />
+          ) : null}
+          {t('login')}
         </Button>
       </form>
     </Form>
