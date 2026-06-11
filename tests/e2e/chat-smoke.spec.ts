@@ -4,6 +4,15 @@ import { expect, test } from '@playwright/test';
 // Accept-Language when no NEXT_LOCALE cookie is present).
 test.use({ locale: 'es-ES' });
 
+// The chat is gated behind a session. Seed the relayed session cookie so the
+// optimistic proxy and the authoritative server check (against the mock
+// identity-service) both pass and the chat shell renders.
+test.beforeEach(async ({ context }) => {
+  await context.addCookies([
+    { name: 'identity_service_session', value: 'e2e-session', url: 'http://127.0.0.1:3000' },
+  ]);
+});
+
 test('renders the chat shell and composer controls', async ({ page }) => {
   await page.goto('/');
 
