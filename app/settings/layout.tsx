@@ -13,8 +13,8 @@ export default async function SettingsLayout({ children }: { children: React.Rea
   const t = await getTranslations('settings');
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="flex items-center justify-between gap-2 border-b px-4 py-3">
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <header className="flex shrink-0 items-center justify-between gap-2 border-b px-4 py-3">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
@@ -27,7 +27,7 @@ export default async function SettingsLayout({ children }: { children: React.Rea
           <ThemeModeSelector />
         </div>
       </header>
-      <div className="flex flex-1 flex-col p-4 lg:p-8">
+      <div className="flex flex-1 overflow-hidden p-4 lg:p-8">
         <SettingsShell nav={<SettingsNav />}>{children}</SettingsShell>
       </div>
     </div>

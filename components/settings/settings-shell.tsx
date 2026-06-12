@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
 import type { ReactNode } from 'react';
@@ -16,9 +17,21 @@ export function SettingsShell({ nav, children }: { nav: ReactNode; children: Rea
   const isIndex = pathname === '/settings';
 
   return (
-    <div className="mx-auto w-full max-w-5xl flex-1 lg:grid lg:grid-cols-[240px_1fr] lg:gap-8">
-      <aside className={cn('lg:block', isIndex ? 'block' : 'hidden')}>{nav}</aside>
-      <main className={cn('min-w-0 lg:block', isIndex ? 'hidden' : 'block')}>{children}</main>
+    <div className="mx-auto flex w-full max-w-5xl flex-1 overflow-hidden lg:grid lg:grid-cols-[240px_1fr]">
+      <aside className={cn('w-full min-w-0 lg:min-h-0', isIndex ? 'block' : 'hidden', 'lg:block')}>
+        <div className="size-full lg:border-r lg:border-border lg:pr-6">
+          <ScrollArea className="size-full">
+            <div className="pr-3">{nav}</div>
+          </ScrollArea>
+        </div>
+      </aside>
+      <main className={cn('w-full min-w-0 lg:min-h-0', isIndex ? 'hidden' : 'block', 'lg:block')}>
+        <div className="size-full lg:pl-6">
+          <ScrollArea className="size-full">
+            <div className="pr-3">{children}</div>
+          </ScrollArea>
+        </div>
+      </main>
     </div>
   );
 }

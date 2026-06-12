@@ -54,25 +54,27 @@ export default async function AccountPage() {
         <span>{t('back')}</span>
       </Link>
 
-      <Card className="w-full max-w-xl">
-        <CardHeader>
-          <CardTitle>{t('title')}</CardTitle>
-          <CardDescription>{t('subtitle')}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <Field label={t('fields.email')} value={user.user.email} />
-          <Field
-            label={t('fields.displayName')}
-            value={user.user.displayName ?? t('noDisplayName')}
-          />
-          <Field label={t('fields.status')} value={statusLabel} />
-          <Field label={t('fields.memberSince')} value={memberSince} />
-          <Field label={t('fields.project')} value={user.project.name} />
-          <Field label={t('fields.role')} value={roleNames} />
-        </CardContent>
-      </Card>
+      <div className="flex w-full flex-col gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('title')}</CardTitle>
+            <CardDescription>{t('subtitle')}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <Field label={t('fields.email')} value={user.user.email} />
+            <Field
+              label={t('fields.displayName')}
+              value={user.user.displayName ?? t('noDisplayName')}
+            />
+            <Field label={t('fields.status')} value={statusLabel} />
+            <Field label={t('fields.memberSince')} value={memberSince} />
+            <Field label={t('fields.project')} value={user.project.name} />
+            <Field label={t('fields.role')} value={roleNames} />
+          </CardContent>
+        </Card>
 
-      {isBasicUser(user) && <RoleRequestCta />}
+        {isBasicUser(user) && <RoleRequestCta />}
+      </div>
     </div>
   );
 }
