@@ -1,19 +1,25 @@
 import { NextResponse } from 'next/server';
 
 import { SESSION_COOKIE_NAME } from '@/lib/auth-shared';
+import { isSessionValid } from '@/lib/identity-client';
 
 import type { NextRequest } from 'next/server';
 
 /**
- * Optimistic auth gate (Next.js 16 Proxy, formerly Middleware). It only checks
- * for the presence of the session cookie — no network call — and redirects to
- * `/login` when it is absent. The authoritative validation happens in the Server
- * Components (`getCurrentUser`) and the data Route Handlers (`requireSession`),
- * per Next's data-security guidance: optimistic here, authoritative in the data
- * layer.
+ * Authoritative auth gate (Next.js 16 Proxy, formerly Middleware, runs on the
+ * Node runtime). On every matched navigation it validates the session against
+ * identity-service, so an admin-revoked (or expired) session is bounced to
+ * `/login` on the next navigation rather than lingering until a page/data check.
+ *
+ * A missing cookie short-circuits to `/login` without a network call; a present
+ * cookie is verified (`GET /auth/session`). The Server Component
+ * (`getCurrentUser`) and data routes (`requireSession`) remain authoritative too.
  */
-export function proxy(request: NextRequest): NextResponse {
-  if (request.cookies.has(SESSION_COOKIE_NAME)) {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
+  const hasCookie = request.cookies.has(SESSION_COOKIE_NAME);
+  const cookieHeader = request.headers.get('cookie') ?? '';
+
+  if (hasCookie && (await isSessionValid(cookieHeader))) {
     return NextResponse.next();
   }
 
@@ -22,7 +28,7 @@ export function proxy(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  // Run on everything except the login page, API routes (which guard themselves),
+  // Run on everything except the login pages, API routes (which guard themselves),
   // Next internals, and metadata files.
   matcher: ['/((?!login|api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)'],
 };

@@ -17,7 +17,9 @@ test('registers a new user and lands in the chat', async ({ page }) => {
   await page.getByLabel('Email').fill('new@example.com');
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  await page.getByLabel('Password').fill('longenough');
+  // A new email routes to the dedicated register page.
+  await expect(page).toHaveURL(/\/login\/register\?email=/);
+  await page.getByLabel('Password', { exact: true }).fill('longenough');
   await page.getByRole('button', { name: 'Create account' }).click();
 
   await expect(page).toHaveURL('http://127.0.0.1:3000/');
@@ -27,18 +29,18 @@ test('registers a new user and lands in the chat', async ({ page }) => {
 test('logs an existing user in and back out', async ({ page }) => {
   await page.goto('/login');
 
-  // An "existing" email routes to the login step (rebote).
+  // An "existing" email routes (rebote) to the dedicated password page.
   await page.getByLabel('Email').fill('existing@example.com');
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
-  await page.getByLabel('Password').fill('correct-password');
+  await expect(page).toHaveURL(/\/login\/password\?email=/);
+  await page.getByLabel('Password', { exact: true }).fill('correct-password');
   await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(page.getByText('Start a conversation')).toBeVisible();
 
   // Sign out via the user menu → back to /login.
-  await page.getByRole('button', { name: 'Signed in as e2e@example.com' }).click();
+  await page.getByRole('button', { name: /^Signed in as/ }).click();
   await page.getByRole('menuitem', { name: 'Sign out' }).click();
 
   await expect(page).toHaveURL(/\/login$/);

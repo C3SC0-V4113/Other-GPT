@@ -21,7 +21,7 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
 ## Mapa de componentes del chat
 
 - Shell de pantalla:
-  - `app/page.tsx` compone header, selector de idioma, selector de tema y chat.
+  - `app/page.tsx` aplica el gate de sesion y compone header (con `UserMenu`: idioma, tema y logout) y chat.
   - `components/chat/chat-header.tsx` mantiene markup server-side.
   - `components/i18n/language-selector.tsx` es la isla cliente del selector de idioma.
 - Estado y comportamiento:
@@ -110,11 +110,40 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
 - Agregar un idioma: crear `messages/<locale>.json`, ampliar `locales` en `i18n/config.ts` y el mapeo
   del selector.
 
+## Autenticacion
+
+La autenticacion se delega a `identity-service` (no hay store de usuarios local) con
+los paquetes `@cesco_valle/identity-contracts` y `@cesco_valle/identity-auth-sdk`,
+bajo un patron **BFF**: el navegador solo habla con las Route Handlers
+`app/api/auth/*` de otro-GPT, que llaman a `identity-service` server-side y reenvian
+la cookie de sesion (`identity_service_session`) al mismo origen (sin CORS).
+
+- **Variable requerida:** `IDENTITY_URL` (server-only; nunca `NEXT_PUBLIC_*`). URL base
+  de identity-service; en dev por defecto `http://localhost:3000`.
+- **Login ruteado (SSR):** `/login` (email) deriva a `/login/password` (usuario
+  existente) o `/login/register` (nuevo). Formularios cliente en `components/auth/*`
+  con react-hook-form + los esquemas zod de `@cesco_valle/identity-contracts`.
+- **Gate:** `proxy.ts` **verifica la sesion contra identity-service en cada
+  navegacion** (`isSessionValid` → `GET /auth/session`), de modo que una sesion
+  revocada por un admin rebota a `/login` en la siguiente navegacion; si falta la
+  cookie, redirige sin llamada de red. `app/page.tsx` revalida de forma autoritativa
+  (`getCurrentUser`) y las rutas de datos `app/api/{chat,audio,images,...}` exigen
+  sesion (`requireSession`, `401`). El cliente compartido vive en
+  `lib/identity-client.ts` (sin `server-only`, usable desde el proxy).
+- **Logout:** `components/auth/user-menu.tsx` → `POST /api/auth/logout`.
+
+> El chat **requiere** identity-service accesible en `IDENTITY_URL`. Sin sesion valida,
+> `/` redirige a `/login`. La suite e2e levanta un mock de identity-service
+> (`tests/e2e/support`) para no depender del backend real.
+
 ## Desarrollo local
 
 ```bash
 npm run dev
 ```
+
+Requiere `IDENTITY_URL` apuntando a una instancia de identity-service
+(ver [Autenticacion](#autenticacion)).
 
 ## Testing
 

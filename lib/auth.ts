@@ -1,31 +1,15 @@
 import 'server-only';
 
-import { ApiError, createUserAuthClient } from '@cesco_valle/identity-auth-sdk/user';
+import { ApiError } from '@cesco_valle/identity-auth-sdk/user';
 import { cookies } from 'next/headers';
 
 import { PROJECT_SLUG } from './auth-shared';
+import { getAuthClient } from './identity-client';
 
-import type { UserAuthClient } from '@cesco_valle/identity-auth-sdk/user';
 import type { ProjectAuthResponse } from '@cesco_valle/identity-contracts/user';
 
 export { PROJECT_SLUG } from './auth-shared';
-
-let client: UserAuthClient | undefined;
-
-/**
- * Lazily build (and memoize) the user auth client. Reads `IDENTITY_URL` at call
- * time so a missing var fails per-request, not at module load / build time.
- */
-export function getAuthClient(): UserAuthClient {
-  if (!client) {
-    const baseUrl = process.env.IDENTITY_URL;
-    if (!baseUrl) {
-      throw new Error('IDENTITY_URL is not configured');
-    }
-    client = createUserAuthClient({ baseUrl });
-  }
-  return client;
-}
+export { getAuthClient } from './identity-client';
 
 /**
  * Relay the raw `Set-Cookie` values from identity-service onto a same-origin
