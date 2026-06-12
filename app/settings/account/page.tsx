@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
 
+import { RoleRequestCta } from '@/components/account/role-request-cta';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getCurrentUser } from '@/lib/auth';
+import { isBasicUser } from '@/lib/roles';
 
 import type { Metadata } from 'next';
 
@@ -69,6 +71,8 @@ export default async function AccountPage() {
           <Field label={t('fields.role')} value={roleNames} />
         </CardContent>
       </Card>
+
+      {isBasicUser(user) && <RoleRequestCta />}
     </div>
   );
 }

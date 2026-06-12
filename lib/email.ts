@@ -1,0 +1,12 @@
+import 'server-only';
+
+import { Resend } from 'resend';
+
+let client: Resend | null = null;
+
+export function getEmailClient(): Resend {
+  if (!client) {
+    client = new Resend(process.env.RESEND_API_KEY);
+  }
+  return client;
+}

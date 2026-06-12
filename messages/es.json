@@ -173,6 +173,18 @@
       "memberSince": "Miembro desde",
       "project": "Proyecto",
       "role": "Rol"
+    },
+    "roleRequest": {
+      "title": "Solicitar mejora de rol",
+      "description": "¿Necesitás más capacidades? Solicitá una mejora de rol para tu cuenta.",
+      "justificationLabel": "¿Por qué necesitás una mejora? (opcional)",
+      "justificationPlaceholder": "Contanos por qué necesitás permisos adicionales...",
+      "submit": "Enviar solicitud",
+      "sending": "Enviando...",
+      "sent": "Solicitud enviada",
+      "successToast": "¡Solicitud de mejora de rol enviada con éxito!",
+      "errorToast": "Algo salió mal. Intentalo de nuevo.",
+      "cancel": "Cancelar"
     }
   }
 }

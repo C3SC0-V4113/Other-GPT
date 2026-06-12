@@ -173,6 +173,18 @@
       "memberSince": "Member since",
       "project": "Project",
       "role": "Role"
+    },
+    "roleRequest": {
+      "title": "Request role upgrade",
+      "description": "Need more capabilities? Request a role upgrade for your account.",
+      "justificationLabel": "Why do you need an upgrade? (optional)",
+      "justificationPlaceholder": "Tell us why you need additional permissions...",
+      "submit": "Send request",
+      "sending": "Sending...",
+      "sent": "Request sent",
+      "successToast": "Role upgrade request sent successfully!",
+      "errorToast": "Something went wrong. Please try again.",
+      "cancel": "Cancel"
     }
   }
 }
