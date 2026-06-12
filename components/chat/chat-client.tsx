@@ -12,11 +12,17 @@ import type { ReactNode } from 'react';
 
 interface ChatClientProps {
   children: ReactNode;
+  canGenerateImages: boolean;
   initialAttachments: ChatAttachment[];
   initialMessages: ChatMessage[];
 }
 
-export function ChatClient({ children, initialAttachments, initialMessages }: ChatClientProps) {
+export function ChatClient({
+  children,
+  canGenerateImages,
+  initialAttachments,
+  initialMessages,
+}: ChatClientProps) {
   return (
     <ChatProvider initialAttachments={initialAttachments} initialMessages={initialMessages}>
       <TooltipProvider>
@@ -28,7 +34,7 @@ export function ChatClient({ children, initialAttachments, initialMessages }: Ch
           <div className="border-t bg-background/95">
             <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
               <ChatComposerProvider>
-                <ChatComposerForm />
+                <ChatComposerForm canGenerateImages={canGenerateImages} />
               </ChatComposerProvider>
             </div>
           </div>

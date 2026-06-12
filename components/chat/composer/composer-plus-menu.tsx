@@ -12,6 +12,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ComposerPlusMenuProps {
+  canGenerateImages: boolean;
   contextAttachmentCount: number;
   totalAttachmentCount: number;
   onOpenAttachmentsContext: () => void;
@@ -21,6 +22,7 @@ interface ComposerPlusMenuProps {
 }
 
 export function ComposerPlusMenu({
+  canGenerateImages,
   contextAttachmentCount,
   totalAttachmentCount,
   onOpenAttachmentsContext,
@@ -51,10 +53,12 @@ export function ComposerPlusMenu({
               <Paperclip />
               <span>{t('attachFiles')}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onToggleImageMode}>
-              <ImagePlus />
-              <span>{t('generateImages')}</span>
-            </DropdownMenuItem>
+            {canGenerateImages ? (
+              <DropdownMenuItem onClick={onToggleImageMode}>
+                <ImagePlus />
+                <span>{t('generateImages')}</span>
+              </DropdownMenuItem>
+            ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
       </TooltipTrigger>

@@ -81,7 +81,7 @@ function ComposerInput({
   );
 }
 
-export function ChatComposerForm() {
+export function ChatComposerForm({ canGenerateImages }: { canGenerateImages: boolean }) {
   const {
     input,
     attachments,
@@ -131,6 +131,7 @@ export function ChatComposerForm() {
         {({ contextAttachmentCount, totalAttachmentCount, openContextModal, openFileDialog }) => (
           <ComposerActionsRow>
             <ComposerPlusMenu
+              canGenerateImages={canGenerateImages}
               contextAttachmentCount={contextAttachmentCount}
               totalAttachmentCount={totalAttachmentCount}
               isSubmitting={isSubmitting}

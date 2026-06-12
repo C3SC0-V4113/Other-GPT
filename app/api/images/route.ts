@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
-import { requireSession } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
 import { parseGenerateImageRequestBody } from '@/lib/chat-dtos';
 import {
@@ -10,6 +10,7 @@ import {
   getSessionContextAttachments,
 } from '@/lib/chat-session-store';
 import { toResponseInputContentFromAttachments } from '@/lib/openai-response-input-content';
+import { canGenerateImages } from '@/lib/roles';
 
 import type { ChatImageAspectRatio } from '@/lib/chat-session-store';
 
@@ -85,9 +86,29 @@ function toNdjsonLine(payload: Record<string, number | string>): Uint8Array {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const unauthorized = await requireSession();
-  if (unauthorized) {
-    return unauthorized;
+  // Image generation requires an elevated role (`pro`/`admin`); fail closed.
+  let user = null;
+  try {
+    user = await getCurrentUser();
+  } catch {
+    user = null;
+  }
+  if (!user) {
+    return Response.json(
+      { error: { code: 'AUTHENTICATION_REQUIRED', message: 'Sign in required.' } },
+      { status: 401 }
+    );
+  }
+  if (!canGenerateImages(user)) {
+    return Response.json(
+      {
+        error: {
+          code: 'IMAGE_GENERATION_FORBIDDEN',
+          message: 'Image generation requires an upgraded role.',
+        },
+      },
+      { status: 403 }
+    );
   }
 
   if (!process.env.OPENAI_API_KEY) {

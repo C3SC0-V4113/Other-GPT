@@ -11,6 +11,7 @@ import {
   getSessionAttachments,
   getSessionMessages,
 } from '@/lib/chat-session-store';
+import { canGenerateImages } from '@/lib/roles';
 
 import type { Metadata } from 'next';
 
@@ -39,7 +40,11 @@ export default async function Home() {
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden">
-      <ChatClient initialAttachments={initialAttachments} initialMessages={initialMessages}>
+      <ChatClient
+        canGenerateImages={canGenerateImages(user)}
+        initialAttachments={initialAttachments}
+        initialMessages={initialMessages}
+      >
         <ChatHeader
           action={
             <div className="flex items-center gap-1.5">
