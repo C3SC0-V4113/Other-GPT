@@ -1,6 +1,7 @@
 'use client';
 
-import { LoaderCircle, LogOut, UserRound } from 'lucide-react';
+import { LoaderCircle, LogOut, Settings, UserRound } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
@@ -53,6 +54,13 @@ export function UserMenu({ email, displayName }: UserMenuProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel className="max-w-48 truncate">{displayName ?? email}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/settings">
+            <Settings />
+            <span>{t('account')}</span>
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <ThemeModeMenuItems />
         <DropdownMenuSeparator />

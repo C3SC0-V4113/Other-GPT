@@ -138,6 +138,7 @@
     "metaRegisterTitle": "Crea una cuenta",
     "metaRegisterDescription": "Regístrate para usar other-GPT.",
     "signedInAs": "Sesión de {email}",
+    "account": "Cuenta",
     "signOut": "Cerrar sesión",
     "errors": {
       "emailRequired": "Ingresa tu correo.",
@@ -151,6 +152,27 @@
       "emailExists": "Ese correo ya tiene cuenta. Inicia sesión.",
       "generic": "Algo salió mal. Inténtalo de nuevo.",
       "unreachable": "No se pudo contactar al servidor. Inténtalo en breve."
+    }
+  },
+  "settings": {
+    "title": "Configuración",
+    "backToChat": "Volver al chat",
+    "navAccount": "Cuenta"
+  },
+  "account": {
+    "title": "Cuenta",
+    "subtitle": "Los datos de tu cuenta.",
+    "back": "Configuración",
+    "noDisplayName": "Sin definir",
+    "statusActive": "Activa",
+    "statusBanned": "Suspendida",
+    "fields": {
+      "email": "Correo",
+      "displayName": "Nombre",
+      "status": "Estado",
+      "memberSince": "Miembro desde",
+      "project": "Proyecto",
+      "role": "Rol"
     }
   }
 }
