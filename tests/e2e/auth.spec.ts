@@ -22,7 +22,7 @@ test('registers a new user and lands in the chat', async ({ page }) => {
   await page.getByLabel('Password', { exact: true }).fill('longenough');
   await page.getByRole('button', { name: 'Create account' }).click();
 
-  await expect(page).toHaveURL('http://127.0.0.1:3000/');
+  await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText('Start a conversation')).toBeVisible();
 });
 

@@ -9,11 +9,11 @@ import type * as Sdk from '@cesco_valle/identity-auth-sdk/user';
 
 // `lib/auth` imports `server-only` and `next/headers`; stub both for node tests.
 vi.mock('server-only', () => ({}));
-vi.mock('next/headers', () => ({
-  cookies: vi.fn(async () => ({ toString: (): string => 'identity_service_session=abc' })),
-}));
 
-const { mockClient } = vi.hoisted(() => ({
+const { cookieStoreState, mockClient } = vi.hoisted(() => ({
+  cookieStoreState: {
+    value: 'identity_service_session=abc',
+  },
   mockClient: {
     getMe: vi.fn(),
     hasValidSession: vi.fn(),
@@ -26,8 +26,17 @@ vi.mock('@cesco_valle/identity-auth-sdk/user', async (importActual) => {
   return { ...actual, createUserAuthClient: () => mockClient };
 });
 
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({
+    has: (name: string): boolean => cookieStoreState.value.includes(`${name}=`),
+    toString: (): string => cookieStoreState.value,
+  })),
+}));
+
 beforeEach(() => {
   process.env.IDENTITY_URL = 'http://identity.test';
+  cookieStoreState.value = 'identity_service_session=abc';
+  vi.clearAllMocks();
 });
 
 const USER = {
@@ -37,6 +46,13 @@ const USER = {
 };
 
 describe('getCurrentUser', () => {
+  it('returns null without calling identity-service when the session cookie is absent', async () => {
+    cookieStoreState.value = '';
+
+    await expect(getCurrentUser()).resolves.toBeNull();
+    expect(mockClient.getMe).not.toHaveBeenCalled();
+  });
+
   it('returns the user when the session is valid', async () => {
     mockClient.getMe.mockResolvedValueOnce(USER);
     await expect(getCurrentUser()).resolves.toEqual(USER);
@@ -54,6 +70,14 @@ describe('getCurrentUser', () => {
 });
 
 describe('requireSession', () => {
+  it('returns 401 without calling identity-service when the session cookie is absent', async () => {
+    cookieStoreState.value = '';
+
+    const response = await requireSession();
+    expect(response?.status).toBe(401);
+    expect(mockClient.hasValidSession).not.toHaveBeenCalled();
+  });
+
   it('returns null (proceed) when the session is valid', async () => {
     mockClient.hasValidSession.mockResolvedValueOnce(true);
     await expect(requireSession()).resolves.toBeNull();

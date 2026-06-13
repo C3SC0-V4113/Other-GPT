@@ -1,9 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const baseUrl = 'http://127.0.0.1:3000';
+const appPort = process.env.E2E_PORT ?? '3000';
+const baseUrl = `http://127.0.0.1:${appPort}`;
 const isCi = Boolean(process.env.CI);
 
-const mockIdentityUrl = 'http://127.0.0.1:4555';
+const mockIdentityPort = process.env.E2E_IDENTITY_PORT ?? '4555';
+const mockIdentityUrl = `http://127.0.0.1:${mockIdentityPort}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -35,7 +37,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev -- --hostname 127.0.0.1 --port 3000',
+    command: `npm run dev -- --hostname 127.0.0.1 --port ${appPort}`,
     url: baseUrl,
     reuseExistingServer: !isCi,
     timeout: 120_000,

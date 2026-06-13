@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+const appUrl = `http://127.0.0.1:${process.env.E2E_PORT ?? '3000'}`;
+
 // Pin the browser locale so locale detection is deterministic (the app reads
 // Accept-Language when no NEXT_LOCALE cookie is present).
 test.use({ locale: 'es-ES' });
@@ -9,7 +11,7 @@ test.use({ locale: 'es-ES' });
 // identity-service) both pass and the chat shell renders.
 test.beforeEach(async ({ context }) => {
   await context.addCookies([
-    { name: 'identity_service_session', value: 'e2e-session', url: 'http://127.0.0.1:3000' },
+    { name: 'identity_service_session', value: 'e2e-session', url: appUrl },
   ]);
 });
 

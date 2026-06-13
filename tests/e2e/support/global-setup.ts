@@ -1,6 +1,6 @@
 import { startMockIdentityServer } from './mock-identity-server';
 
-export const MOCK_IDENTITY_PORT = 4555;
+export const MOCK_IDENTITY_PORT = Number(process.env.E2E_IDENTITY_PORT ?? '4555');
 
 /**
  * Starts the mock identity-service before the e2e run and returns a teardown that

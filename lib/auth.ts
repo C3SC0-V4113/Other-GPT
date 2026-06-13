@@ -3,7 +3,7 @@ import 'server-only';
 import { ApiError } from '@cesco_valle/identity-auth-sdk/user';
 import { cookies } from 'next/headers';
 
-import { PROJECT_SLUG } from './auth-shared';
+import { PROJECT_SLUG, SESSION_COOKIE_NAME } from './auth-shared';
 import { getAuthClient } from './identity-client';
 
 import type { ProjectAuthResponse } from '@cesco_valle/identity-contracts/user';
@@ -43,7 +43,12 @@ export function toErrorResponse(error: unknown): Response {
  * session cookie and returns `null` when the session is missing/invalid (401).
  */
 export async function getCurrentUser(): Promise<ProjectAuthResponse | null> {
-  const cookie = (await cookies()).toString();
+  const cookieStore = await cookies();
+  if (!cookieStore.has(SESSION_COOKIE_NAME)) {
+    return null;
+  }
+
+  const cookie = cookieStore.toString();
   try {
     return await getAuthClient().getMe(PROJECT_SLUG, { cookie });
   } catch (error) {
@@ -60,7 +65,15 @@ export async function getCurrentUser(): Promise<ProjectAuthResponse | null> {
  * fails closed if identity-service is unreachable.
  */
 export async function requireSession(): Promise<Response | null> {
-  const cookie = (await cookies()).toString();
+  const cookieStore = await cookies();
+  if (!cookieStore.has(SESSION_COOKIE_NAME)) {
+    return Response.json(
+      { error: { code: 'AUTHENTICATION_REQUIRED', message: 'Sign in required.' } },
+      { status: 401 }
+    );
+  }
+
+  const cookie = cookieStore.toString();
   let isValid = false;
   try {
     isValid = await getAuthClient().hasValidSession(PROJECT_SLUG, { cookie });

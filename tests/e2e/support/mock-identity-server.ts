@@ -19,19 +19,83 @@ const MOCK_USER = {
   },
 };
 
-const MOCK_ACCESS = {
-  project: MOCK_USER.project,
-  access: {
-    isMember: true,
-    membershipId: MOCK_USER.membership.id,
-    status: 'ACTIVE',
-    roles: MOCK_USER.membership.roles,
-    isAdmin: false,
-  },
-};
+type MockIdentityUser = typeof MOCK_USER;
+
+const registeredUsers = new Map<string, { password: string; identity: MockIdentityUser }>();
+const sessions = new Map<string, MockIdentityUser>([[VALID_TOKEN, MOCK_USER]]);
+
+function createMockIdentity(email: string, displayName?: unknown): MockIdentityUser {
+  const normalizedEmail = email.toLowerCase();
+  const safeId = Buffer.from(normalizedEmail).toString('base64url');
+  const resolvedDisplayName =
+    typeof displayName === 'string' && displayName.trim().length > 0
+      ? displayName.trim()
+      : normalizedEmail.split('@')[0];
+
+  return {
+    ...MOCK_USER,
+    user: {
+      ...MOCK_USER.user,
+      id: `e2e-user-${safeId}`,
+      email: normalizedEmail,
+      displayName: resolvedDisplayName,
+    },
+    membership: {
+      ...MOCK_USER.membership,
+      id: `e2e-membership-${safeId}`,
+    },
+  };
+}
+
+function createMockAccess(identity: MockIdentityUser) {
+  return {
+    project: identity.project,
+    access: {
+      isMember: true,
+      membershipId: identity.membership.id,
+      status: 'ACTIVE',
+      roles: identity.membership.roles,
+      isAdmin: false,
+    },
+  };
+}
+
+function getCookieValue(req: IncomingMessage, cookieName: string): string | null {
+  const cookies = (req.headers.cookie ?? '').split(';');
+  for (const cookie of cookies) {
+    const [name, ...valueParts] = cookie.trim().split('=');
+    if (name === cookieName) {
+      return decodeURIComponent(valueParts.join('='));
+    }
+  }
+  return null;
+}
+
+function getSessionIdentity(req: IncomingMessage): MockIdentityUser | null {
+  const token = getCookieValue(req, SESSION_COOKIE);
+  if (!token) {
+    return null;
+  }
+  return sessions.get(token) ?? null;
+}
+
+function createSessionCookie(identity: MockIdentityUser): string {
+  const token = `e2e-session-${Buffer.from(identity.user.email).toString('base64url')}`;
+  sessions.set(token, identity);
+  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax`;
+}
+
+function isExistingEmail(email: string): boolean {
+  return email.startsWith('existing') || registeredUsers.has(email.toLowerCase());
+}
+
+function getExistingIdentity(email: string): MockIdentityUser {
+  const normalizedEmail = email.toLowerCase();
+  return registeredUsers.get(normalizedEmail)?.identity ?? createMockIdentity(normalizedEmail);
+}
 
 function hasSession(req: IncomingMessage): boolean {
-  return (req.headers.cookie ?? '').includes(`${SESSION_COOKIE}=`);
+  return getSessionIdentity(req) !== null;
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown, setCookie?: string): void {
@@ -58,7 +122,6 @@ async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> 
   }
 }
 
-const sessionCookie = `${SESSION_COOKIE}=${VALID_TOKEN}; Path=/; HttpOnly; SameSite=Lax`;
 const clearedCookie = `${SESSION_COOKIE}=; Path=/; Max-Age=0`;
 const base = '/projects/other-gpt/auth';
 
@@ -81,26 +144,41 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
 
   if (method === 'POST' && pathname === `${base}/register/email-check`) {
     const body = await readJson(req);
-    const email = String(body.email ?? '');
-    const isExisting = email.startsWith('existing');
+    const email = String(body.email ?? '').toLowerCase();
+    const isExisting = isExistingEmail(email);
     sendJson(res, 200, { email, exists: isExisting, nextStep: isExisting ? 'LOGIN' : 'REGISTER' });
     return;
   }
 
   if (method === 'POST' && pathname === `${base}/login`) {
     const body = await readJson(req);
-    if (body.password === 'wrongpass') {
+    const email = String(body.email ?? '').toLowerCase();
+    const password = String(body.password ?? '');
+    const registeredUser = registeredUsers.get(email);
+    const hasInvalidPassword =
+      password === 'wrongpass' ||
+      (registeredUser !== undefined && registeredUser.password !== password);
+
+    if (!isExistingEmail(email) || hasInvalidPassword) {
       sendJson(res, 401, {
         error: { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
       });
       return;
     }
-    sendJson(res, 200, MOCK_USER, sessionCookie);
+
+    const identity = registeredUser?.identity ?? getExistingIdentity(email);
+    sendJson(res, 200, identity, createSessionCookie(identity));
     return;
   }
 
   if (method === 'POST' && pathname === `${base}/register`) {
-    sendJson(res, 201, MOCK_USER, sessionCookie);
+    const body = await readJson(req);
+    const email = String(body.email ?? '').toLowerCase();
+    const password = String(body.password ?? '');
+    const identity = createMockIdentity(email, body.displayName);
+
+    registeredUsers.set(email, { password, identity });
+    sendJson(res, 201, identity, createSessionCookie(identity));
     return;
   }
 
@@ -118,8 +196,9 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   }
 
   if (method === 'GET' && pathname === `${base}/me`) {
-    if (hasSession(req)) {
-      sendJson(res, 200, MOCK_USER);
+    const identity = getSessionIdentity(req);
+    if (identity) {
+      sendJson(res, 200, identity);
     } else {
       sendJson(res, 401, {
         error: { code: 'AUTHENTICATION_REQUIRED', message: 'Authentication required' },
@@ -129,8 +208,9 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   }
 
   if (method === 'GET' && pathname === '/projects/other-gpt/me') {
-    if (hasSession(req)) {
-      sendJson(res, 200, MOCK_ACCESS);
+    const identity = getSessionIdentity(req);
+    if (identity) {
+      sendJson(res, 200, createMockAccess(identity));
     } else {
       sendJson(res, 401, {
         error: { code: 'AUTHENTICATION_REQUIRED', message: 'Authentication required' },

@@ -37,7 +37,13 @@ export function ComposerPlusMenu({
       <TooltipTrigger asChild>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button disabled={isSubmitting} size="icon-sm" type="button" variant="outline">
+            <Button
+              aria-label={t('options')}
+              disabled={isSubmitting}
+              size="icon-sm"
+              type="button"
+              variant="outline"
+            >
               <Plus />
             </Button>
           </DropdownMenuTrigger>

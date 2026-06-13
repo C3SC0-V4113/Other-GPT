@@ -43,6 +43,9 @@ Aplicacion de chat server-first en Next.js 16 con streaming de respuestas, estad
 - Imagen:
   - `POST /api/images` con `Responses API` y streaming incremental de imagenes desde prompt y aspect ratio.
   - emite previews parciales via NDJSON y un evento final con la imagen completa.
+  - controlada por roles: solo usuarios con rol `pro` o `admin` ven la opción "Generar imágenes" en
+    el menú `+` del composer; los usuarios básicos (`user`) reciben `403 IMAGE_GENERATION_FORBIDDEN`
+    si invocan la API directamente. La gestión de roles se realiza desde `/settings/account`.
 - Adjuntos de archivos:
   - `POST /api/chat/attachments` para subir archivos del composer.
   - `DELETE /api/chat/attachments/[attachmentId]` para quitar adjuntos activos.
