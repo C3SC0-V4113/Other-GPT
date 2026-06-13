@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useTransition, useState } from 'react';
+import { useEffect, useTransition, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 export function RoleRequestCta() {
   const t = useTranslations('account.roleRequest');
@@ -22,6 +23,12 @@ export function RoleRequestCta() {
   const [message, setMessage] = useState('');
   const [isSent, setIsSent] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!isSent) return;
+    const timer = setTimeout(() => setIsSent(false), 4000);
+    return () => clearTimeout(timer);
+  }, [isSent]);
 
   function handleSubmit() {
     startTransition(async () => {
@@ -41,21 +48,35 @@ export function RoleRequestCta() {
         toast.success(t('successToast'));
         setIsSent(true);
         setIsOpen(false);
+        setMessage('');
       } catch {
         toast.error(t('errorToast'));
       }
     });
   }
 
-  return isSent ? (
-    <Button variant="outline" disabled className="w-full">
-      {t('sent')}
-    </Button>
-  ) : (
+  return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full">
-          {t('title')}
+        <Button variant="outline" disabled={isSent} className="relative w-full">
+          <span
+            className={cn(
+              'inline-flex items-center transition-all duration-200 ease-out motion-reduce:transition-none',
+              isSent ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
+            )}
+            aria-hidden={isSent}
+          >
+            {t('title')}
+          </span>
+          <span
+            className={cn(
+              'absolute inset-0 inline-flex items-center justify-center transition-all duration-200 ease-out motion-reduce:transition-none',
+              isSent ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+            )}
+            aria-hidden={!isSent}
+          >
+            {t('sent')}
+          </span>
         </Button>
       </DialogTrigger>
       <DialogContent>
