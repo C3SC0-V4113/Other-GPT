@@ -2,11 +2,11 @@ import { Stone } from 'lucide-react';
 
 import type { ReactNode } from 'react';
 
-interface ChatHeaderProps {
+interface PrivateHeaderProps {
   action: ReactNode;
 }
 
-export function ChatHeader({ action }: ChatHeaderProps) {
+export function PrivateHeader({ action }: PrivateHeaderProps) {
   return (
     <header className="border-b bg-background/95">
       <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-3">

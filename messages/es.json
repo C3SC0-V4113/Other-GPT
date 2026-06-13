@@ -140,6 +140,10 @@
     "signedInAs": "Sesión de {email}",
     "account": "Cuenta",
     "signOut": "Cerrar sesión",
+    "signOutConfirmTitle": "Cerrar sesión",
+    "signOutConfirmDescription": "Al cerrar sesión se borrará el chat actual. Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
+    "confirmSignOut": "Cerrar sesión",
     "errors": {
       "emailRequired": "Ingresa tu correo.",
       "emailInvalid": "Ingresa un correo válido.",

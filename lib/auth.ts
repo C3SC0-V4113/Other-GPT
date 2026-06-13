@@ -2,6 +2,7 @@ import 'server-only';
 
 import { ApiError } from '@cesco_valle/identity-auth-sdk/user';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 
 import { PROJECT_SLUG, SESSION_COOKIE_NAME } from './auth-shared';
 import { getAuthClient } from './identity-client';
@@ -42,7 +43,7 @@ export function toErrorResponse(error: unknown): Response {
  * Authoritative current-user read for Server Components. Forwards the incoming
  * session cookie and returns `null` when the session is missing/invalid (401).
  */
-export async function getCurrentUser(): Promise<ProjectAuthResponse | null> {
+export const getCurrentUser = cache(async (): Promise<ProjectAuthResponse | null> => {
   const cookieStore = await cookies();
   if (!cookieStore.has(SESSION_COOKIE_NAME)) {
     return null;
@@ -57,7 +58,7 @@ export async function getCurrentUser(): Promise<ProjectAuthResponse | null> {
     }
     throw error;
   }
-}
+});
 
 /**
  * Guard for data Route Handlers: returns a `401` response when there is no valid

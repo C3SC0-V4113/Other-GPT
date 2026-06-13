@@ -8,17 +8,14 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 
 import type { ChatAttachment } from '@/lib/chat-attachments';
 import type { ChatMessage } from '@/lib/chat-session-store';
-import type { ReactNode } from 'react';
 
 interface ChatClientProps {
-  children: ReactNode;
   canGenerateImages: boolean;
   initialAttachments: ChatAttachment[];
   initialMessages: ChatMessage[];
 }
 
 export function ChatClient({
-  children,
   canGenerateImages,
   initialAttachments,
   initialMessages,
@@ -27,8 +24,6 @@ export function ChatClient({
     <ChatProvider initialAttachments={initialAttachments} initialMessages={initialMessages}>
       <TooltipProvider>
         <div className="flex min-h-0 flex-1 flex-col">
-          {children}
-
           <ChatMessagesView />
 
           <div className="border-t bg-background/95">

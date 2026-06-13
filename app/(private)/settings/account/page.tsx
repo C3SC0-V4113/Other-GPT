@@ -1,6 +1,5 @@
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
 
 import { RoleRequestCta } from '@/components/account/role-request-cta';
@@ -26,15 +25,10 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 export default async function AccountPage() {
-  let user = null;
-  try {
-    user = await getCurrentUser();
-  } catch {
-    user = null;
-  }
+  const user = await getCurrentUser();
 
   if (!user) {
-    redirect('/login');
+    return null;
   }
 
   const [t, format] = await Promise.all([getTranslations('account'), getFormatter()]);

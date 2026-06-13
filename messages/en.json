@@ -140,6 +140,10 @@
     "signedInAs": "Signed in as {email}",
     "account": "Account",
     "signOut": "Sign out",
+    "signOutConfirmTitle": "Sign out",
+    "signOutConfirmDescription": "Signing out will delete your current chat session. This cannot be undone.",
+    "cancel": "Cancel",
+    "confirmSignOut": "Sign out",
     "errors": {
       "emailRequired": "Enter your email.",
       "emailInvalid": "Enter a valid email address.",

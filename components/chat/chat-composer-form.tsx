@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 
+import { ChatClearSessionButton } from '@/components/chat/chat-clear-session-button';
 import { useChatComposer } from '@/components/chat/chat-composer-provider';
 import {
   ComposerActionsRow,
@@ -130,15 +131,19 @@ export function ChatComposerForm({ canGenerateImages }: { canGenerateImages: boo
       >
         {({ contextAttachmentCount, totalAttachmentCount, openContextModal, openFileDialog }) => (
           <ComposerActionsRow>
-            <ComposerPlusMenu
-              canGenerateImages={canGenerateImages}
-              contextAttachmentCount={contextAttachmentCount}
-              totalAttachmentCount={totalAttachmentCount}
-              isSubmitting={isSubmitting}
-              onAddAttachments={openFileDialog}
-              onOpenAttachmentsContext={openContextModal}
-              onToggleImageMode={toggleImageGenerationMode}
-            />
+            <div className="flex items-center gap-1.5">
+              <ComposerPlusMenu
+                canGenerateImages={canGenerateImages}
+                contextAttachmentCount={contextAttachmentCount}
+                totalAttachmentCount={totalAttachmentCount}
+                isSubmitting={isSubmitting}
+                onAddAttachments={openFileDialog}
+                onOpenAttachmentsContext={openContextModal}
+                onToggleImageMode={toggleImageGenerationMode}
+              />
+
+              <ChatClearSessionButton />
+            </div>
 
             <ComposerInput
               isDisabled={isSubmitting}
