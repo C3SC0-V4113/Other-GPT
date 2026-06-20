@@ -14,6 +14,8 @@ import {
   ComposerRatioSelect,
   ComposerSubmitButton,
   ComposerToolbar,
+  ComposerVoiceButton,
+  ComposerVoicePanel,
 } from '@/components/chat/composer';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -47,6 +49,7 @@ function ComposerToolbarRegion({
 
 function ComposerInput({
   children,
+  hasVoiceButton,
   isDisabled,
   isImageMode,
   onKeyDown,
@@ -54,6 +57,7 @@ function ComposerInput({
   value,
 }: {
   children: React.ReactNode;
+  hasVoiceButton: boolean;
   isDisabled: boolean;
   isImageMode: boolean;
   onKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
@@ -65,7 +69,7 @@ function ComposerInput({
   return (
     <div className="relative min-w-0 flex-1">
       <Textarea
-        className="min-h-18 px-4 py-3.5 pr-24"
+        className={cn('min-h-18 px-4 py-3.5', hasVoiceButton ? 'pr-33' : 'pr-24')}
         disabled={isDisabled}
         name="message"
         onChange={(event) => {
@@ -82,7 +86,13 @@ function ComposerInput({
   );
 }
 
-export function ChatComposerForm({ canGenerateImages }: { canGenerateImages: boolean }) {
+export function ChatComposerForm({
+  canGenerateImages,
+  canUseRealtimeVoice,
+}: {
+  canGenerateImages: boolean;
+  canUseRealtimeVoice: boolean;
+}) {
   const {
     input,
     attachments,
@@ -110,6 +120,8 @@ export function ChatComposerForm({ canGenerateImages }: { canGenerateImages: boo
 
   return (
     <ComposerRoot>
+      {canUseRealtimeVoice ? <ComposerVoicePanel /> : null}
+
       <ComposerToolbarRegion isVisible={isImageGenerationMode}>
         <ComposerToolbar>
           <ComposerModeBadge onRemove={toggleImageGenerationMode} />
@@ -146,6 +158,7 @@ export function ChatComposerForm({ canGenerateImages }: { canGenerateImages: boo
             </div>
 
             <ComposerInput
+              hasVoiceButton={canUseRealtimeVoice}
               isDisabled={isSubmitting}
               isImageMode={isImageGenerationMode}
               onKeyDown={(event) => {
@@ -163,6 +176,8 @@ export function ChatComposerForm({ canGenerateImages }: { canGenerateImages: boo
                 isTranscribing={isTranscribing}
                 onToggleRecording={toggleRecording}
               />
+
+              {canUseRealtimeVoice ? <ComposerVoiceButton isSubmitting={isSubmitting} /> : null}
 
               <ComposerSubmitButton
                 isImageGenerationMode={isImageGenerationMode}

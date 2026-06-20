@@ -11,12 +11,14 @@ import type { ChatMessage } from '@/lib/chat-session-store';
 
 interface ChatClientProps {
   canGenerateImages: boolean;
+  canUseRealtimeVoice: boolean;
   initialAttachments: ChatAttachment[];
   initialMessages: ChatMessage[];
 }
 
 export function ChatClient({
   canGenerateImages,
+  canUseRealtimeVoice,
   initialAttachments,
   initialMessages,
 }: ChatClientProps) {
@@ -29,7 +31,10 @@ export function ChatClient({
           <div className="border-t bg-background/95">
             <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
               <ChatComposerProvider>
-                <ChatComposerForm canGenerateImages={canGenerateImages} />
+                <ChatComposerForm
+                  canGenerateImages={canGenerateImages}
+                  canUseRealtimeVoice={canUseRealtimeVoice}
+                />
               </ChatComposerProvider>
             </div>
           </div>

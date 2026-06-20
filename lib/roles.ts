@@ -18,3 +18,8 @@ export function isBasicUser(user: ProjectAuthResponse): boolean {
 export function canGenerateImages(user: ProjectAuthResponse): boolean {
   return getRoleCodes(user).some((code) => ELEVATED_ROLE_CODES.has(code));
 }
+
+/** Realtime voice is reserved for elevated roles (`pro` / `admin`). */
+export function canUseRealtimeVoice(user: ProjectAuthResponse): boolean {
+  return getRoleCodes(user).some((code) => ELEVATED_ROLE_CODES.has(code));
+}

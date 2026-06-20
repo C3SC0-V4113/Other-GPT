@@ -5,6 +5,7 @@ import {
   reduceMessagesState,
   reduceRecordingState,
   reduceRequestState,
+  reduceVoiceState,
 } from '@/components/chat/chat-controller-reducers';
 
 import type { ChatAction } from '@/components/chat/chat-controller-actions';
@@ -21,5 +22,6 @@ export function chatControllerReducer(state: ChatState, action: ChatAction): Cha
     messages: reduceMessagesState(state.messages, action),
     recording: reduceRecordingState(state.recording, action),
     request: reduceRequestState(state.request, action),
+    voice: reduceVoiceState(state.voice, action),
   };
 }

@@ -7,3 +7,5 @@ export * from './composer-plus-menu';
 export * from './composer-ratio-select';
 export * from './composer-submit-button';
 export * from './composer-toolbar';
+export * from './composer-voice-button';
+export * from './composer-voice-panel';

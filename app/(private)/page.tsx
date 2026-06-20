@@ -7,7 +7,7 @@ import {
   getSessionAttachments,
   getSessionMessages,
 } from '@/lib/chat-session-store';
-import { canGenerateImages } from '@/lib/roles';
+import { canGenerateImages, canUseRealtimeVoice } from '@/lib/roles';
 
 import type { Metadata } from 'next';
 
@@ -31,6 +31,7 @@ export default async function Home() {
   return (
     <ChatClient
       canGenerateImages={canGenerateImages(user)}
+      canUseRealtimeVoice={canUseRealtimeVoice(user)}
       initialAttachments={initialAttachments}
       initialMessages={initialMessages}
     />

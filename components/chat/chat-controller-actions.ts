@@ -1,4 +1,4 @@
-import type { ChatRetryRequest } from '@/components/chat/chat-types';
+import type { ChatRetryRequest, ChatVoiceStatus } from '@/components/chat/chat-types';
 import type { ChatAttachment } from '@/lib/chat-attachments';
 import type {
   ChatImageAspectRatio,
@@ -57,6 +57,8 @@ export type ChatAction =
         retryPrompt: string;
       };
     }
+  | { type: 'messages/append-voice-assistant'; payload: { messageId: string } }
+  | { type: 'messages/append-voice-user'; payload: { messageId: string; text: string } }
   | { type: 'messages/hydrate'; payload: ChatMessage[] }
   | {
       type: 'messages/interrupted-assistant-image';
@@ -88,4 +90,8 @@ export type ChatAction =
   | { type: 'recording/set-recording'; payload: boolean }
   | { type: 'recording/set-transcribing'; payload: boolean }
   | { type: 'request/set-pending-assistant-message-id'; payload: string | null }
-  | { type: 'request/set-submitting'; payload: boolean };
+  | { type: 'request/set-submitting'; payload: boolean }
+  | { type: 'voice/reset' }
+  | { type: 'voice/set-assistant-speaking'; payload: boolean }
+  | { type: 'voice/set-muted'; payload: boolean }
+  | { type: 'voice/set-status'; payload: ChatVoiceStatus };

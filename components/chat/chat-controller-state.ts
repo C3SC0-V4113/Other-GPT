@@ -35,5 +35,10 @@ export function createInitialChatState(
       isSubmitting: false,
       pendingAssistantMessageId: null,
     },
+    voice: {
+      isAssistantSpeaking: false,
+      isMuted: false,
+      status: 'idle',
+    },
   };
 }

@@ -8,6 +8,8 @@ import type {
 
 type ChatMessageStatus = 'complete' | 'error' | 'interrupted' | 'streaming';
 
+export type ChatVoiceStatus = 'connected' | 'connecting' | 'error' | 'idle';
+
 export interface ChatRetryRequest {
   aspectRatio?: ChatImageAspectRatio;
   kind: 'chat' | 'image';
@@ -73,6 +75,11 @@ export interface ChatState {
     isSubmitting: boolean;
     pendingAssistantMessageId: string | null;
   };
+  voice: {
+    isAssistantSpeaking: boolean;
+    isMuted: boolean;
+    status: ChatVoiceStatus;
+  };
 }
 
 export interface ChatActionHandlers {
@@ -92,9 +99,12 @@ export interface ChatActionHandlers {
   ) => Promise<boolean>;
   setInput: (nextInput: string) => void;
   setSelectedImageAspectRatio: (nextAspectRatio: ChatImageAspectRatio) => void;
+  startVoiceSession: () => Promise<void>;
   stopGeneration: () => void;
   stopPlayingAudio: () => void;
+  stopVoiceSession: () => void;
   toggleImageGenerationMode: () => void;
+  toggleMute: () => void;
   toggleRecording: () => Promise<void>;
 }
 
@@ -154,6 +164,15 @@ export interface ChatAudioActionsContextValue {
   playingMessageId: string | null;
   stopPlayingAudio: () => void;
   ttsLoadingMessageId: string | null;
+}
+
+export interface ChatVoiceActionsContextValue {
+  isAssistantSpeaking: boolean;
+  isMuted: boolean;
+  startVoiceSession: () => Promise<void>;
+  status: ChatVoiceStatus;
+  stopVoiceSession: () => void;
+  toggleMute: () => void;
 }
 
 export function toUiMessage(message: ChatMessage, index: number): ChatUiMessage {

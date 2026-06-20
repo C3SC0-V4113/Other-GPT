@@ -41,6 +41,19 @@
       "start": "Start dictation",
       "stop": "Stop dictation"
     },
+    "voice": {
+      "start": "Start voice chat",
+      "stop": "End voice chat",
+      "mute": "Mute microphone",
+      "unmute": "Unmute microphone",
+      "endCall": "End",
+      "title": "Voice assistant",
+      "statusConnecting": "Connecting...",
+      "statusConnected": "Connected",
+      "statusError": "Connection failed",
+      "listening": "Listening...",
+      "speaking": "Assistant speaking..."
+    },
     "submit": {
       "send": "Send message",
       "generateImage": "Generate image",
@@ -106,6 +119,8 @@
     "recordingUnsupported": "Audio recording is not supported in this browser.",
     "micAccessFailed": "Unable to access your microphone.",
     "transcribeFailed": "Unable to transcribe audio.",
+    "voiceUnsupported": "Realtime voice is not supported in this browser.",
+    "voiceFailed": "Unable to start a realtime voice session.",
     "ttsFailed": "TTS request failed.",
     "noAudioContent": "No audio content received.",
     "requestFailed": "Request failed.",

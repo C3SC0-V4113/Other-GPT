@@ -20,6 +20,7 @@ import {
   useChatAudioEffects,
   useChatClipboardEffects,
   useChatImageEffects,
+  useChatRealtimeVoiceEffects,
   useChatRecordingEffects,
   useChatStreamEffects,
 } from '@/components/chat/controller-effects';
@@ -32,7 +33,9 @@ import type {
   ChatMessagesContextValue,
   ChatProviderValue,
   ChatRuntimeContextValue,
+  ChatVoiceActionsContextValue,
 } from '@/components/chat/chat-types';
+import type { ChatVoiceTurn } from '@/components/chat/controller-effects';
 import type { ChatAttachment } from '@/lib/chat-attachments';
 import type { ChatImageAspectRatio, ChatMessage } from '@/lib/chat-session-store';
 
@@ -68,6 +71,11 @@ function useChatProviderValue(
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const recordedChunksRef = useRef<BlobPart[]>([]);
+  const voicePeerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const voiceLocalStreamRef = useRef<MediaStream | null>(null);
+  const voiceRemoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const voiceDataChannelRef = useRef<RTCDataChannel | null>(null);
+  const voiceTurnRef = useRef<ChatVoiceTurn>({ assistantMessageId: null, assistantText: '' });
 
   const addErrorBubble = useCallback(
     (message: string, options?: { retryPrompt?: string }) => {
@@ -173,6 +181,24 @@ function useChatProviderValue(
       mediaRecorderRef,
       mediaStreamRef,
       recordedChunksRef,
+    },
+  });
+
+  const { startVoiceSession, stopVoiceSession, toggleMute } = useChatRealtimeVoiceEffects({
+    deps: {
+      addErrorBubble,
+      dispatch,
+    },
+    refs: {
+      dataChannelRef: voiceDataChannelRef,
+      localStreamRef: voiceLocalStreamRef,
+      peerConnectionRef: voicePeerConnectionRef,
+      remoteAudioRef: voiceRemoteAudioRef,
+      voiceTurnRef,
+    },
+    voice: {
+      isMuted: state.voice.isMuted,
+      status: state.voice.status,
     },
   });
 
@@ -287,6 +313,16 @@ function useChatProviderValue(
       mediaStreamRef.current = null;
       recordedChunksRef.current = [];
 
+      voiceDataChannelRef.current?.close();
+      voicePeerConnectionRef.current?.close();
+      voiceLocalStreamRef.current?.getTracks().forEach((track) => {
+        track.stop();
+      });
+      voiceDataChannelRef.current = null;
+      voicePeerConnectionRef.current = null;
+      voiceLocalStreamRef.current = null;
+      voiceRemoteAudioRef.current = null;
+
       releaseAudioResources();
       clearCopyFeedbackTimeout();
       releaseAttachmentPreviews(state.composer.attachments);
@@ -312,11 +348,14 @@ function useChatProviderValue(
       setSelectedImageAspectRatio: (nextAspectRatio: ChatImageAspectRatio) => {
         dispatch({ payload: nextAspectRatio, type: 'composer/set-aspect-ratio' });
       },
+      startVoiceSession,
       stopGeneration,
       stopPlayingAudio,
+      stopVoiceSession,
       toggleImageGenerationMode: () => {
         dispatch({ type: 'composer/toggle-image-mode' });
       },
+      toggleMute,
       toggleRecording,
     }),
     [
@@ -332,8 +371,11 @@ function useChatProviderValue(
       retryLastFailedPrompt,
       sendMessage,
       setAttachmentIncludedInContext,
+      startVoiceSession,
       stopGeneration,
       stopPlayingAudio,
+      stopVoiceSession,
+      toggleMute,
       toggleRecording,
     ]
   );
@@ -360,6 +402,7 @@ const ChatMessagesContext = createContext<ChatMessagesContextValue | null>(null)
 const ChatRuntimeContext = createContext<ChatRuntimeContextValue | null>(null);
 const ChatComposerStateContext = createContext<ChatComposerStateContextValue | null>(null);
 const ChatAudioActionsContext = createContext<ChatAudioActionsContextValue | null>(null);
+const ChatVoiceActionsContext = createContext<ChatVoiceActionsContextValue | null>(null);
 
 export function ChatProvider({ children, initialAttachments, initialMessages }: ChatProviderProps) {
   const value = useChatProviderValue(initialMessages, initialAttachments);
@@ -457,12 +500,33 @@ export function ChatProvider({ children, initialAttachments, initialMessages }: 
     ]
   );
 
+  const voiceActionsValue = useMemo<ChatVoiceActionsContextValue>(
+    () => ({
+      isAssistantSpeaking: state.voice.isAssistantSpeaking,
+      isMuted: state.voice.isMuted,
+      startVoiceSession: actions.startVoiceSession,
+      status: state.voice.status,
+      stopVoiceSession: actions.stopVoiceSession,
+      toggleMute: actions.toggleMute,
+    }),
+    [
+      actions.startVoiceSession,
+      actions.stopVoiceSession,
+      actions.toggleMute,
+      state.voice.isAssistantSpeaking,
+      state.voice.isMuted,
+      state.voice.status,
+    ]
+  );
+
   return (
     <ChatRuntimeContext.Provider value={runtimeValue}>
       <ChatComposerStateContext.Provider value={composerStateValue}>
         <ChatMessagesContext.Provider value={messagesValue}>
           <ChatAudioActionsContext.Provider value={audioActionsValue}>
-            {children}
+            <ChatVoiceActionsContext.Provider value={voiceActionsValue}>
+              {children}
+            </ChatVoiceActionsContext.Provider>
           </ChatAudioActionsContext.Provider>
         </ChatMessagesContext.Provider>
       </ChatComposerStateContext.Provider>
@@ -505,6 +569,16 @@ export function useChatAudioActions() {
 
   if (!context) {
     throw new Error('useChatAudioActions must be used within ChatProvider.');
+  }
+
+  return context;
+}
+
+export function useChatVoiceActions() {
+  const context = use(ChatVoiceActionsContext);
+
+  if (!context) {
+    throw new Error('useChatVoiceActions must be used within ChatProvider.');
   }
 
   return context;

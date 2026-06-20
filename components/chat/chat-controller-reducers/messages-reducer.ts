@@ -123,6 +123,28 @@ export function reduceMessagesState(
         ],
         lastFailedRequest: null,
       };
+    case 'messages/append-voice-assistant':
+      return {
+        ...state,
+        items: [
+          ...state.items,
+          {
+            content: { text: '', type: 'text' },
+            id: action.payload.messageId,
+            kind: 'message',
+            role: 'assistant',
+            status: 'streaming',
+          },
+        ],
+      };
+    case 'messages/append-voice-user':
+      return {
+        ...state,
+        items: [
+          ...state.items,
+          createUserTextMessage(action.payload.messageId, action.payload.text, []),
+        ],
+      };
     case 'messages/clear-all':
       return {
         items: [],

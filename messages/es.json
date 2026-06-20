@@ -41,6 +41,19 @@
       "start": "Iniciar dictado",
       "stop": "Detener dictado"
     },
+    "voice": {
+      "start": "Iniciar chat de voz",
+      "stop": "Finalizar chat de voz",
+      "mute": "Silenciar micrófono",
+      "unmute": "Activar micrófono",
+      "endCall": "Finalizar",
+      "title": "Asistente de voz",
+      "statusConnecting": "Conectando...",
+      "statusConnected": "Conectado",
+      "statusError": "Error de conexión",
+      "listening": "Escuchando...",
+      "speaking": "El asistente está hablando..."
+    },
     "submit": {
       "send": "Enviar mensaje",
       "generateImage": "Generar imagen",
@@ -106,6 +119,8 @@
     "recordingUnsupported": "La grabación de audio no es compatible con este navegador.",
     "micAccessFailed": "No se pudo acceder a tu micrófono.",
     "transcribeFailed": "No fue posible transcribir el audio.",
+    "voiceUnsupported": "La voz en tiempo real no es compatible con este navegador.",
+    "voiceFailed": "No fue posible iniciar una sesión de voz en tiempo real.",
     "ttsFailed": "La solicitud de audio falló.",
     "noAudioContent": "No se recibió contenido de audio.",
     "requestFailed": "La solicitud falló.",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { canGenerateImages, getRoleCodes, isBasicUser } from '@/lib/roles';
+import { canGenerateImages, canUseRealtimeVoice, getRoleCodes, isBasicUser } from '@/lib/roles';
 
 import type { ProjectAuthResponse } from '@cesco_valle/identity-contracts/user';
 
@@ -53,5 +53,15 @@ describe('canGenerateImages', () => {
     expect(canGenerateImages(userWithRoles(['pro']))).toBe(true);
     expect(canGenerateImages(userWithRoles(['admin']))).toBe(true);
     expect(canGenerateImages(userWithRoles(['user', 'admin']))).toBe(true);
+  });
+});
+
+describe('canUseRealtimeVoice', () => {
+  it('requires an elevated role (pro/admin)', () => {
+    expect(canUseRealtimeVoice(userWithRoles(['user']))).toBe(false);
+    expect(canUseRealtimeVoice(userWithRoles(null))).toBe(false);
+    expect(canUseRealtimeVoice(userWithRoles(['pro']))).toBe(true);
+    expect(canUseRealtimeVoice(userWithRoles(['admin']))).toBe(true);
+    expect(canUseRealtimeVoice(userWithRoles(['user', 'pro']))).toBe(true);
   });
 });
