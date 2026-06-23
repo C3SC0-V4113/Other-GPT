@@ -30,7 +30,7 @@ export function ComposerVoicePanel() {
 
   const isVisible = status !== 'idle';
   const isConnected = status === 'connected';
-
+  const isCallLocked = status === 'connecting' || status === 'connected';
   const statusLabel =
     status === 'connecting'
       ? t('statusConnecting')
@@ -53,12 +53,20 @@ export function ComposerVoicePanel() {
           : 'pointer-events-none mb-0 max-h-0 -translate-y-1 opacity-0'
       )}
     >
-      <div className="flex items-center justify-between gap-3 rounded-2xl border bg-muted/40 px-4 py-2.5">
+      <div
+        aria-label={t('title')}
+        aria-modal={isCallLocked || undefined}
+        className="flex items-center justify-between gap-3 rounded-2xl border bg-muted/40 px-4 py-2.5"
+        data-call-controls
+        role="dialog"
+      >
         <div className="flex min-w-0 items-center gap-3">
           <VoiceActivityIndicator isActive={isConnected && isAssistantSpeaking} />
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-medium">{t('title')}</span>
-            <span className="truncate text-xs text-muted-foreground">{statusLabel}</span>
+            <span aria-live="polite" className="truncate text-xs text-muted-foreground">
+              {statusLabel}
+            </span>
           </div>
         </div>
 

@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { executeUnlessCallLocked, isExclusiveCallStatus } from '@/components/call-interaction-lock';
 import {
   chatControllerReducer,
   createInitialChatState,
@@ -329,34 +330,78 @@ function useChatProviderValue(
     };
   }, [clearCopyFeedbackTimeout, releaseAudioResources, state.composer.attachments]);
 
+  const isCallLocked = isExclusiveCallStatus(state.voice.status);
+
   const actions = useMemo<ChatActionHandlers>(
     () => ({
-      abortPendingRequest,
-      addErrorBubble,
-      addFilesAsAttachments,
-      clearLocalState,
-      copyMessageText,
-      playMessageAudio,
-      removeAttachment,
-      resetFromInitialMessages,
-      retryLastFailedPrompt,
-      sendMessage,
-      setAttachmentIncludedInContext,
+      abortPendingRequest: () =>
+        executeUnlessCallLocked(isCallLocked, abortPendingRequest, undefined),
+      addErrorBubble: (message, options) =>
+        executeUnlessCallLocked(isCallLocked, () => addErrorBubble(message, options), undefined),
+      addFilesAsAttachments: (files) =>
+        executeUnlessCallLocked(
+          isCallLocked,
+          () => addFilesAsAttachments(files),
+          Promise.resolve(0)
+        ),
+      clearLocalState: () => executeUnlessCallLocked(isCallLocked, clearLocalState, undefined),
+      copyMessageText: (messageId, messageText) =>
+        executeUnlessCallLocked(
+          isCallLocked,
+          () => copyMessageText(messageId, messageText),
+          Promise.resolve()
+        ),
+      playMessageAudio: (messageId, messageText) =>
+        executeUnlessCallLocked(
+          isCallLocked,
+          () => playMessageAudio(messageId, messageText),
+          Promise.resolve()
+        ),
+      removeAttachment: (attachmentId) =>
+        executeUnlessCallLocked(
+          isCallLocked,
+          () => removeAttachment(attachmentId),
+          Promise.resolve(false)
+        ),
+      resetFromInitialMessages: () =>
+        executeUnlessCallLocked(isCallLocked, resetFromInitialMessages, undefined),
+      retryLastFailedPrompt: () =>
+        executeUnlessCallLocked(isCallLocked, retryLastFailedPrompt, Promise.resolve()),
+      sendMessage: () => executeUnlessCallLocked(isCallLocked, sendMessage, Promise.resolve()),
+      setAttachmentIncludedInContext: (attachmentId, isIncludedInContext) =>
+        executeUnlessCallLocked(
+          isCallLocked,
+          () => setAttachmentIncludedInContext(attachmentId, isIncludedInContext),
+          Promise.resolve(false)
+        ),
       setInput: (nextInput: string) => {
-        dispatch({ payload: nextInput, type: 'composer/set-input' });
+        executeUnlessCallLocked(
+          isCallLocked,
+          () => dispatch({ payload: nextInput, type: 'composer/set-input' }),
+          undefined
+        );
       },
       setSelectedImageAspectRatio: (nextAspectRatio: ChatImageAspectRatio) => {
-        dispatch({ payload: nextAspectRatio, type: 'composer/set-aspect-ratio' });
+        executeUnlessCallLocked(
+          isCallLocked,
+          () => dispatch({ payload: nextAspectRatio, type: 'composer/set-aspect-ratio' }),
+          undefined
+        );
       },
       startVoiceSession,
-      stopGeneration,
-      stopPlayingAudio,
+      stopGeneration: () => executeUnlessCallLocked(isCallLocked, stopGeneration, undefined),
+      stopPlayingAudio: () => executeUnlessCallLocked(isCallLocked, stopPlayingAudio, undefined),
       stopVoiceSession,
       toggleImageGenerationMode: () => {
-        dispatch({ type: 'composer/toggle-image-mode' });
+        executeUnlessCallLocked(
+          isCallLocked,
+          () => dispatch({ type: 'composer/toggle-image-mode' }),
+          undefined
+        );
       },
       toggleMute,
-      toggleRecording,
+      toggleRecording: () =>
+        executeUnlessCallLocked(isCallLocked, toggleRecording, Promise.resolve()),
     }),
     [
       abortPendingRequest,
@@ -365,6 +410,7 @@ function useChatProviderValue(
       clearLocalState,
       copyMessageText,
       dispatch,
+      isCallLocked,
       playMessageAudio,
       removeAttachment,
       resetFromInitialMessages,

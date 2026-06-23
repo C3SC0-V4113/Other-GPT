@@ -1,8 +1,12 @@
 'use client';
 
+import {
+  CallInteractionBoundary,
+  CallInteractionLockSynchronizer,
+} from '@/components/call-interaction-lock';
 import { ChatComposerForm } from '@/components/chat/chat-composer-form';
 import { ChatComposerProvider } from '@/components/chat/chat-composer-provider';
-import { ChatProvider } from '@/components/chat/chat-controller-provider';
+import { ChatProvider, useChatVoiceActions } from '@/components/chat/chat-controller-provider';
 import { ChatMessagesView } from '@/components/chat/chat-messages-view';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
@@ -16,17 +20,20 @@ interface ChatClientProps {
   initialMessages: ChatMessage[];
 }
 
-export function ChatClient({
+function ChatInteractionRegions({
   canGenerateImages,
   canUseRealtimeVoice,
-  initialAttachments,
-  initialMessages,
-}: ChatClientProps) {
+}: Pick<ChatClientProps, 'canGenerateImages' | 'canUseRealtimeVoice'>) {
+  const { status } = useChatVoiceActions();
+
   return (
-    <ChatProvider initialAttachments={initialAttachments} initialMessages={initialMessages}>
+    <>
+      <CallInteractionLockSynchronizer status={status} />
       <TooltipProvider>
         <div className="flex min-h-0 flex-1 flex-col">
-          <ChatMessagesView />
+          <CallInteractionBoundary className="flex min-h-0 flex-1 flex-col">
+            <ChatMessagesView />
+          </CallInteractionBoundary>
 
           <div className="border-t bg-background/95">
             <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
@@ -40,6 +47,22 @@ export function ChatClient({
           </div>
         </div>
       </TooltipProvider>
+    </>
+  );
+}
+
+export function ChatClient({
+  canGenerateImages,
+  canUseRealtimeVoice,
+  initialAttachments,
+  initialMessages,
+}: ChatClientProps) {
+  return (
+    <ChatProvider initialAttachments={initialAttachments} initialMessages={initialMessages}>
+      <ChatInteractionRegions
+        canGenerateImages={canGenerateImages}
+        canUseRealtimeVoice={canUseRealtimeVoice}
+      />
     </ChatProvider>
   );
 }

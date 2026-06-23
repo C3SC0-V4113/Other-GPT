@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 
+import { CallInteractionBoundary } from '@/components/call-interaction-lock';
 import { ChatClearSessionButton } from '@/components/chat/chat-clear-session-button';
 import { useChatComposer } from '@/components/chat/chat-composer-provider';
 import {
@@ -122,76 +123,78 @@ export function ChatComposerForm({
     <ComposerRoot>
       {canUseRealtimeVoice ? <ComposerVoicePanel /> : null}
 
-      <ComposerToolbarRegion isVisible={isImageGenerationMode}>
-        <ComposerToolbar>
-          <ComposerModeBadge onRemove={toggleImageGenerationMode} />
-          <ComposerRatioSelect
-            isDisabled={isSubmitting}
-            onValueChange={setSelectedImageAspectRatio}
-            value={selectedImageAspectRatio}
-          />
-        </ComposerToolbar>
-      </ComposerToolbarRegion>
-
-      <ComposerAttachmentsUploader
-        attachments={attachments}
-        errorMessage={errorMessage}
-        isSubmitting={isSubmitting}
-        onAddFiles={addFilesAsAttachments}
-        onRemoveAttachment={removeAttachment}
-        onSetAttachmentIncludedInContext={setAttachmentIncludedInContext}
-      >
-        {({ contextAttachmentCount, totalAttachmentCount, openContextModal, openFileDialog }) => (
-          <ComposerActionsRow>
-            <div className="flex items-center gap-1.5">
-              <ComposerPlusMenu
-                canGenerateImages={canGenerateImages}
-                contextAttachmentCount={contextAttachmentCount}
-                totalAttachmentCount={totalAttachmentCount}
-                isSubmitting={isSubmitting}
-                onAddAttachments={openFileDialog}
-                onOpenAttachmentsContext={openContextModal}
-                onToggleImageMode={toggleImageGenerationMode}
-              />
-
-              <ChatClearSessionButton />
-            </div>
-
-            <ComposerInput
-              hasVoiceButton={canUseRealtimeVoice}
+      <CallInteractionBoundary className="flex flex-col gap-2">
+        <ComposerToolbarRegion isVisible={isImageGenerationMode}>
+          <ComposerToolbar>
+            <ComposerModeBadge onRemove={toggleImageGenerationMode} />
+            <ComposerRatioSelect
               isDisabled={isSubmitting}
-              isImageMode={isImageGenerationMode}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault();
-                  void handleSendMessage();
-                }
-              }}
-              onValueChange={setInput}
-              value={input}
-            >
-              <ComposerMicButton
-                isRecording={isRecording}
-                isSubmitting={isSubmitting}
-                isTranscribing={isTranscribing}
-                onToggleRecording={toggleRecording}
-              />
+              onValueChange={setSelectedImageAspectRatio}
+              value={selectedImageAspectRatio}
+            />
+          </ComposerToolbar>
+        </ComposerToolbarRegion>
 
-              {canUseRealtimeVoice ? <ComposerVoiceButton isSubmitting={isSubmitting} /> : null}
+        <ComposerAttachmentsUploader
+          attachments={attachments}
+          errorMessage={errorMessage}
+          isSubmitting={isSubmitting}
+          onAddFiles={addFilesAsAttachments}
+          onRemoveAttachment={removeAttachment}
+          onSetAttachmentIncludedInContext={setAttachmentIncludedInContext}
+        >
+          {({ contextAttachmentCount, totalAttachmentCount, openContextModal, openFileDialog }) => (
+            <ComposerActionsRow>
+              <div className="flex items-center gap-1.5">
+                <ComposerPlusMenu
+                  canGenerateImages={canGenerateImages}
+                  contextAttachmentCount={contextAttachmentCount}
+                  totalAttachmentCount={totalAttachmentCount}
+                  isSubmitting={isSubmitting}
+                  onAddAttachments={openFileDialog}
+                  onOpenAttachmentsContext={openContextModal}
+                  onToggleImageMode={toggleImageGenerationMode}
+                />
 
-              <ComposerSubmitButton
-                isImageGenerationMode={isImageGenerationMode}
-                isSendDisabled={isSendDisabled}
-                isSubmitting={isSubmitting}
-                onSend={() => {
-                  void handleSendMessage();
+                <ChatClearSessionButton />
+              </div>
+
+              <ComposerInput
+                hasVoiceButton={canUseRealtimeVoice}
+                isDisabled={isSubmitting}
+                isImageMode={isImageGenerationMode}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    void handleSendMessage();
+                  }
                 }}
-                onStop={stopGeneration}
-              />
-            </ComposerInput>
-          </ComposerActionsRow>
-        )}
-      </ComposerAttachmentsUploader>
+                onValueChange={setInput}
+                value={input}
+              >
+                <ComposerMicButton
+                  isRecording={isRecording}
+                  isSubmitting={isSubmitting}
+                  isTranscribing={isTranscribing}
+                  onToggleRecording={toggleRecording}
+                />
+
+                {canUseRealtimeVoice ? <ComposerVoiceButton isSubmitting={isSubmitting} /> : null}
+
+                <ComposerSubmitButton
+                  isImageGenerationMode={isImageGenerationMode}
+                  isSendDisabled={isSendDisabled}
+                  isSubmitting={isSubmitting}
+                  onSend={() => {
+                    void handleSendMessage();
+                  }}
+                  onStop={stopGeneration}
+                />
+              </ComposerInput>
+            </ComposerActionsRow>
+          )}
+        </ComposerAttachmentsUploader>
+      </CallInteractionBoundary>
     </ComposerRoot>
   );
 }
