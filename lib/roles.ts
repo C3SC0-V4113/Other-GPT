@@ -23,3 +23,8 @@ export function canGenerateImages(user: ProjectAuthResponse): boolean {
 export function canUseRealtimeVoice(user: ProjectAuthResponse): boolean {
   return getRoleCodes(user).some((code) => ELEVATED_ROLE_CODES.has(code));
 }
+
+/** Mirador Core MCP tools are reserved for elevated roles (`pro` / `admin`). */
+export function canUseMiradorTools(user: ProjectAuthResponse): boolean {
+  return getRoleCodes(user).some((code) => ELEVATED_ROLE_CODES.has(code));
+}

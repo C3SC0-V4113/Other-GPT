@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
 import { getUserLocale } from '@/i18n/locale';
-import { requireSession } from '@/lib/auth';
+import { getCurrentUser, requireSession } from '@/lib/auth';
 import { toChatAttachmentSnapshot } from '@/lib/chat-attachments';
 import { parseChatRequestBody } from '@/lib/chat-dtos';
 import { buildChatInstructions } from '@/lib/chat-instructions';
@@ -13,6 +13,7 @@ import {
   getSessionContextAttachments,
   getSessionMessages,
 } from '@/lib/chat-session-store';
+import { buildMiradorMcpTools } from '@/lib/mirador-tools';
 import { toResponseInputContentFromAttachments } from '@/lib/openai-response-input-content';
 
 import type { ChatAttachment } from '@/lib/chat-attachments';
@@ -33,6 +34,34 @@ async function deleteFilesFromOpenAI(fileIds: string[]): Promise<void> {
       }
     })
   );
+}
+
+// TEMP diagnostic: set MIRADOR_MCP_DEBUG=1 to log the raw MCP tool-call result
+// (output + error) that OpenAI received. Reveals whether Mirador returned data or
+// an error when the model says it had a "technical problem". Remove once resolved.
+function logMiradorDiagnostics(event: OpenAI.Responses.ResponseStreamEvent): void {
+  if (process.env.MIRADOR_MCP_DEBUG !== '1' || event.type !== 'response.output_item.done') {
+    return;
+  }
+
+  const { item } = event;
+  if (item.type === 'mcp_call') {
+    console.error(
+      '[mirador-mcp] mcp_call',
+      JSON.stringify({
+        arguments: item.arguments,
+        error: item.error,
+        name: item.name,
+        output: item.output,
+        status: item.status,
+      })
+    );
+  } else if (item.type === 'mcp_list_tools') {
+    console.error(
+      '[mirador-mcp] mcp_list_tools',
+      JSON.stringify({ error: item.error, toolCount: item.tools.length })
+    );
+  }
 }
 
 function getProviderErrorMessage(error: unknown): string {
@@ -115,9 +144,19 @@ export async function DELETE(): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const unauthorized = await requireSession();
-  if (unauthorized) {
-    return unauthorized;
+  // Single identity read covers both the auth guard and the role check used to
+  // gate Mirador MCP tools below (mirrors `app/api/realtime/session/route.ts`).
+  let user = null;
+  try {
+    user = await getCurrentUser();
+  } catch {
+    user = null;
+  }
+  if (!user) {
+    return Response.json(
+      { error: { code: 'AUTHENTICATION_REQUIRED', message: 'Sign in required.' } },
+      { status: 401 }
+    );
   }
 
   if (!process.env.OPENAI_API_KEY) {
@@ -170,14 +209,18 @@ export async function POST(request: Request): Promise<Response> {
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+  // Elevated roles (`pro` / `admin`) get Mirador Core company-data tools; basic
+  // users get an empty array, leaving the request unchanged.
+  const miradorTools = buildMiradorMcpTools(user);
   let stream: Awaited<ReturnType<typeof openai.responses.create>>;
 
   try {
     stream = await openai.responses.create({
       input: modelInput,
-      instructions: buildChatInstructions(locale),
+      instructions: buildChatInstructions(locale, { miradorEnabled: miradorTools.length > 0 }),
       model,
       stream: true,
+      ...(miradorTools.length > 0 ? { tools: miradorTools } : {}),
     });
   } catch (error) {
     if (isInvalidFileProviderError(error)) {
@@ -203,6 +246,8 @@ export async function POST(request: Request): Promise<Response> {
     async start(controller) {
       try {
         for await (const event of stream) {
+          logMiradorDiagnostics(event);
+
           if (event.type !== 'response.output_text.delta' || !event.delta) {
             continue;
           }
